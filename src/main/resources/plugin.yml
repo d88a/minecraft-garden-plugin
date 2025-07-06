@@ -9,7 +9,7 @@ website: https://github.com/yourusername/minecraft-garden-plugin
 commands:
   garden:
     description: Главная команда для управления садом
-    usage: /garden [create|plot|shop|sell|invite|expand|help]
+    usage: /garden [create|plot|tp|shop|sell|invite|expand|help]
     aliases: [g, garden]
     permission: garden.use
 

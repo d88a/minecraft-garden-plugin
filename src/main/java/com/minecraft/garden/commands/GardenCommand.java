@@ -2,6 +2,9 @@ package com.minecraft.garden.commands;
 
 import com.minecraft.garden.GardenPlugin;
 import com.minecraft.garden.managers.PlotManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -37,6 +40,10 @@ public class GardenCommand implements CommandExecutor {
             case "create":
                 createPlot(player);
                 break;
+            case "tp":
+            case "teleport":
+                teleportToPlot(player);
+                break;
             case "shop":
                 showShop(player);
                 break;
@@ -71,6 +78,7 @@ public class GardenCommand implements CommandExecutor {
             player.sendMessage("§e/garden create §7- Получить участок");
         } else {
             player.sendMessage("§e/garden plot §7- Информация об участке");
+            player.sendMessage("§e/garden tp §7- Телепорт на участок");
         }
         
         player.sendMessage("§e/garden shop §7- Магазин семян");
@@ -100,6 +108,29 @@ public class GardenCommand implements CommandExecutor {
         } else {
             player.sendMessage("§cОшибка при создании участка!");
         }
+    }
+    
+    private void teleportToPlot(Player player) {
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка! Используйте §6/garden create §cдля получения участка.");
+            return;
+        }
+        
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        World world = Bukkit.getWorld(plugin.getConfigManager().getWorldName());
+        
+        if (world == null) {
+            player.sendMessage("§cОшибка: мир не найден!");
+            return;
+        }
+        
+        // Телепортируем в центр участка
+        Location center = plot.getCenterLocation(world);
+        center.setY(world.getHighestBlockYAt(center) + 1); // Над землей
+        
+        player.teleport(center);
+        player.sendMessage("§aТелепорт на участок выполнен!");
+        player.sendMessage("§eКоординаты: §7X:" + center.getBlockX() + " Y:" + center.getBlockY() + " Z:" + center.getBlockZ());
     }
     
     private void showPlotInfo(Player player) {
@@ -146,6 +177,7 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e/garden §7- Главное меню");
         player.sendMessage("§e/garden create §7- Получить участок");
         player.sendMessage("§e/garden plot §7- Информация об участке");
+        player.sendMessage("§e/garden tp §7- Телепорт на участок");
         player.sendMessage("§e/garden shop §7- Магазин семян");
         player.sendMessage("§e/garden sell §7- Продажа урожая");
         player.sendMessage("§e/garden invite <игрок> §7- Пригласить игрока");
