@@ -34,8 +34,9 @@ public class PlotManager {
                         plotData.id = plotSection.getInt("id");
                         plotData.x = plotSection.getInt("x");
                         plotData.z = plotSection.getInt("z");
-                        plotData.y = plotSection.getInt("y", 64);
-                        plotData.size = plotSection.getInt("size", plugin.getConfigManager().getMinPlotSize());
+                        plotData.y = plotSection.getInt("y", 62);
+                        plotData.size = plotSection.getInt("size", 15);
+                        plotData.maxSize = plotSection.getInt("maxSize", 60);
                         playerPlots.put(uuid, plotData);
                         
                         if (plotData.id >= nextPlotId) {
@@ -60,6 +61,7 @@ public class PlotManager {
             plotSection.set("z", plot.z);
             plotSection.set("y", plot.y);
             plotSection.set("size", plot.size);
+            plotSection.set("maxSize", plot.maxSize);
         }
         plugin.getDataManager().saveData();
     }
@@ -81,33 +83,105 @@ public class PlotManager {
             return null; // У игрока уже есть участок
         }
         
-        // Вычисляем координаты для размещения участков в сетке
-        int plotsPerRow = 5; // 5 участков в ряду
+        // Заданная область из конфигурации
+        int areaStartX = plugin.getConfigManager().getAreaStartX();
+        int areaEndX = plugin.getConfigManager().getAreaEndX();
+        int areaStartZ = plugin.getConfigManager().getAreaStartZ();
+        int areaEndZ = plugin.getConfigManager().getAreaEndZ();
+        int areaHeight = plugin.getConfigManager().getAreaHeight();
+        
+        // Параметры участков из конфигурации
+        int initialSize = plugin.getConfigManager().getInitialPlotSize();
+        int maxSize = plugin.getConfigManager().getMaxPlotSize();
+        int pathWidth = plugin.getConfigManager().getPathWidth();
+        int fenceSpacing = plugin.getConfigManager().getFenceSpacing();
+        
+        // Вычисляем, сколько участков поместится в области
+        int totalWidth = areaEndX - areaStartX;
+        int totalDepth = areaEndZ - areaStartZ;
+        
+        // Учитываем заборы и тропинки
+        int plotWithFence = maxSize + (fenceSpacing * 2);
+        int plotWithPath = plotWithFence + pathWidth;
+        
+        int plotsPerRow = totalWidth / plotWithPath;
+        int maxRows = totalDepth / plotWithPath;
+        
+        // Находим позицию для нового участка
         int plotRow = nextPlotId / plotsPerRow;
         int plotCol = nextPlotId % plotsPerRow;
         
-        int spacing = plugin.getConfigManager().getPlotSpacing();
-        int plotSize = plugin.getConfigManager().getMinPlotSize();
+        // Проверяем, есть ли место
+        if (plotRow >= maxRows) {
+            plugin.getLogger().warning("Нет места для нового участка! Все места заняты.");
+            return null;
+        }
         
         // Вычисляем координаты участка
-        int plotX = plugin.getConfigManager().getStartX() + (plotCol * (plotSize + spacing));
-        int plotZ = plugin.getConfigManager().getStartZ() + (plotRow * (plotSize + spacing));
-        
-        // Находим подходящую высоту для участка
-        World world = plugin.getServer().getWorld(plugin.getConfigManager().getWorldName());
-        int plotY = findSuitableHeight(world, plotX, plotZ, plotSize);
+        int plotX = areaStartX + (plotCol * plotWithPath) + fenceSpacing;
+        int plotZ = areaStartZ + (plotRow * plotWithPath) + fenceSpacing;
+        int plotY = areaHeight;
         
         PlotData plotData = new PlotData();
         plotData.id = nextPlotId++;
         plotData.x = plotX;
         plotData.z = plotZ;
         plotData.y = plotY;
-        plotData.size = plotSize;
+        plotData.size = initialSize;
+        plotData.maxSize = maxSize;
         
         playerPlots.put(playerUuid, plotData);
         savePlots();
         
+        // Создаем забор и табличку
+        createPlotFence(plotData, playerUuid);
+        
         return plotData;
+    }
+    
+    /**
+     * Создает забор вокруг участка и табличку с именем игрока
+     */
+    private void createPlotFence(PlotData plot, UUID playerUuid) {
+        World world = plugin.getServer().getWorld(plugin.getConfigManager().getWorldName());
+        if (world == null) return;
+        
+        String playerName = plugin.getServer().getOfflinePlayer(playerUuid).getName();
+        if (playerName == null) playerName = "Неизвестный";
+        
+        // Создаем забор вокруг участка (учитываем максимальный размер)
+        int fenceX = plot.x - 1;
+        int fenceZ = plot.z - 1;
+        int fenceSize = plot.maxSize + 2; // +2 для забора
+        
+        // Создаем периметр забора
+        for (int i = 0; i < fenceSize; i++) {
+            // Нижняя сторона
+            world.getBlockAt(fenceX + i, plot.y, fenceZ).setType(org.bukkit.Material.OAK_FENCE);
+            // Верхняя сторона
+            world.getBlockAt(fenceX + i, plot.y, fenceZ + fenceSize - 1).setType(org.bukkit.Material.OAK_FENCE);
+            // Левая сторона
+            world.getBlockAt(fenceX, plot.y, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
+            // Правая сторона
+            world.getBlockAt(fenceX + fenceSize - 1, plot.y, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
+        }
+        
+        // Создаем табличку с именем игрока (в центре передней стороны)
+        int signX = fenceX + (fenceSize / 2);
+        int signZ = fenceZ - 1;
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, plot.y, signZ);
+        signBlock.setType(org.bukkit.Material.OAK_SIGN);
+        
+        if (signBlock.getState() instanceof org.bukkit.block.Sign) {
+            org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlock.getState();
+            sign.setLine(0, "§6Участок игрока:");
+            sign.setLine(1, "§e" + playerName);
+            sign.setLine(2, "§7ID: " + plot.id);
+            sign.setLine(3, "§7Размер: " + plot.size + "x" + plot.size);
+            sign.update();
+        }
+        
+        plugin.getLogger().info("Создан забор для участка " + plot.id + " игрока " + playerName);
     }
     
     /**
@@ -160,20 +234,60 @@ public class PlotManager {
         return true;
     }
     
+    /**
+     * Удаляет участок игрока
+     */
+    public boolean deletePlot(UUID playerUuid) {
+        if (!hasPlot(playerUuid)) {
+            return false; // У игрока нет участка
+        }
+        
+        PlotData plot = playerPlots.get(playerUuid);
+        plugin.getLogger().info("Удаление участка ID " + plot.id + " для игрока " + playerUuid);
+        
+        // Удаляем участок из памяти
+        playerPlots.remove(playerUuid);
+        
+        // Сохраняем изменения
+        savePlots();
+        
+        return true;
+    }
+    
+    /**
+     * Получает информацию о сетке участков
+     */
+    public String getGridInfo() {
+        int plotsPerRow = 5;
+        int totalPlots = playerPlots.size();
+        int currentRow = totalPlots / plotsPerRow;
+        int currentCol = totalPlots % plotsPerRow;
+        
+        return String.format("Всего участков: %d, Текущая позиция: ряд %d, колонка %d", 
+                           totalPlots, currentRow, currentCol);
+    }
+    
     public static class PlotData {
         public int id;
         public int x;
         public int z;
         public int y;
         public int size;
+        public int maxSize;
         
         public Location getCenterLocation(World world) {
             return new Location(world, x + size/2, y + 1, z + size/2);
         }
         
         public Location getTeleportLocation(World world) {
-            // Телепорт на безопасное место рядом с участком
-            return new Location(world, x + size/2, y + 2, z + size/2);
+            // Телепорт в центр участка на безопасную высоту
+            int centerX = x + size/2;
+            int centerZ = z + size/2;
+            
+            // Находим безопасную высоту для телепортации
+            int safeY = world.getHighestBlockYAt(centerX, centerZ) + 2;
+            
+            return new Location(world, centerX, safeY, centerZ);
         }
         
         public boolean isInPlot(Location location) {
@@ -184,6 +298,11 @@ public class PlotManager {
         
         public String getCoordinates() {
             return String.format("X: %d, Y: %d, Z: %d", x, y, z);
+        }
+        
+        public String getPlotInfo() {
+            return String.format("ID: %d, Размер: %dx%d (макс: %dx%d), Позиция: ряд %d, колонка %d", 
+                               id, size, size, maxSize, maxSize, id / 3, id % 3);
         }
     }
 } 

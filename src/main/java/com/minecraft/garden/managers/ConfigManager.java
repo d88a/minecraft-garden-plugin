@@ -32,12 +32,40 @@ public class ConfigManager {
         return config.getInt("economy.starting_balance", 10);
     }
     
-    public int getMinPlotSize() {
-        return config.getInt("plots.min_size", 15);
+    public int getAreaStartX() {
+        return config.getInt("plots.area_start_x", 198);
+    }
+    
+    public int getAreaEndX() {
+        return config.getInt("plots.area_end_x", 314);
+    }
+    
+    public int getAreaStartZ() {
+        return config.getInt("plots.area_start_z", 1334);
+    }
+    
+    public int getAreaEndZ() {
+        return config.getInt("plots.area_end_z", 1467);
+    }
+    
+    public int getAreaHeight() {
+        return config.getInt("plots.area_height", 62);
+    }
+    
+    public int getInitialPlotSize() {
+        return config.getInt("plots.initial_size", 15);
     }
     
     public int getMaxPlotSize() {
         return config.getInt("plots.max_size", 60);
+    }
+    
+    public int getPathWidth() {
+        return config.getInt("plots.path_width", 2);
+    }
+    
+    public int getFenceSpacing() {
+        return config.getInt("plots.fence_spacing", 1);
     }
     
     public String getWorldName() {

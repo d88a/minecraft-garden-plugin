@@ -36,19 +36,23 @@ economy:
 
 # Участки
 plots:
-  # Минимальный размер участка
-  min_size: 15
+  # Область размещения участков
+  area_start_x: 198
+  area_end_x: 314
+  area_start_z: 1334
+  area_end_z: 1467
+  area_height: 62
   
-  # Максимальный размер участка
+  # Размеры участков
+  initial_size: 15
   max_size: 60
   
-  # Расстояние между участками
-  spacing: 2
+  # Расстояния
+  path_width: 2
+  fence_spacing: 1
   
-  # Координаты начала садовой зоны
+  # Мир для участков
   world: "world"
-  start_x: 1000
-  start_z: 1000
 
 # Растения
 plants:

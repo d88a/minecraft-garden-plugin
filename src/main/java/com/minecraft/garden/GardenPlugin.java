@@ -20,19 +20,43 @@ public class GardenPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         
-        // Инициализация менеджеров
-        configManager = new ConfigManager(this);
-        dataManager = new DataManager(this);
-        economyManager = new EconomyManager(this);
-        plotManager = new PlotManager(this);
+        getLogger().info("=== Загрузка плагина 'Вырасти сад' ===");
         
-        // Регистрация команд
-        getCommand("garden").setExecutor(new GardenCommand(this));
-        
-        // Регистрация слушателей событий
-        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-        
-        getLogger().info("Плагин 'Вырасти сад' успешно загружен!");
+        try {
+            // Инициализация менеджеров
+            getLogger().info("Инициализация менеджеров...");
+            configManager = new ConfigManager(this);
+            dataManager = new DataManager(this);
+            economyManager = new EconomyManager(this);
+            plotManager = new PlotManager(this);
+            getLogger().info("✓ Менеджеры инициализированы");
+            
+            // Регистрация команд
+            getLogger().info("Регистрация команд...");
+            if (getCommand("garden") != null) {
+                getCommand("garden").setExecutor(new GardenCommand(this));
+                getLogger().info("✓ Команда /garden зарегистрирована");
+                getLogger().info("✓ Алиас /g зарегистрирован");
+            } else {
+                getLogger().severe("✗ ОШИБКА: Команда 'garden' не найдена в plugin.yml!");
+            }
+            
+            // Регистрация слушателей событий
+            getLogger().info("Регистрация слушателей событий...");
+            getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+            getLogger().info("✓ Слушатели событий зарегистрированы");
+            
+            getLogger().info("=== Плагин 'Вырасти сад' успешно загружен! ===");
+            getLogger().info("Доступные команды:");
+            getLogger().info("  /garden - главное меню");
+            getLogger().info("  /garden create - создать участок");
+            getLogger().info("  /garden tp - телепорт на участок");
+            getLogger().info("  /garden help - справка");
+            
+        } catch (Exception e) {
+            getLogger().severe("✗ КРИТИЧЕСКАЯ ОШИБКА при загрузке плагина: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     @Override
