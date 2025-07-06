@@ -1,0 +1,88 @@
+# Конфигурация плагина "Вырасти сад"
+
+# Экономика
+economy:
+  # Начальный капитал игрока (в рублях)
+  starting_balance: 10
+  
+  # Цены на семена
+  seed_prices:
+    wheat: 2
+    carrot: 3
+    potato: 3
+    beetroot: 2
+    pumpkin: 5
+    melon: 5
+  
+  # Цены продажи урожая
+  crop_prices:
+    wheat: 5
+    carrot: 8
+    potato: 8
+    beetroot: 6
+    pumpkin: 15
+    melon: 15
+  
+  # Стоимость расширения участка (за блок)
+  plot_expansion_cost: 1
+  
+  # Стоимость автоматической поливки (в день)
+  auto_watering_cost: 5
+  
+  # Стоимость удобрений
+  fertilizer_costs:
+    growth_speed: 10
+    crop_size: 15
+
+# Участки
+plots:
+  # Минимальный размер участка
+  min_size: 15
+  
+  # Максимальный размер участка
+  max_size: 60
+  
+  # Расстояние между участками
+  spacing: 2
+  
+  # Координаты начала садовой зоны
+  world: "world"
+  start_x: 1000
+  start_z: 1000
+
+# Растения
+plants:
+  wheat:
+    growth_time: 30  # секунды
+    stages: 8
+  carrot:
+    growth_time: 45
+    stages: 8
+  potato:
+    growth_time: 45
+    stages: 8
+  beetroot:
+    growth_time: 35
+    stages: 4
+  pumpkin:
+    growth_time: 120
+    stages: 4
+  melon:
+    growth_time: 120
+    stages: 4
+
+# Поливка
+watering:
+  # Время действия ручного полива (в секундах)
+  manual_duration: 3600  # 1 час
+  
+  # Интервал автоматической поливки (в секундах)
+  auto_interval: 1800    # 30 минут
+
+# Сохранение
+storage:
+  # Интервал автосохранения (в секундах)
+  auto_save_interval: 300  # 5 минут
+  
+  # Формат файлов данных
+  format: "json" 
