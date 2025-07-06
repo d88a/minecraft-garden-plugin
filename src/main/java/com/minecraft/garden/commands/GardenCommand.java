@@ -103,8 +103,14 @@ public class GardenCommand implements CommandExecutor {
             player.sendMessage("§aУчасток успешно создан!");
             player.sendMessage("§eID: §7" + plot.id);
             player.sendMessage("§eРазмер: §7" + plot.size + "x" + plot.size);
-            player.sendMessage("§eКоординаты: §7X:" + plot.x + " Z:" + plot.z);
+            player.sendMessage("§eКоординаты: §7" + plot.getCoordinates());
             player.sendMessage("§eТелепорт: §6/garden tp");
+            
+            // Показываем информацию о соседях
+            String neighbors = getNeighborPlotsInfo(plot);
+            if (!neighbors.equals("нет соседей")) {
+                player.sendMessage("§eСоседние участки: §7" + neighbors);
+            }
         } else {
             player.sendMessage("§cОшибка при создании участка!");
         }
@@ -124,13 +130,18 @@ public class GardenCommand implements CommandExecutor {
             return;
         }
         
-        // Телепортируем в центр участка
-        Location center = plot.getCenterLocation(world);
-        center.setY(world.getHighestBlockYAt(center) + 1); // Над землей
+        // Используем новую логику телепортации
+        Location teleportLocation = plot.getTeleportLocation(world);
         
-        player.teleport(center);
+        // Проверяем, что место безопасно для телепортации
+        if (teleportLocation.getBlock().getType().isSolid()) {
+            teleportLocation.setY(world.getHighestBlockYAt(teleportLocation) + 2);
+        }
+        
+        player.teleport(teleportLocation);
         player.sendMessage("§aТелепорт на участок выполнен!");
-        player.sendMessage("§eКоординаты: §7X:" + center.getBlockX() + " Y:" + center.getBlockY() + " Z:" + center.getBlockZ());
+        player.sendMessage("§eКоординаты участка: §7" + plot.getCoordinates());
+        player.sendMessage("§eРазмер: §7" + plot.size + "x" + plot.size);
     }
     
     private void showPlotInfo(Player player) {
@@ -143,8 +154,48 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§6=== Ваш участок ===");
         player.sendMessage("§eID: §7" + plot.id);
         player.sendMessage("§eРазмер: §7" + plot.size + "x" + plot.size);
-        player.sendMessage("§eКоординаты: §7X:" + plot.x + " Z:" + plot.z);
+        player.sendMessage("§eКоординаты: §7" + plot.getCoordinates());
         player.sendMessage("§eТелепорт: §6/garden tp");
+        
+        // Показываем соседние участки
+        player.sendMessage("§eСоседние участки: §7" + getNeighborPlotsInfo(plot));
+    }
+    
+    private String getNeighborPlotsInfo(PlotManager.PlotData currentPlot) {
+        int plotsPerRow = 5;
+        int currentRow = currentPlot.id / plotsPerRow;
+        int currentCol = currentPlot.id % plotsPerRow;
+        
+        StringBuilder info = new StringBuilder();
+        
+        // Проверяем соседние участки
+        int[] neighbors = {
+            currentPlot.id - 1, // слева
+            currentPlot.id + 1, // справа
+            currentPlot.id - plotsPerRow, // сверху
+            currentPlot.id + plotsPerRow  // снизу
+        };
+        
+        for (int neighborId : neighbors) {
+            if (neighborId >= 0) {
+                // Ищем владельца соседнего участка
+                for (var entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+                    if (entry.getValue().id == neighborId) {
+                        String ownerName = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+                        if (ownerName != null) {
+                            info.append(ownerName).append(", ");
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (info.length() > 0) {
+            return info.substring(0, info.length() - 2); // Убираем последнюю запятую
+        } else {
+            return "нет соседей";
+        }
     }
     
     private void showShop(Player player) {

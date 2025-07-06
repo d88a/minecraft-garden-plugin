@@ -51,4 +51,8 @@ public class ConfigManager {
     public int getStartZ() {
         return config.getInt("plots.start_z", 1000);
     }
+    
+    public int getPlotSpacing() {
+        return config.getInt("plots.spacing", 2);
+    }
 } 
