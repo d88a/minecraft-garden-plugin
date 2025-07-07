@@ -22,7 +22,7 @@ jobs:
       run: mvn clean package
       
     - name: Deploy to SFTP server
-      uses: appleboy/sftp-action@v0.1.4
+      uses: appleboy/sftp-action@master
       with:
         host: ${{ secrets.SFTP_SERVER }}
         username: ${{ secrets.SFTP_USERNAME }}
