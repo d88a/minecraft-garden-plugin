@@ -2,10 +2,13 @@ package com.minecraft.garden;
 
 import com.minecraft.garden.commands.GardenCommand;
 import com.minecraft.garden.listeners.PlayerListener;
+import com.minecraft.garden.listeners.GuiListener;
 import com.minecraft.garden.managers.ConfigManager;
 import com.minecraft.garden.managers.DataManager;
 import com.minecraft.garden.managers.EconomyManager;
 import com.minecraft.garden.managers.PlotManager;
+import com.minecraft.garden.managers.PlantManager;
+import com.minecraft.garden.managers.GuiManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GardenPlugin extends JavaPlugin {
@@ -15,6 +18,8 @@ public class GardenPlugin extends JavaPlugin {
     private DataManager dataManager;
     private EconomyManager economyManager;
     private PlotManager plotManager;
+    private PlantManager plantManager;
+    private GuiManager guiManager;
     
     @Override
     public void onEnable() {
@@ -29,6 +34,8 @@ public class GardenPlugin extends JavaPlugin {
             dataManager = new DataManager(this);
             economyManager = new EconomyManager(this);
             plotManager = new PlotManager(this);
+            plantManager = new PlantManager(this);
+            guiManager = new GuiManager(this);
             getLogger().info("✓ Менеджеры инициализированы");
             
             // Регистрация команд
@@ -44,6 +51,7 @@ public class GardenPlugin extends JavaPlugin {
             // Регистрация слушателей событий
             getLogger().info("Регистрация слушателей событий...");
             getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+            getServer().getPluginManager().registerEvents(new GuiListener(this), this);
             getLogger().info("✓ Слушатели событий зарегистрированы");
             
             getLogger().info("=== Плагин 'Вырасти сад' успешно загружен! ===");
@@ -56,17 +64,36 @@ public class GardenPlugin extends JavaPlugin {
         } catch (Exception e) {
             getLogger().severe("✗ КРИТИЧЕСКАЯ ОШИБКА при загрузке плагина: " + e.getMessage());
             e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
         }
     }
     
     @Override
     public void onDisable() {
-        // Сохранение данных при выключении
+        getLogger().info("=== Выгрузка плагина 'Вырасти сад' ===");
+        
+        // Сохраняем данные
         if (dataManager != null) {
-            dataManager.saveAllData();
+            dataManager.saveData();
+            getLogger().info("✓ Данные сохранены");
         }
         
-        getLogger().info("Плагин 'Вырасти сад' выключен!");
+        if (plotManager != null) {
+            plotManager.savePlots();
+            getLogger().info("✓ Участки сохранены");
+        }
+        
+        if (plantManager != null) {
+            plantManager.savePlantedCrops();
+            getLogger().info("✓ Растения сохранены");
+        }
+        
+        if (economyManager != null) {
+            economyManager.saveBalances();
+            getLogger().info("✓ Балансы сохранены");
+        }
+        
+        getLogger().info("=== Плагин 'Вырасти сад' выгружен! ===");
     }
     
     // Геттеры для менеджеров
@@ -88,5 +115,13 @@ public class GardenPlugin extends JavaPlugin {
     
     public PlotManager getPlotManager() {
         return plotManager;
+    }
+    
+    public PlantManager getPlantManager() {
+        return plantManager;
+    }
+    
+    public GuiManager getGuiManager() {
+        return guiManager;
     }
 } 

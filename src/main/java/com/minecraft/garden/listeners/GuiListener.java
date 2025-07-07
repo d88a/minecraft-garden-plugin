@@ -1,0 +1,479 @@
+package com.minecraft.garden.listeners;
+
+import com.minecraft.garden.GardenPlugin;
+import com.minecraft.garden.managers.GuiManager;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.ItemStack;
+
+public class GuiListener implements Listener {
+    
+    private final GardenPlugin plugin;
+    
+    public GuiListener(GardenPlugin plugin) {
+        this.plugin = plugin;
+    }
+    
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) {
+            return;
+        }
+        
+        Player player = (Player) event.getWhoClicked();
+        
+        // Проверяем, что это наш GUI
+        if (!plugin.getGuiManager().hasOpenGui(player)) {
+            return;
+        }
+        
+        // Отменяем стандартное взаимодействие
+        event.setCancelled(true);
+        
+        // Получаем информацию о клике
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+            return;
+        }
+        
+        // Обрабатываем клик в зависимости от типа GUI
+        GuiManager.GuiType guiType = plugin.getGuiManager().getOpenGui(player);
+        
+        switch (guiType) {
+            case MAIN_MENU:
+                handleMainMenuClick(player, clickedItem);
+                break;
+            case SHOP:
+                handleShopClick(player, clickedItem);
+                break;
+            case SELL_MENU:
+                handleSellMenuClick(player, clickedItem);
+                break;
+            case EXPAND_MENU:
+                handleExpandMenuClick(player, clickedItem);
+                break;
+        }
+    }
+    
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player)) {
+            return;
+        }
+        
+        Player player = (Player) event.getPlayer();
+        
+        // Удаляем запись об открытом GUI
+        if (plugin.getGuiManager().hasOpenGui(player)) {
+            plugin.getGuiManager().closeGui(player);
+        }
+    }
+    
+    private void handleMainMenuClick(Player player, ItemStack clickedItem) {
+        Material material = clickedItem.getType();
+        
+        switch (material) {
+            case GRASS_BLOCK:
+                if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+                    // Показываем информацию об участке
+                    showPlotInfo(player);
+                } else {
+                    // Создаем участок
+                    createPlot(player);
+                }
+                break;
+                
+            case ENDER_PEARL:
+                if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+                    teleportToPlot(player);
+                }
+                break;
+                
+            case BARRIER:
+                if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+                    deletePlot(player);
+                }
+                break;
+                
+            case WHEAT_SEEDS:
+                plugin.getGuiManager().openShop(player);
+                break;
+                
+            case GOLD_INGOT:
+                plugin.getGuiManager().openSellMenu(player);
+                break;
+                
+            case IRON_AXE:
+                plugin.getGuiManager().openExpandMenu(player);
+                break;
+                
+            case BOOK:
+                showHelp(player);
+                break;
+                
+            case EMERALD:
+                // Обновляем баланс
+                plugin.getGuiManager().openMainMenu(player);
+                break;
+        }
+    }
+    
+    private void handleShopClick(Player player, ItemStack clickedItem) {
+        Material material = clickedItem.getType();
+        
+        switch (material) {
+            case WHEAT_SEEDS:
+                buySeeds(player, "wheat", 1);
+                break;
+                
+            case CARROT:
+                buySeeds(player, "carrot", 1);
+                break;
+                
+            case POTATO:
+                buySeeds(player, "potato", 1);
+                break;
+                
+            case BEETROOT_SEEDS:
+                buySeeds(player, "beetroot", 1);
+                break;
+                
+            case PUMPKIN_SEEDS:
+                buySeeds(player, "pumpkin", 1);
+                break;
+                
+            case MELON_SEEDS:
+                buySeeds(player, "melon", 1);
+                break;
+                
+            case ARROW:
+                plugin.getGuiManager().openMainMenu(player);
+                break;
+                
+            case EMERALD:
+                // Обновляем баланс
+                plugin.getGuiManager().openShop(player);
+                break;
+        }
+    }
+    
+    private void handleSellMenuClick(Player player, ItemStack clickedItem) {
+        Material material = clickedItem.getType();
+        
+        switch (material) {
+            case WHEAT:
+                sellCrops(player, "wheat", 1);
+                break;
+                
+            case CARROT:
+                sellCrops(player, "carrot", 1);
+                break;
+                
+            case POTATO:
+                sellCrops(player, "potato", 1);
+                break;
+                
+            case BEETROOT:
+                sellCrops(player, "beetroot", 1);
+                break;
+                
+            case PUMPKIN:
+                sellCrops(player, "pumpkin", 1);
+                break;
+                
+            case MELON:
+                sellCrops(player, "melon", 1);
+                break;
+                
+            case HOPPER:
+                sellAllCrops(player);
+                break;
+                
+            case ARROW:
+                plugin.getGuiManager().openMainMenu(player);
+                break;
+                
+            case EMERALD:
+                // Обновляем баланс
+                plugin.getGuiManager().openSellMenu(player);
+                break;
+        }
+    }
+    
+    private void handleExpandMenuClick(Player player, ItemStack clickedItem) {
+        Material material = clickedItem.getType();
+        
+        switch (material) {
+            case ARROW:
+                plugin.getGuiManager().openMainMenu(player);
+                break;
+        }
+    }
+    
+    // Методы из GardenCommand (копируем для удобства)
+    private void showPlotInfo(Player player) {
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка! Используйте §6/garden create §cдля получения участка.");
+            return;
+        }
+        
+        var plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        player.sendMessage("§6=== Ваш участок ===");
+        player.sendMessage("§e" + plot.getPlotInfo());
+        player.sendMessage("§eКоординаты: §7" + plot.getCoordinates());
+        player.sendMessage("§eТелепорт: §6/garden tp");
+    }
+    
+    private void createPlot(Player player) {
+        if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас уже есть участок!");
+            return;
+        }
+        
+        var plot = plugin.getPlotManager().createPlot(player.getUniqueId());
+        if (plot != null) {
+            player.sendMessage("§aУчасток успешно создан!");
+            player.sendMessage("§e" + plot.getPlotInfo());
+            player.sendMessage("§eКоординаты: §7" + plot.getCoordinates());
+            player.sendMessage("§eТелепорт: §6/garden tp");
+        } else {
+            player.sendMessage("§cОшибка при создании участка!");
+        }
+    }
+    
+    private void teleportToPlot(Player player) {
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка! Используйте §6/garden create §cдля получения участка.");
+            return;
+        }
+        
+        var plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        if (plot == null) {
+            player.sendMessage("§cОшибка: данные участка не найдены!");
+            return;
+        }
+        
+        String worldName = plugin.getConfigManager().getWorldName();
+        var world = plugin.getServer().getWorld(worldName);
+        
+        if (world == null) {
+            player.sendMessage("§cОшибка: мир '" + worldName + "' не найден!");
+            return;
+        }
+        
+        var teleportLocation = plot.getTeleportLocation(world);
+        
+        try {
+            player.teleport(teleportLocation);
+            player.sendMessage("§aТелепорт на участок выполнен!");
+            player.sendMessage("§eКоординаты участка: §7" + plot.getCoordinates());
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка при телепортации: " + e.getMessage());
+        }
+    }
+    
+    private void deletePlot(Player player) {
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка для удаления!");
+            return;
+        }
+        
+        var plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        boolean success = plugin.getPlotManager().deletePlot(player.getUniqueId());
+        
+        if (success) {
+            player.sendMessage("§aУчасток успешно удален!");
+            player.sendMessage("§eУдаленный участок: §7ID " + plot.id + ", " + plot.getCoordinates());
+        } else {
+            player.sendMessage("§cОшибка при удалении участка!");
+        }
+    }
+    
+    private void showHelp(Player player) {
+        player.sendMessage("§6=== Справка по командам ===");
+        player.sendMessage("§e/garden §7- Главное меню");
+        player.sendMessage("§e/garden create §7- Получить участок");
+        player.sendMessage("§e/garden plot §7- Информация об участке");
+        player.sendMessage("§e/garden tp §7- Телепорт на участок");
+        player.sendMessage("§c/garden delete §7- Удалить участок");
+        player.sendMessage("§e/garden shop §7- Магазин семян");
+        player.sendMessage("§e/garden sell §7- Продажа урожая");
+        player.sendMessage("§e/garden help §7- Эта справка");
+    }
+    
+    private void buySeeds(Player player, String seedName, int amount) {
+        Material seedType = getSeedMaterial(seedName);
+        if (seedType == null) {
+            player.sendMessage("§cНеизвестное семя: " + seedName);
+            return;
+        }
+        
+        int price = plugin.getConfigManager().getSeedPrice(seedName);
+        int totalCost = price * amount;
+        
+        if (!plugin.getEconomyManager().hasMoney(player, totalCost)) {
+            player.sendMessage("§cНедостаточно денег! Нужно: §e" + totalCost + " §cрублей");
+            return;
+        }
+        
+        plugin.getEconomyManager().withdrawMoney(player, totalCost);
+        player.getInventory().addItem(new ItemStack(seedType, amount));
+        
+        player.sendMessage("§aПокупка успешна! Получено: §e" + amount + "x " + getSeedDisplayName(seedName));
+        
+        // Обновляем GUI
+        plugin.getGuiManager().openShop(player);
+    }
+    
+    private void sellCrops(Player player, String cropName, int amount) {
+        Material cropType = getCropMaterial(cropName);
+        if (cropType == null) {
+            player.sendMessage("§cНеизвестный урожай: " + cropName);
+            return;
+        }
+        
+        int playerAmount = getPlayerCropAmount(player, cropType);
+        if (playerAmount < amount) {
+            player.sendMessage("§cУ вас недостаточно урожая! Есть: §e" + playerAmount + "x " + getCropDisplayName(cropName));
+            return;
+        }
+        
+        int price = plugin.getConfigManager().getCropPrice(cropName);
+        int totalEarnings = price * amount;
+        
+        removeCropsFromInventory(player, cropType, amount);
+        plugin.getEconomyManager().addMoney(player, totalEarnings);
+        
+        player.sendMessage("§aПродажа успешна! Продано: §e" + amount + "x " + getCropDisplayName(cropName));
+        
+        // Обновляем GUI
+        plugin.getGuiManager().openSellMenu(player);
+    }
+    
+    private void sellAllCrops(Player player) {
+        int totalEarnings = 0;
+        int totalSold = 0;
+        
+        Material[] cropTypes = {
+            Material.WHEAT, Material.CARROT, Material.POTATO, 
+            Material.BEETROOT, Material.PUMPKIN, Material.MELON
+        };
+        
+        for (Material cropType : cropTypes) {
+            int playerAmount = getPlayerCropAmount(player, cropType);
+            if (playerAmount > 0) {
+                String cropName = getCropName(cropType);
+                int price = plugin.getConfigManager().getCropPrice(cropName);
+                int earnings = price * playerAmount;
+                
+                totalEarnings += earnings;
+                totalSold += playerAmount;
+                
+                removeCropsFromInventory(player, cropType, playerAmount);
+                player.sendMessage("§eПродано §7" + playerAmount + "x " + getCropDisplayName(cropName) + " §eза §7" + earnings + " §eрублей");
+            }
+        }
+        
+        if (totalSold > 0) {
+            plugin.getEconomyManager().addMoney(player, totalEarnings);
+            player.sendMessage("§aПродажа завершена! Общий заработок: §7" + totalEarnings + " §eрублей");
+        } else {
+            player.sendMessage("§cУ вас нет урожая для продажи!");
+        }
+        
+        // Обновляем GUI
+        plugin.getGuiManager().openSellMenu(player);
+    }
+    
+    // Вспомогательные методы
+    private Material getSeedMaterial(String seedName) {
+        switch (seedName.toLowerCase()) {
+            case "wheat": return Material.WHEAT_SEEDS;
+            case "carrot": return Material.CARROT;
+            case "potato": return Material.POTATO;
+            case "beetroot": return Material.BEETROOT_SEEDS;
+            case "pumpkin": return Material.PUMPKIN_SEEDS;
+            case "melon": return Material.MELON_SEEDS;
+            default: return null;
+        }
+    }
+    
+    private String getSeedDisplayName(String seedName) {
+        switch (seedName.toLowerCase()) {
+            case "wheat": return "Семена пшеницы";
+            case "carrot": return "Морковь";
+            case "potato": return "Картофель";
+            case "beetroot": return "Семена свеклы";
+            case "pumpkin": return "Семена тыквы";
+            case "melon": return "Семена арбуза";
+            default: return seedName;
+        }
+    }
+    
+    private Material getCropMaterial(String cropName) {
+        switch (cropName.toLowerCase()) {
+            case "wheat": return Material.WHEAT;
+            case "carrot": return Material.CARROT;
+            case "potato": return Material.POTATO;
+            case "beetroot": return Material.BEETROOT;
+            case "pumpkin": return Material.PUMPKIN;
+            case "melon": return Material.MELON;
+            default: return null;
+        }
+    }
+    
+    private String getCropName(Material cropType) {
+        switch (cropType) {
+            case WHEAT: return "wheat";
+            case CARROT: return "carrot";
+            case POTATO: return "potato";
+            case BEETROOT: return "beetroot";
+            case PUMPKIN: return "pumpkin";
+            case MELON: return "melon";
+            default: return cropType.name().toLowerCase();
+        }
+    }
+    
+    private String getCropDisplayName(String cropName) {
+        switch (cropName.toLowerCase()) {
+            case "wheat": return "Пшеница";
+            case "carrot": return "Морковь";
+            case "potato": return "Картофель";
+            case "beetroot": return "Свекла";
+            case "pumpkin": return "Тыква";
+            case "melon": return "Арбуз";
+            default: return cropName;
+        }
+    }
+    
+    private int getPlayerCropAmount(Player player, Material cropType) {
+        int total = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == cropType) {
+                total += item.getAmount();
+            }
+        }
+        return total;
+    }
+    
+    private void removeCropsFromInventory(Player player, Material cropType, int amount) {
+        int remaining = amount;
+        
+        for (int i = 0; i < player.getInventory().getSize() && remaining > 0; i++) {
+            ItemStack item = player.getInventory().getItem(i);
+            if (item != null && item.getType() == cropType) {
+                if (item.getAmount() <= remaining) {
+                    remaining -= item.getAmount();
+                    player.getInventory().setItem(i, null);
+                } else {
+                    item.setAmount(item.getAmount() - remaining);
+                    remaining = 0;
+                }
+            }
+        }
+    }
+} 

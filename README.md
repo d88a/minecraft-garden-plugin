@@ -77,9 +77,16 @@ mvn clean compile
 
 ### Тестирование
 
+Для тестирования используйте файлы в папке `testing/`:
+
 ```bash
-mvn test
+cd testing
+.\build-simple.bat
 ```
+
+Подробные инструкции по тестированию:
+- `testing/QUICK_TEST.md` - быстрое тестирование
+- `testing/TESTING_GUIDE.md` - подробное руководство
 
 ## Лицензия
 

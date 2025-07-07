@@ -83,4 +83,30 @@ public class ConfigManager {
     public int getPlotSpacing() {
         return config.getInt("plots.spacing", 2);
     }
+    
+    // Методы для растений
+    public int getCropGrowthTime(String cropName) {
+        return config.getInt("plants." + cropName + ".growth_time", 60);
+    }
+    
+    public int getCropStages(String cropName) {
+        return config.getInt("plants." + cropName + ".stages", 8);
+    }
+    
+    // Методы для экономики
+    public int getSeedPrice(String seedName) {
+        return config.getInt("economy.seed_prices." + seedName, 5);
+    }
+    
+    public int getCropPrice(String cropName) {
+        return config.getInt("economy.crop_prices." + cropName, 10);
+    }
+    
+    public int getPlotExpansionCost() {
+        return config.getInt("economy.plot_expansion_cost", 1);
+    }
+    
+    public int getAutoWateringCost() {
+        return config.getInt("economy.auto_watering_cost", 5);
+    }
 } 

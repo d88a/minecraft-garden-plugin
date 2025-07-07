@@ -9,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.Material;
 
 public class GardenCommand implements CommandExecutor {
     
@@ -51,8 +52,27 @@ public class GardenCommand implements CommandExecutor {
             case "shop":
                 showShop(player);
                 break;
+            case "buy":
+                if (args.length < 3) {
+                    player.sendMessage("§cИспользование: /garden buy <семя> <количество>");
+                    player.sendMessage("§eПример: /garden buy wheat 5");
+                    return true;
+                }
+                buySeeds(player, args[1], args[2]);
+                break;
             case "sell":
-                showSellMenu(player);
+                if (args.length < 2) {
+                    showSellMenu(player);
+                    return true;
+                }
+                if (args[1].equalsIgnoreCase("all")) {
+                    sellAllCrops(player);
+                } else if (args.length >= 3) {
+                    sellCrops(player, args[1], args[2]);
+                } else {
+                    player.sendMessage("§cИспользование: /garden sell <урожай> <количество>");
+                    player.sendMessage("§eИли: /garden sell all");
+                }
                 break;
             case "invite":
                 if (args.length < 2) {
@@ -76,25 +96,8 @@ public class GardenCommand implements CommandExecutor {
     }
     
     private void showMainMenu(Player player) {
-        player.sendMessage("§6=== Меню сада ===");
-        
-        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
-            player.sendMessage("§e/garden create §7- Получить участок");
-        } else {
-            player.sendMessage("§e/garden plot §7- Информация об участке");
-            player.sendMessage("§e/garden tp §7- Телепорт на участок");
-            player.sendMessage("§c/garden delete §7- Удалить участок");
-        }
-        
-        player.sendMessage("§e/garden shop §7- Магазин семян");
-        player.sendMessage("§e/garden sell §7- Продажа урожая");
-        player.sendMessage("§e/garden invite <игрок> §7- Пригласить игрока");
-        player.sendMessage("§e/garden expand §7- Расширить участок");
-        player.sendMessage("§e/garden help §7- Справка");
-        
-        // Показываем баланс
-        int balance = plugin.getEconomyManager().getBalance(player);
-        player.sendMessage("§aВаш баланс: §e" + balance + " §aрублей");
+        // Открываем графический интерфейс вместо текстового меню
+        plugin.getGuiManager().openMainMenu(player);
     }
     
     private void createPlot(Player player) {
@@ -156,9 +159,9 @@ public class GardenCommand implements CommandExecutor {
         
         try {
             player.teleport(safeLocation);
-            player.sendMessage("§aТелепорт на участок выполнен!");
-            player.sendMessage("§eКоординаты участка: §7" + plot.getCoordinates());
-            player.sendMessage("§eРазмер: §7" + plot.size + "x" + plot.size);
+        player.sendMessage("§aТелепорт на участок выполнен!");
+        player.sendMessage("§eКоординаты участка: §7" + plot.getCoordinates());
+        player.sendMessage("§eРазмер: §7" + plot.size + "x" + plot.size);
             player.sendMessage("§eТелепорт: §7X=" + (int)safeLocation.getX() + " Y=" + (int)safeLocation.getY() + " Z=" + (int)safeLocation.getZ());
         } catch (Exception e) {
             player.sendMessage("§cОшибка при телепортации: " + e.getMessage());
@@ -301,19 +304,84 @@ public class GardenCommand implements CommandExecutor {
     }
     
     private void showShop(Player player) {
-        player.sendMessage("§6=== Магазин семян ===");
-        player.sendMessage("§eПшеница: §72 рубля");
-        player.sendMessage("§eМорковь: §73 рубля");
-        player.sendMessage("§eКартофель: §73 рубля");
-        player.sendMessage("§eСвекла: §72 рубля");
-        player.sendMessage("§eТыква: §75 рублей");
-        player.sendMessage("§eАрбуз: §75 рублей");
-        player.sendMessage("§cМагазин пока не работает!");
+        // Открываем графический интерфейс магазина
+        plugin.getGuiManager().openShop(player);
+    }
+    
+    private void buySeeds(Player player, String seedName, String amountStr) {
+        // Проверяем количество
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if (amount <= 0 || amount > 64) {
+                player.sendMessage("§cКоличество должно быть от 1 до 64!");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cНеверное количество!");
+            return;
+        }
+        
+        // Определяем тип семени
+        Material seedType = getSeedMaterial(seedName);
+        if (seedType == null) {
+            player.sendMessage("§cНеизвестное семя: " + seedName);
+            player.sendMessage("§eДоступные семена: wheat, carrot, potato, beetroot, pumpkin, melon");
+            return;
+        }
+        
+        // Получаем цену
+        int price = plugin.getConfigManager().getSeedPrice(seedName);
+        int totalCost = price * amount;
+        
+        // Проверяем баланс
+        if (!plugin.getEconomyManager().hasMoney(player, totalCost)) {
+            player.sendMessage("§cНедостаточно денег! Нужно: §e" + totalCost + " §cрублей");
+            return;
+        }
+        
+        // Списываем деньги
+        plugin.getEconomyManager().withdrawMoney(player, totalCost);
+        
+        // Даем семена
+        player.getInventory().addItem(new org.bukkit.inventory.ItemStack(seedType, amount));
+        
+        player.sendMessage("§aПокупка успешна!");
+        player.sendMessage("§eПолучено: §7" + amount + "x " + getSeedDisplayName(seedName));
+        player.sendMessage("§eСтоимость: §7" + totalCost + " рублей");
+        
+        // Обновляем баланс
+        int newBalance = plugin.getEconomyManager().getBalance(player);
+        player.sendMessage("§aНовый баланс: §e" + newBalance + " §aрублей");
+    }
+    
+    private Material getSeedMaterial(String seedName) {
+        switch (seedName.toLowerCase()) {
+            case "wheat": return Material.WHEAT_SEEDS;
+            case "carrot": return Material.CARROT;
+            case "potato": return Material.POTATO;
+            case "beetroot": return Material.BEETROOT_SEEDS;
+            case "pumpkin": return Material.PUMPKIN_SEEDS;
+            case "melon": return Material.MELON_SEEDS;
+            default: return null;
+        }
+    }
+    
+    private String getSeedDisplayName(String seedName) {
+        switch (seedName.toLowerCase()) {
+            case "wheat": return "Семена пшеницы";
+            case "carrot": return "Морковь";
+            case "potato": return "Картофель";
+            case "beetroot": return "Семена свеклы";
+            case "pumpkin": return "Семена тыквы";
+            case "melon": return "Семена арбуза";
+            default: return seedName;
+        }
     }
     
     private void showSellMenu(Player player) {
-        player.sendMessage("§6=== Продажа урожая ===");
-        player.sendMessage("§cФункция продажи пока не реализована!");
+        // Открываем графический интерфейс продажи
+        plugin.getGuiManager().openSellMenu(player);
     }
     
     private void invitePlayer(Player player, String targetName) {
@@ -321,8 +389,8 @@ public class GardenCommand implements CommandExecutor {
     }
     
     private void showExpandMenu(Player player) {
-        player.sendMessage("§6=== Расширение участка ===");
-        player.sendMessage("§cФункция расширения пока не реализована!");
+        // Открываем графический интерфейс расширения
+        plugin.getGuiManager().openExpandMenu(player);
     }
     
     private void showHelp(Player player) {
@@ -333,9 +401,172 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e/garden tp §7- Телепорт на участок");
         player.sendMessage("§c/garden delete §7- Удалить участок");
         player.sendMessage("§e/garden shop §7- Магазин семян");
+        player.sendMessage("§e/garden buy <семя> <количество> §7- Купить семена");
         player.sendMessage("§e/garden sell §7- Продажа урожая");
         player.sendMessage("§e/garden invite <игрок> §7- Пригласить игрока");
         player.sendMessage("§e/garden expand §7- Расширить участок");
         player.sendMessage("§e/garden help §7- Эта справка");
+        player.sendMessage("§7");
+        player.sendMessage("§6=== Игровой процесс ===");
+        player.sendMessage("§e1. Создайте участок: §6/garden create");
+        player.sendMessage("§e2. Купите семена: §6/garden shop");
+        player.sendMessage("§e3. Посадите семена на участке");
+        player.sendMessage("§e4. Дождитесь созревания");
+        player.sendMessage("§e5. Соберите урожай правым кликом");
+        player.sendMessage("§e6. Продайте урожай: §6/garden sell");
+    }
+    
+    private void sellCrops(Player player, String cropName, String amountStr) {
+        // Проверяем количество
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if (amount <= 0) {
+                player.sendMessage("§cКоличество должно быть больше 0!");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cНеверное количество!");
+            return;
+        }
+        
+        // Определяем тип урожая
+        Material cropType = getCropMaterial(cropName);
+        if (cropType == null) {
+            player.sendMessage("§cНеизвестный урожай: " + cropName);
+            player.sendMessage("§eДоступные урожаи: wheat, carrot, potato, beetroot, pumpkin, melon");
+            return;
+        }
+        
+        // Проверяем, есть ли у игрока нужное количество
+        int playerAmount = getPlayerCropAmount(player, cropType);
+        if (playerAmount < amount) {
+            player.sendMessage("§cУ вас недостаточно урожая! Есть: §e" + playerAmount + "x " + getCropDisplayName(cropName));
+            return;
+        }
+        
+        // Получаем цену
+        int price = plugin.getConfigManager().getCropPrice(cropName);
+        int totalEarnings = price * amount;
+        
+        // Убираем урожай из инвентаря
+        removeCropsFromInventory(player, cropType, amount);
+        
+        // Даем деньги
+        plugin.getEconomyManager().addMoney(player, totalEarnings);
+        
+        player.sendMessage("§aПродажа успешна!");
+        player.sendMessage("§eПродано: §7" + amount + "x " + getCropDisplayName(cropName));
+        player.sendMessage("§eЗаработано: §7" + totalEarnings + " рублей");
+        
+        // Обновляем баланс
+        int newBalance = plugin.getEconomyManager().getBalance(player);
+        player.sendMessage("§aНовый баланс: §e" + newBalance + " §aрублей");
+    }
+    
+    private void sellAllCrops(Player player) {
+        int totalEarnings = 0;
+        int totalSold = 0;
+        
+        // Проверяем все типы урожая
+        Material[] cropTypes = {
+            Material.WHEAT, Material.CARROT, Material.POTATO, 
+            Material.BEETROOT, Material.PUMPKIN, Material.MELON
+        };
+        
+        for (Material cropType : cropTypes) {
+            int playerAmount = getPlayerCropAmount(player, cropType);
+            if (playerAmount > 0) {
+                String cropName = getCropName(cropType);
+                int price = plugin.getConfigManager().getCropPrice(cropName);
+                int earnings = price * playerAmount;
+                
+                totalEarnings += earnings;
+                totalSold += playerAmount;
+                
+                // Убираем урожай из инвентаря
+                removeCropsFromInventory(player, cropType, playerAmount);
+                
+                player.sendMessage("§eПродано §7" + playerAmount + "x " + getCropDisplayName(cropName) + " §eза §7" + earnings + " §eрублей");
+            }
+        }
+        
+        if (totalSold > 0) {
+            // Даем деньги
+            plugin.getEconomyManager().addMoney(player, totalEarnings);
+            
+            player.sendMessage("§aПродажа завершена!");
+            player.sendMessage("§eВсего продано: §7" + totalSold + " §eпредметов");
+            player.sendMessage("§eОбщий заработок: §7" + totalEarnings + " §eрублей");
+            
+            // Обновляем баланс
+            int newBalance = plugin.getEconomyManager().getBalance(player);
+            player.sendMessage("§aНовый баланс: §e" + newBalance + " §aрублей");
+        } else {
+            player.sendMessage("§cУ вас нет урожая для продажи!");
+        }
+    }
+    
+    private Material getCropMaterial(String cropName) {
+        switch (cropName.toLowerCase()) {
+            case "wheat": return Material.WHEAT;
+            case "carrot": return Material.CARROT;
+            case "potato": return Material.POTATO;
+            case "beetroot": return Material.BEETROOT;
+            case "pumpkin": return Material.PUMPKIN;
+            case "melon": return Material.MELON;
+            default: return null;
+        }
+    }
+    
+    private String getCropName(Material cropType) {
+        switch (cropType) {
+            case WHEAT: return "wheat";
+            case CARROT: return "carrot";
+            case POTATO: return "potato";
+            case BEETROOT: return "beetroot";
+            case PUMPKIN: return "pumpkin";
+            case MELON: return "melon";
+            default: return cropType.name().toLowerCase();
+        }
+    }
+    
+    private String getCropDisplayName(String cropName) {
+        switch (cropName.toLowerCase()) {
+            case "wheat": return "Пшеница";
+            case "carrot": return "Морковь";
+            case "potato": return "Картофель";
+            case "beetroot": return "Свекла";
+            case "pumpkin": return "Тыква";
+            case "melon": return "Арбуз";
+            default: return cropName;
+        }
+    }
+    
+    private int getPlayerCropAmount(Player player, Material cropType) {
+        int total = 0;
+        for (org.bukkit.inventory.ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == cropType) {
+                total += item.getAmount();
+            }
+        }
+        return total;
+    }
+    
+    private void removeCropsFromInventory(Player player, Material cropType, int amount) {
+        int remaining = amount;
+        
+        for (int i = 0; i < player.getInventory().getSize() && remaining > 0; i++) {
+            org.bukkit.inventory.ItemStack item = player.getInventory().getItem(i);
+            if (item != null && item.getType() == cropType) {
+                if (item.getAmount() <= remaining) {
+                    remaining -= item.getAmount();
+                    player.getInventory().setItem(i, null);
+                } else {
+                    item.setAmount(item.getAmount() - remaining);
+                    remaining = 0;
+                }
+            }
+        }
     }
 } 
