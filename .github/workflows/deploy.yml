@@ -12,10 +12,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up JDK 17
+    - name: Set up JDK 22
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '22'
         distribution: 'temurin'
         
     - name: Build with Maven
@@ -24,12 +24,14 @@ jobs:
     - name: Deploy to SFTP server
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
-        server: e1.aurorix.net
-        username: d88a.51844846
+        server: ${{ secrets.SFTP_SERVER }}
+        username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
         port: 2022
         local-dir: ./target/
-        server-dir: ./plugins/
+        server-dir: ./root/aurorix/plugins/
+        include: |
+          *.jar
         exclude: |
           **/.git*
           **/.git*/**
