@@ -22,11 +22,13 @@ jobs:
       run: mvn clean package
       
     - name: Deploy to SFTP server
-      uses: appleboy/sftp-action@master
+      uses: cross-the-world/scp-pipeline@v1.1.0
       with:
         host: ${{ secrets.SFTP_SERVER }}
-        username: ${{ secrets.SFTP_USERNAME }}
-        password: ${{ secrets.SFTP_PASSWORD }}
         port: 2022
-        source: "./target/*.jar"
-        target: "/root/aurorix/plugins/" 
+        user: ${{ secrets.SFTP_USERNAME }}
+        pass: ${{ secrets.SFTP_PASSWORD }}
+        connect_timeout: 10s
+        local: "./target/*.jar"
+        remote: "/root/aurorix/plugins/"
+        sftp_only: true 
