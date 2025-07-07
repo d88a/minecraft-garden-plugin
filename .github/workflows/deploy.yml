@@ -28,6 +28,7 @@ jobs:
         username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
         port: 2022
+        protocol: sftp
         local-dir: ./target/
         server-dir: ./root/aurorix/plugins/
         exclude: |
