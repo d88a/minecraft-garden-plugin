@@ -30,8 +30,6 @@ jobs:
         port: 2022
         local-dir: ./target/
         server-dir: ./root/aurorix/plugins/
-        include: |
-          *.jar
         exclude: |
           **/.git*
           **/.git*/**
