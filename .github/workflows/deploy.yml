@@ -22,15 +22,14 @@ jobs:
       run: mvn clean package
       
     - name: Deploy to SFTP server
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      uses: appleboy/scp-action@v0.1.7
       with:
-        server: ${{ secrets.SFTP_SERVER }}
+        host: ${{ secrets.SFTP_SERVER }}
         username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
         port: 2022
-        protocol: sftp
-        local-dir: ./target/
-        server-dir: ./root/aurorix/plugins/
+        source: "./target/*.jar"
+        target: "/root/aurorix/plugins/"
         exclude: |
           **/.git*
           **/.git*/**
