@@ -179,16 +179,10 @@ public class PlantManager {
             player.sendMessage("§eМесто посадки: " + targetBlock.getType());
             player.sendMessage("§eКоординаты: X=" + location.getBlockX() + " Y=" + location.getBlockY() + " Z=" + location.getBlockZ());
             
-            // Проверяем, находится ли место на участке
-            boolean isOnPlot = false;
-            for (Map.Entry<UUID, PlotManager.PlotData> entry : plugin.getPlotManager().getAllPlots().entrySet()) {
-                if (entry.getValue().isInPlot(location)) {
-                    isOnPlot = true;
-                    player.sendMessage("§eМесто находится на участке игрока: " + plugin.getServer().getOfflinePlayer(entry.getKey()).getName());
-                    break;
-                }
-            }
-            if (!isOnPlot) {
+            // Проверяем, находится ли место на участке (используем уже определенную переменную isOnPlot)
+            if (isOnPlot) {
+                player.sendMessage("§eМесто находится на участке игрока: " + plugin.getServer().getOfflinePlayer(plotOwner).getName());
+            } else {
                 player.sendMessage("§eМесто НЕ находится на участке!");
             }
             

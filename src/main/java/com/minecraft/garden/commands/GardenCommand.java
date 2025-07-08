@@ -12,6 +12,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.block.Block;
+import org.bukkit.inventory.meta.ItemMeta;
+import java.util.Arrays;
 
 public class GardenCommand implements CommandExecutor {
     
@@ -95,6 +97,13 @@ public class GardenCommand implements CommandExecutor {
                 break;
             case "debug":
                 debugSystem(player);
+                break;
+            case "custom":
+                if (args.length < 2) {
+                    showCustomPlantsHelp(player);
+                    return true;
+                }
+                handleCustomPlantsCommand(player, args);
                 break;
             case "help":
                 showHelp(player);
@@ -451,6 +460,7 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e/garden till §7- Вспахать землю на участке");
         player.sendMessage("§e/garden test §7- Тестовая команда");
         player.sendMessage("§e/garden debug §7- Отладка системы");
+        player.sendMessage("§e/garden custom §7- Кастомные растения");
         player.sendMessage("§e/garden help §7- Эта справка");
         player.sendMessage("§7");
         player.sendMessage("§6=== Игровой процесс ===");
@@ -460,6 +470,12 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e4. Дождитесь созревания");
         player.sendMessage("§e5. Соберите урожай правым кликом");
         player.sendMessage("§e6. Продайте урожай: §6/garden sell");
+        player.sendMessage("§7");
+        player.sendMessage("§6=== Кастомные растения ===");
+        player.sendMessage("§e/garden custom list §7- Список кастомных растений");
+        player.sendMessage("§e/garden custom give <растение> <количество> §7- Выдать семена");
+        player.sendMessage("§e/garden custom plant <растение> §7- Посадить растение");
+        player.sendMessage("§e/garden custom info <растение> §7- Информация о растении");
     }
     
     private void sellCrops(Player player, String cropName, String amountStr) {
@@ -809,5 +825,279 @@ public class GardenCommand implements CommandExecutor {
         plugin.getPlotManager().tillPlot(player.getUniqueId(), tillLocation);
         player.sendMessage("§aУчасток вспахан!");
         player.sendMessage("§eКоординаты вспаханного участка: §7" + tillLocation.getBlockX() + ", " + tillLocation.getBlockY() + ", " + tillLocation.getBlockZ());
+    }
+
+    private void showCustomPlantsHelp(Player player) {
+        player.sendMessage("§6=== Кастомные растения ===");
+        player.sendMessage("§e/garden custom list §7- Список кастомных растений");
+        player.sendMessage("§e/garden custom give <растение> <количество> §7- Выдать семена");
+        player.sendMessage("§e/garden custom plant <растение> §7- Посадить растение");
+        player.sendMessage("§e/garden custom info <растение> §7- Информация о растении");
+        player.sendMessage("§7");
+        player.sendMessage("§6=== Доступные растения ===");
+        player.sendMessage("§e• golden_tree §7- Золотое дерево");
+        player.sendMessage("§e• crystal_rose §7- Кристальная роза");
+        player.sendMessage("§e• fire_pumpkin §7- Огненная тыква");
+        player.sendMessage("§e• ice_berry §7- Ледяная ягода");
+        player.sendMessage("§e• electric_wheat §7- Электрическая пшеница");
+        player.sendMessage("§e• rainbow_flower §7- Радужный цветок");
+    }
+
+    private void handleCustomPlantsCommand(Player player, String[] args) {
+        switch (args[1].toLowerCase()) {
+            case "list":
+                showCustomPlantsList(player);
+                break;
+            case "give":
+                if (args.length < 4) {
+                    player.sendMessage("§cИспользование: /garden custom give <растение> <количество>");
+                    return;
+                }
+                giveCustomSeeds(player, args[2], args[3]);
+                break;
+            case "plant":
+                if (args.length < 3) {
+                    player.sendMessage("§cИспользование: /garden custom plant <растение>");
+                    return;
+                }
+                plantCustomSeed(player, args[2]);
+                break;
+            case "info":
+                if (args.length < 3) {
+                    player.sendMessage("§cИспользование: /garden custom info <растение>");
+                    return;
+                }
+                showCustomPlantInfo(player, args[2]);
+                break;
+            default:
+                player.sendMessage("§cНеизвестная команда. Используйте /garden custom для справки.");
+                break;
+        }
+    }
+
+    private void showCustomPlantsList(Player player) {
+        player.sendMessage("§6=== Кастомные растения ===");
+        
+        // Здесь нужно будет получить список из CustomPlantManager
+        String[] plants = {
+            "🌳 Золотое дерево (golden_tree) - 50 рублей",
+            "💎 Кристальная роза (crystal_rose) - 35 рублей", 
+            "🔥 Огненная тыква (fire_pumpkin) - 40 рублей",
+            "❄️ Ледяная ягода (ice_berry) - 25 рублей",
+            "⚡ Электрическая пшеница (electric_wheat) - 30 рублей",
+            "🌈 Радужный цветок (rainbow_flower) - 60 рублей"
+        };
+        
+        for (String plant : plants) {
+            player.sendMessage("§e" + plant);
+        }
+        
+        player.sendMessage("§7");
+        player.sendMessage("§eИспользуйте: §6/garden custom give <растение> <количество>");
+    }
+
+    private void giveCustomSeeds(Player player, String plantId, String amountStr) {
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if (amount <= 0 || amount > 64) {
+                player.sendMessage("§cКоличество должно быть от 1 до 64!");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cНеверное количество!");
+            return;
+        }
+        
+        // Здесь нужно будет получить растение из CustomPlantManager
+        String plantName = getCustomPlantName(plantId);
+        if (plantName == null) {
+            player.sendMessage("§cНеизвестное растение: " + plantId);
+            player.sendMessage("§eИспользуйте: §6/garden custom list");
+            return;
+        }
+        
+        // Создаем кастомные семена
+        ItemStack customSeed = createCustomSeed(plantId);
+        if (customSeed == null) {
+            player.sendMessage("§cОшибка создания семян!");
+            return;
+        }
+        
+        customSeed.setAmount(amount);
+        player.getInventory().addItem(customSeed);
+        
+        player.sendMessage("§aВыдано кастомных семян!");
+        player.sendMessage("§eПолучено: §7" + amount + "x " + plantName);
+    }
+
+    private void plantCustomSeed(Player player, String plantId) {
+        String plantName = getCustomPlantName(plantId);
+        if (plantName == null) {
+            player.sendMessage("§cНеизвестное растение: " + plantId);
+            return;
+        }
+        
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка! Используйте §6/garden create");
+            return;
+        }
+        
+        // Проверяем, есть ли у игрока семена
+        ItemStack seed = findCustomSeedInInventory(player, plantId);
+        if (seed == null) {
+            player.sendMessage("§cУ вас нет семян " + plantName + "!");
+            return;
+        }
+        
+        // Получаем место для посадки
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        String worldName = plugin.getConfigManager().getWorldName();
+        World world = Bukkit.getWorld(worldName);
+        
+        if (world == null) {
+            player.sendMessage("§cОшибка: мир не найден!");
+            return;
+        }
+        
+        Location plantLocation = plot.getPlantLocation(world);
+        if (plantLocation == null) {
+            player.sendMessage("§cОшибка: место для посадки не найдено!");
+            return;
+        }
+        
+        // Здесь нужно будет использовать CustomPlantManager для посадки
+        // plugin.getCustomPlantManager().plantCustomSeed(player, seed, plantLocation);
+        
+        player.sendMessage("§aКастомное растение посажено!");
+        player.sendMessage("§eРастение: §7" + plantName);
+    }
+
+    private void showCustomPlantInfo(Player player, String plantId) {
+        String plantName = getCustomPlantName(plantId);
+        if (plantName == null) {
+            player.sendMessage("§cНеизвестное растение: " + plantId);
+            return;
+        }
+        
+        player.sendMessage("§6=== " + plantName + " ===");
+        
+        // Здесь нужно будет получить информацию из CustomPlantManager
+        switch (plantId.toLowerCase()) {
+            case "golden_tree":
+                player.sendMessage("§eВремя роста: §75 минут");
+                player.sendMessage("§eУрожай: §7Золотые яблоки (3x)");
+                player.sendMessage("§eОсобенность: §7Дает золотые яблоки");
+                break;
+            case "crystal_rose":
+                player.sendMessage("§eВремя роста: §73 минуты");
+                player.sendMessage("§eУрожай: §7Кристальные лепестки (5x)");
+                player.sendMessage("§eОсобенность: §7Светится в темноте");
+                break;
+            case "fire_pumpkin":
+                player.sendMessage("§eВремя роста: §74 минуты");
+                player.sendMessage("§eУрожай: §7Огненные тыквы (2x)");
+                player.sendMessage("§eОсобенность: §7Поджигает врагов");
+                break;
+            case "ice_berry":
+                player.sendMessage("§eВремя роста: §72 минуты");
+                player.sendMessage("§eУрожай: §7Ледяные ягоды (4x)");
+                player.sendMessage("§eОсобенность: §7Замораживает врагов");
+                break;
+            case "electric_wheat":
+                player.sendMessage("§eВремя роста: §790 секунд");
+                player.sendMessage("§eУрожай: §7Электрическая пшеница (6x)");
+                player.sendMessage("§eОсобенность: §7Ударяет током");
+                break;
+            case "rainbow_flower":
+                player.sendMessage("§eВремя роста: §76 минут");
+                player.sendMessage("§eУрожай: §7Радужные лепестки (8x)");
+                player.sendMessage("§eОсобенность: §7Меняет цвет");
+                break;
+        }
+    }
+
+    private String getCustomPlantName(String plantId) {
+        switch (plantId.toLowerCase()) {
+            case "golden_tree": return "🌳 Золотое дерево";
+            case "crystal_rose": return "💎 Кристальная роза";
+            case "fire_pumpkin": return "🔥 Огненная тыква";
+            case "ice_berry": return "❄️ Ледяная ягода";
+            case "electric_wheat": return "⚡ Электрическая пшеница";
+            case "rainbow_flower": return "🌈 Радужный цветок";
+            default: return null;
+        }
+    }
+
+    private ItemStack createCustomSeed(String plantId) {
+        switch (plantId.toLowerCase()) {
+            case "golden_tree":
+                return createSeedItem(Material.GOLD_INGOT, "Золотые семена дерева", 
+                    "§7Семена мистического золотого дерева",
+                    "§7Время роста: §e5 минут",
+                    "§7Цена: §e50 рублей");
+            case "crystal_rose":
+                return createSeedItem(Material.AMETHYST_SHARD, "Кристальные семена розы",
+                    "§7Семена сияющей кристальной розы",
+                    "§7Время роста: §e3 минуты",
+                    "§7Цена: §e35 рублей");
+            case "fire_pumpkin":
+                return createSeedItem(Material.BLAZE_POWDER, "Огненные семена тыквы",
+                    "§7Семена пылающей тыквы",
+                    "§7Время роста: §e4 минуты",
+                    "§7Цена: §e40 рублей");
+            case "ice_berry":
+                return createSeedItem(Material.ICE, "Ледяные семена ягоды",
+                    "§7Семена замороженной ягоды",
+                    "§7Время роста: §e2 минуты",
+                    "§7Цена: §e25 рублей");
+            case "electric_wheat":
+                return createSeedItem(Material.REDSTONE, "Электрические семена пшеницы",
+                    "§7Семена заряженной пшеницы",
+                    "§7Время роста: §e90 секунд",
+                    "§7Цена: §e30 рублей");
+            case "rainbow_flower":
+                return createSeedItem(Material.ORANGE_DYE, "Радужные семена цветка",
+                    "§7Семена разноцветного цветка",
+                    "§7Время роста: §e6 минут",
+                    "§7Цена: §e60 рублей");
+            default:
+                return null;
+        }
+    }
+
+    private ItemStack createSeedItem(Material material, String name, String... lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        meta.setLore(Arrays.asList(lore));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack findCustomSeedInInventory(Player player, String plantId) {
+        String seedName = getCustomSeedName(plantId);
+        if (seedName == null) return null;
+        
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                if (item.getItemMeta().getDisplayName().equals(seedName)) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String getCustomSeedName(String plantId) {
+        switch (plantId.toLowerCase()) {
+            case "golden_tree": return "Золотые семена дерева";
+            case "crystal_rose": return "Кристальные семена розы";
+            case "fire_pumpkin": return "Огненные семена тыквы";
+            case "ice_berry": return "Ледяные семена ягоды";
+            case "electric_wheat": return "Электрические семена пшеницы";
+            case "rainbow_flower": return "Радужные семена цветка";
+            default: return null;
+        }
     }
 } 
