@@ -183,23 +183,25 @@ public class PlotManager {
         int fenceX = plot.x - 1;
         int fenceZ = plot.z - 1;
         int fenceSize = plot.maxSize + 2; // +2 для забора
+        int fenceY = plot.y + 1; // Поднимаем забор на один блок выше
         
         // Создаем периметр забора
         for (int i = 0; i < fenceSize; i++) {
             // Нижняя сторона
-            world.getBlockAt(fenceX + i, plot.y, fenceZ).setType(org.bukkit.Material.OAK_FENCE);
+            world.getBlockAt(fenceX + i, fenceY, fenceZ).setType(org.bukkit.Material.OAK_FENCE);
             // Верхняя сторона
-            world.getBlockAt(fenceX + i, plot.y, fenceZ + fenceSize - 1).setType(org.bukkit.Material.OAK_FENCE);
+            world.getBlockAt(fenceX + i, fenceY, fenceZ + fenceSize - 1).setType(org.bukkit.Material.OAK_FENCE);
             // Левая сторона
-            world.getBlockAt(fenceX, plot.y, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
+            world.getBlockAt(fenceX, fenceY, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
             // Правая сторона
-            world.getBlockAt(fenceX + fenceSize - 1, plot.y, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
+            world.getBlockAt(fenceX + fenceSize - 1, fenceY, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
         }
         
         // Создаем табличку с именем игрока (в центре передней стороны)
         int signX = fenceX + (fenceSize / 2);
         int signZ = fenceZ - 1;
-        org.bukkit.block.Block signBlock = world.getBlockAt(signX, plot.y, signZ);
+        int signY = fenceY; // Табличка на той же высоте, что и забор
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, signY, signZ);
         signBlock.setType(org.bukkit.Material.OAK_SIGN);
         
         if (signBlock.getState() instanceof org.bukkit.block.Sign) {
@@ -211,7 +213,7 @@ public class PlotManager {
             sign.update();
         }
         
-        plugin.getLogger().info("Создан забор для участка " + plot.id + " игрока " + playerName);
+        plugin.getLogger().info("Создан забор для участка " + plot.id + " игрока " + playerName + " на высоте " + fenceY);
     }
     
     /**
@@ -312,23 +314,25 @@ public class PlotManager {
         int fenceX = plot.x - 1;
         int fenceZ = plot.z - 1;
         int fenceSize = plot.maxSize + 2; // +2 для забора
+        int fenceY = plot.y + 1; // Поднимаем забор на один блок выше
         
         // Удаляем периметр забора
         for (int i = 0; i < fenceSize; i++) {
             // Нижняя сторона
-            world.getBlockAt(fenceX + i, plot.y, fenceZ).setType(org.bukkit.Material.AIR);
+            world.getBlockAt(fenceX + i, fenceY, fenceZ).setType(org.bukkit.Material.AIR);
             // Верхняя сторона
-            world.getBlockAt(fenceX + i, plot.y, fenceZ + fenceSize - 1).setType(org.bukkit.Material.AIR);
+            world.getBlockAt(fenceX + i, fenceY, fenceZ + fenceSize - 1).setType(org.bukkit.Material.AIR);
             // Левая сторона
-            world.getBlockAt(fenceX, plot.y, fenceZ + i).setType(org.bukkit.Material.AIR);
+            world.getBlockAt(fenceX, fenceY, fenceZ + i).setType(org.bukkit.Material.AIR);
             // Правая сторона
-            world.getBlockAt(fenceX + fenceSize - 1, plot.y, fenceZ + i).setType(org.bukkit.Material.AIR);
+            world.getBlockAt(fenceX + fenceSize - 1, fenceY, fenceZ + i).setType(org.bukkit.Material.AIR);
         }
         
         // Удаляем табличку с именем игрока (в центре передней стороны)
         int signX = fenceX + (fenceSize / 2);
         int signZ = fenceZ - 1;
-        org.bukkit.block.Block signBlock = world.getBlockAt(signX, plot.y, signZ);
+        int signY = fenceY; // Табличка на той же высоте, что и забор
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, signY, signZ);
         signBlock.setType(org.bukkit.Material.AIR);
         
         plugin.getLogger().info("Удален забор для участка " + plot.id);

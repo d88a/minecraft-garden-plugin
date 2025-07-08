@@ -330,8 +330,23 @@ public class PlantManager {
         String cropName = getCropName(cropType);
         int price = plugin.getConfigManager().getCropPrice(cropName);
         
-        player.sendMessage("§aСобран урожай: §e" + getCropDisplayName(cropName));
+        player.sendMessage("§aСобран урожай: §e" + getCropDisplayName(cropType));
         player.sendMessage("§eЦена продажи: §7" + price + " рублей");
+    }
+    
+    /**
+     * Получает имя урожая для типа растения
+     */
+    private String getCropName(Material cropType) {
+        switch (cropType) {
+            case WHEAT: return "wheat";
+            case CARROTS: return "carrot";
+            case POTATOES: return "potato";
+            case BEETROOTS: return "beetroot";
+            case PUMPKIN: return "pumpkin";
+            case MELON: return "melon";
+            default: return cropType.name().toLowerCase();
+        }
     }
     
     /**
