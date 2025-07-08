@@ -36,7 +36,4 @@ jobs:
         SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
         SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
         SFTP_PORT: ${{ secrets.SFTP_PORT || 2022 }}
-      run: bash ./deploy_sftp.sh
-        exclude: |
-          **/*.md
-          **/*.txt 
+      run: bash ./deploy_sftp.sh 
