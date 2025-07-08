@@ -27,16 +27,16 @@ jobs:
         name: plugin-jar
         path: ./target/*.jar
 
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
     - name: Deploy to SFTP server
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.SFTP_SERVER }}
-        username: ${{ secrets.SFTP_USERNAME }}
-        password: ${{ secrets.SFTP_PASSWORD }}
-        protocol: sftp
-        port: 2022
-        local-dir: ./target/
-        server-dir: /root/aurorix/plugins/
+      env:
+        SFTP_SERVER: ${{ secrets.SFTP_SERVER }}
+        SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+        SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+        SFTP_PORT: ${{ secrets.SFTP_PORT || 2022 }}
+      run: bash ./deploy_sftp.sh
         exclude: |
           **/*.md
           **/*.txt 
