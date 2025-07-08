@@ -20,15 +20,19 @@ jobs:
         
     - name: Build with Maven
       run: mvn clean package
-      
-    - name: Deploy to SFTP server
-      uses: cross-the-world/scp-pipeline@v1.1.0
+
+    - name: Upload plugin artifact
+      uses: actions/upload-artifact@v4
       with:
-        host: ${{ secrets.SFTP_SERVER }}
+        name: plugin-jar
+        path: ./target/*.jar
+
+    - name: Deploy to SFTP server
+      uses: atymic/sftp-deploy@v2.0.0
+      with:
+        server: ${{ secrets.SFTP_SERVER }}
+        username: ${{ secrets.SFTP_USERNAME }}
+        password: ${{ secrets.SFTP_PASSWORD }}
         port: 2022
-        user: ${{ secrets.SFTP_USERNAME }}
-        pass: ${{ secrets.SFTP_PASSWORD }}
-        connect_timeout: 10s
-        local: "./target/*.jar"
-        remote: "/root/aurorix/plugins/"
-        scp: false 
+        local_path: './target/*.jar'
+        remote_path: '/root/aurorix/plugins/' 
