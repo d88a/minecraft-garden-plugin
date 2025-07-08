@@ -45,7 +45,7 @@ public class EconomyManager {
     }
     
     public int getBalance(Player player) {
-        return playerBalances.getOrDefault(player.getUniqueId(), plugin.getConfigManager().getStartingBalance());
+        return playerBalances.getOrDefault(player.getUniqueId(), 0);
     }
     
     public void setBalance(Player player, int amount) {
@@ -71,9 +71,21 @@ public class EconomyManager {
         setBalance(player, currentBalance + amount);
     }
     
-    public void initializePlayer(Player player) {
+    /**
+     * Выдает начальный баланс игроку при получении участка
+     */
+    public void givePlotStartingBalance(Player player) {
         if (!playerBalances.containsKey(player.getUniqueId())) {
-            setBalance(player, plugin.getConfigManager().getStartingBalance());
+            int startingBalance = plugin.getConfigManager().getPlotStartingBalance();
+            setBalance(player, startingBalance);
+            player.sendMessage("§aПолучен начальный капитал: §e" + startingBalance + " рублей");
         }
+    }
+    
+    /**
+     * Проверяет, есть ли у игрока баланс (участвовал ли он в экономике)
+     */
+    public boolean hasParticipatedInEconomy(Player player) {
+        return playerBalances.containsKey(player.getUniqueId());
     }
 } 

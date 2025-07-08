@@ -2,8 +2,8 @@
 
 # Экономика
 economy:
-  # Начальный капитал игрока (в рублях)
-  starting_balance: 10
+  # Начальный капитал игрока при получении участка (в рублях)
+  plot_starting_balance: 10
   
   # Цены на семена
   seed_prices:
@@ -44,8 +44,8 @@ plots:
   area_height: 62
   
   # Размеры участков
-  initial_size: 15
-  max_size: 30
+  initial_size: 5
+  max_size: 20
   
   # Расстояния
   path_width: 2
@@ -89,4 +89,12 @@ storage:
   auto_save_interval: 300  # 5 минут
   
   # Формат файлов данных
-  format: "json" 
+  format: "json"
+
+# Кастомные семена
+custom_seeds:
+  # Разрешить посадку только кастомных семян на участках
+  only_custom_seeds_on_plots: true
+  
+  # Разрешить посадку обычных семян вне участков
+  allow_vanilla_seeds_outside: true 

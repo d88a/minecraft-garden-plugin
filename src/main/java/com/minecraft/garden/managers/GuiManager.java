@@ -135,16 +135,61 @@ public class GuiManager {
      * Открывает меню расширения участка
      */
     public void openExpandMenu(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, "§6=== Расширение участка ===");
+        Inventory inv = Bukkit.createInventory(null, 36, "§6=== Расширение участка ===");
         
-        // Информация о расширении
-        inv.setItem(13, createItem(Material.IRON_AXE, "§dРасширение участка", 
-            "§7Функция расширения", "§7пока не реализована", 
-            "§7Следите за обновлениями!"));
+        // Проверяем, есть ли у игрока участок
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            inv.setItem(13, createItem(Material.BARRIER, "§cУ вас нет участка!", 
+                "§7Сначала создайте участок", "§7командой /garden create"));
+            
+            // Кнопка "Назад"
+            inv.setItem(31, createItem(Material.ARROW, "§cНазад", 
+                "§7Нажмите, чтобы вернуться", "§7в главное меню"));
+            
+            player.openInventory(inv);
+            openGuis.put(player, GuiType.EXPAND_MENU);
+            return;
+        }
+        
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        int currentSize = plot.size;
+        int maxSize = plot.maxSize;
+        int balance = plugin.getEconomyManager().getBalance(player);
+        
+        // Информация о текущем участке
+        inv.setItem(4, createItem(Material.GRASS_BLOCK, "§aТекущий размер: §e" + currentSize + "x" + currentSize, 
+            "§7Максимальный размер: §e" + maxSize + "x" + maxSize,
+            "§7Ваш баланс: §e" + balance + " рублей"));
+        
+        // Кнопки расширения
+        int[] availableSizes = {6, 7, 8, 9, 10, 12, 15, 18, 20};
+        int slot = 10;
+        
+        for (int newSize : availableSizes) {
+            if (newSize > currentSize && newSize <= maxSize) {
+                int cost = (newSize - currentSize) * plugin.getConfigManager().getPlotExpansionCost();
+                
+                if (balance >= cost) {
+                    // Достаточно денег
+                    inv.setItem(slot, createItem(Material.IRON_AXE, "§aРасширить до " + newSize + "x" + newSize, 
+                        "§7Стоимость: §e" + cost + " рублей",
+                        "§7Нажмите, чтобы расширить"));
+                } else {
+                    // Недостаточно денег
+                    inv.setItem(slot, createItem(Material.BARRIER, "§cРасширить до " + newSize + "x" + newSize, 
+                        "§7Стоимость: §e" + cost + " рублей",
+                        "§cНедостаточно денег!"));
+                }
+                slot++;
+            }
+        }
         
         // Кнопка "Назад"
-        inv.setItem(22, createItem(Material.ARROW, "§cНазад", 
+        inv.setItem(31, createItem(Material.ARROW, "§cНазад", 
             "§7Нажмите, чтобы вернуться", "§7в главное меню"));
+        
+        // Баланс
+        inv.setItem(32, createItem(Material.EMERALD, "§aБаланс: §e" + balance + " §aрублей"));
         
         player.openInventory(inv);
         openGuis.put(player, GuiType.EXPAND_MENU);

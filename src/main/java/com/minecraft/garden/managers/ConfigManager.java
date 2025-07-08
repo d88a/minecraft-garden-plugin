@@ -32,6 +32,10 @@ public class ConfigManager {
         return config.getInt("economy.starting_balance", 10);
     }
     
+    public int getPlotStartingBalance() {
+        return config.getInt("economy.plot_starting_balance", 10);
+    }
+    
     public int getAreaStartX() {
         return config.getInt("plots.area_start_x", 198);
     }
@@ -53,11 +57,11 @@ public class ConfigManager {
     }
     
     public int getInitialPlotSize() {
-        return config.getInt("plots.initial_size", 15);
+        return config.getInt("plots.initial_size", 5);
     }
     
     public int getMaxPlotSize() {
-        return config.getInt("plots.max_size", 60);
+        return config.getInt("plots.max_size", 20);
     }
     
     public int getPathWidth() {
@@ -108,5 +112,14 @@ public class ConfigManager {
     
     public int getAutoWateringCost() {
         return config.getInt("economy.auto_watering_cost", 5);
+    }
+    
+    // Методы для кастомных семян
+    public boolean isOnlyCustomSeedsOnPlots() {
+        return config.getBoolean("custom_seeds.only_custom_seeds_on_plots", true);
+    }
+    
+    public boolean isAllowVanillaSeedsOutside() {
+        return config.getBoolean("custom_seeds.allow_vanilla_seeds_outside", true);
     }
 } 

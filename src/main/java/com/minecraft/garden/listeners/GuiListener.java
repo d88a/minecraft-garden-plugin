@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import com.minecraft.garden.managers.PlotManager;
 
 public class GuiListener implements Listener {
     
@@ -210,9 +211,86 @@ public class GuiListener implements Listener {
         Material material = clickedItem.getType();
         
         switch (material) {
+            case IRON_AXE:
+                // Обрабатываем расширение участка
+                handlePlotExpansion(player, clickedItem);
+                break;
+                
             case ARROW:
                 plugin.getGuiManager().openMainMenu(player);
                 break;
+                
+            case EMERALD:
+                // Обновляем баланс
+                plugin.getGuiManager().openExpandMenu(player);
+                break;
+        }
+    }
+    
+    private void handlePlotExpansion(Player player, ItemStack clickedItem) {
+        // Проверяем, есть ли у игрока участок
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка!");
+            return;
+        }
+        
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        int currentSize = plot.size;
+        
+        // Извлекаем новый размер из названия предмета
+        String itemName = clickedItem.getItemMeta().getDisplayName();
+        if (!itemName.contains("Расширить до")) {
+            return;
+        }
+        
+        // Парсим размер из названия (например, "Расширить до 10x10")
+        String sizeStr = itemName.replace("§aРасширить до ", "").replace("x", "");
+        int newSize;
+        try {
+            newSize = Integer.parseInt(sizeStr);
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cОшибка при определении размера!");
+            return;
+        }
+        
+        // Проверяем, что новый размер больше текущего
+        if (newSize <= currentSize) {
+            player.sendMessage("§cНовый размер должен быть больше текущего!");
+            return;
+        }
+        
+        // Проверяем, что новый размер не превышает максимальный
+        if (newSize > plot.maxSize) {
+            player.sendMessage("§cНовый размер превышает максимальный!");
+            return;
+        }
+        
+        // Вычисляем стоимость
+        int cost = (newSize - currentSize) * plugin.getConfigManager().getPlotExpansionCost();
+        
+        // Проверяем баланс
+        if (!plugin.getEconomyManager().hasMoney(player, cost)) {
+            player.sendMessage("§cНедостаточно денег! Нужно: §e" + cost + " §cрублей");
+            return;
+        }
+        
+        // Списываем деньги
+        plugin.getEconomyManager().withdrawMoney(player, cost);
+        
+        // Расширяем участок
+        boolean success = plugin.getPlotManager().expandPlot(player.getUniqueId(), newSize);
+        
+        if (success) {
+            player.sendMessage("§aУчасток успешно расширен!");
+            player.sendMessage("§eНовый размер: §7" + newSize + "x" + newSize);
+            player.sendMessage("§eСтоимость: §7" + cost + " рублей");
+            
+            // Обновляем GUI
+            plugin.getGuiManager().openExpandMenu(player);
+        } else {
+            // Возвращаем деньги, если расширение не удалось
+            plugin.getEconomyManager().addMoney(player, cost);
+            player.sendMessage("§cОшибка при расширении участка!");
         }
     }
     

@@ -4,6 +4,7 @@ import com.minecraft.garden.GardenPlugin;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -141,6 +142,12 @@ public class PlotManager {
         // Создаем забор и табличку
         createPlotFence(plotData, playerUuid);
         
+        // Выдаем начальный баланс игроку
+        Player player = plugin.getServer().getPlayer(playerUuid);
+        if (player != null) {
+            plugin.getEconomyManager().givePlotStartingBalance(player);
+        }
+        
         return plotData;
     }
     
@@ -179,10 +186,10 @@ public class PlotManager {
         String playerName = plugin.getServer().getOfflinePlayer(playerUuid).getName();
         if (playerName == null) playerName = "Неизвестный";
         
-        // Создаем забор вокруг участка (учитываем максимальный размер)
+        // Создаем забор вокруг текущего размера участка (не максимального)
         int fenceX = plot.x - 1;
         int fenceZ = plot.z - 1;
-        int fenceSize = plot.maxSize + 2; // +2 для забора
+        int fenceSize = plot.size + 2; // +2 для забора вокруг текущего размера
         int fenceY = plot.y + 1; // Поднимаем забор на один блок выше
         
         // Создаем периметр забора
@@ -213,7 +220,110 @@ public class PlotManager {
             sign.update();
         }
         
-        plugin.getLogger().info("Создан забор для участка " + plot.id + " игрока " + playerName + " на высоте " + fenceY);
+        plugin.getLogger().info("Создан забор для участка " + plot.id + " игрока " + playerName + " размером " + plot.size + "x" + plot.size);
+    }
+    
+    /**
+     * Расширяет участок игрока
+     */
+    public boolean expandPlot(UUID playerUuid, int newSize) {
+        if (!hasPlot(playerUuid)) {
+            return false; // У игрока нет участка
+        }
+        
+        PlotData plot = playerPlots.get(playerUuid);
+        
+        // Проверяем, что новый размер не превышает максимальный
+        if (newSize > plot.maxSize) {
+            return false;
+        }
+        
+        // Проверяем, что новый размер больше текущего
+        if (newSize <= plot.size) {
+            return false;
+        }
+        
+        // Обновляем размер участка
+        int oldSize = plot.size;
+        plot.size = newSize;
+        
+        // Обновляем забор
+        updatePlotFence(plot, playerUuid);
+        
+        // Сохраняем изменения
+        savePlots();
+        
+        plugin.getLogger().info("Участок " + plot.id + " расширен с " + oldSize + "x" + oldSize + " до " + newSize + "x" + newSize);
+        return true;
+    }
+    
+    /**
+     * Обновляет забор участка при расширении
+     */
+    private void updatePlotFence(PlotData plot, UUID playerUuid) {
+        World world = plugin.getServer().getWorld(plugin.getConfigManager().getWorldName());
+        if (world == null) return;
+        
+        String playerName = plugin.getServer().getOfflinePlayer(playerUuid).getName();
+        if (playerName == null) playerName = "Неизвестный";
+        
+        // Удаляем старый забор (максимальный размер)
+        int oldFenceX = plot.x - 1;
+        int oldFenceZ = plot.z - 1;
+        int oldFenceSize = plot.maxSize + 2;
+        int fenceY = plot.y + 1;
+        
+        // Удаляем периметр старого забора
+        for (int i = 0; i < oldFenceSize; i++) {
+            // Нижняя сторона
+            world.getBlockAt(oldFenceX + i, fenceY, oldFenceZ).setType(org.bukkit.Material.AIR);
+            // Верхняя сторона
+            world.getBlockAt(oldFenceX + i, fenceY, oldFenceZ + oldFenceSize - 1).setType(org.bukkit.Material.AIR);
+            // Левая сторона
+            world.getBlockAt(oldFenceX, fenceY, oldFenceZ + i).setType(org.bukkit.Material.AIR);
+            // Правая сторона
+            world.getBlockAt(oldFenceX + oldFenceSize - 1, fenceY, oldFenceZ + i).setType(org.bukkit.Material.AIR);
+        }
+        
+        // Создаем новый забор вокруг текущего размера
+        int fenceX = plot.x - 1;
+        int fenceZ = plot.z - 1;
+        int fenceSize = plot.size + 2; // +2 для забора вокруг текущего размера
+        
+        // Создаем периметр нового забора
+        for (int i = 0; i < fenceSize; i++) {
+            // Нижняя сторона
+            world.getBlockAt(fenceX + i, fenceY, fenceZ).setType(org.bukkit.Material.OAK_FENCE);
+            // Верхняя сторона
+            world.getBlockAt(fenceX + i, fenceY, fenceZ + fenceSize - 1).setType(org.bukkit.Material.OAK_FENCE);
+            // Левая сторона
+            world.getBlockAt(fenceX, fenceY, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
+            // Правая сторона
+            world.getBlockAt(fenceX + fenceSize - 1, fenceY, fenceZ + i).setType(org.bukkit.Material.OAK_FENCE);
+        }
+        
+        // Обновляем табличку
+        int signX = fenceX + (fenceSize / 2);
+        int signZ = fenceZ - 1;
+        int signY = fenceY;
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, signY, signZ);
+        
+        // Удаляем старую табличку
+        signBlock.setType(org.bukkit.Material.AIR);
+        
+        // Создаем новую табличку
+        signBlock.setType(org.bukkit.Material.OAK_SIGN);
+        
+        if (signBlock.getState() instanceof org.bukkit.block.Sign) {
+            org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlock.getState();
+            sign.setLine(0, "§6Участок игрока:");
+            sign.setLine(1, "§e" + playerName);
+            sign.setLine(2, "§7ID: " + plot.id);
+            sign.setLine(3, "§7Размер: " + plot.size + "x" + plot.size);
+            sign.update();
+        }
+        
+        plugin.getLogger().info("Обновлен забор для участка " + plot.id + " игрока " + playerName + " до размера " + plot.size + "x" + plot.size);
     }
     
     /**

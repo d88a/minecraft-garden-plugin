@@ -12,6 +12,9 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
+import java.util.UUID;
+
 public class PlayerListener implements Listener {
     
     private final GardenPlugin plugin;
@@ -24,13 +27,14 @@ public class PlayerListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         
-        // Инициализируем игрока в экономике
-        plugin.getEconomyManager().initializePlayer(player);
-        
         // Если у игрока нет участка, предлагаем создать
         if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
             player.sendMessage("§aДобро пожаловать в игру 'Вырасти сад'!");
-            player.sendMessage("§eИспользуйте §6/garden §eдля получения участка и начала игры.");
+            player.sendMessage("§eИспользуйте §6/garden create §eдля получения участка и начала игры.");
+        } else {
+            // Показываем информацию о балансе
+            int balance = plugin.getEconomyManager().getBalance(player);
+            player.sendMessage("§aДобро пожаловать обратно! Ваш баланс: §e" + balance + " рублей");
         }
     }
     
@@ -39,11 +43,38 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
         ItemStack item = event.getItemInHand();
+        Location location = block.getLocation();
         
-        // Проверяем, что это кастомное семя
+        // Проверяем, находится ли место на участке
+        boolean isOnPlot = false;
+        UUID plotOwner = null;
+        
+        for (Map.Entry<UUID, PlotManager.PlotData> entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+            if (entry.getValue().isInPlot(location)) {
+                isOnPlot = true;
+                plotOwner = entry.getKey();
+                break;
+            }
+        }
+        
+        // Если это кастомное семя
         if (plugin.getCustomItemManager().isCustomSeed(item)) {
             // Отменяем стандартное размещение блока
             event.setCancelled(true);
+            
+            // Проверяем права на посадку
+            if (isOnPlot) {
+                if (!plotOwner.equals(player.getUniqueId())) {
+                    player.sendMessage("§cВы можете сажать только на своем участке!");
+                    return;
+                }
+            } else {
+                // Проверяем, разрешена ли посадка кастомных семян вне участков
+                if (!plugin.getConfigManager().isAllowVanillaSeedsOutside()) {
+                    player.sendMessage("§cКастомные семена можно сажать только на участках!");
+                    return;
+                }
+            }
             
             // Убираем один предмет из руки
             if (item.getAmount() > 1) {
@@ -56,14 +87,24 @@ public class PlayerListener implements Listener {
             Material baseMaterial = plugin.getCustomItemManager().getBaseMaterial(item);
             
             // Пытаемся посадить семя
-            boolean success = plugin.getPlantManager().plantSeed(player, baseMaterial, block.getLocation());
+            boolean success = plugin.getPlantManager().plantSeed(player, baseMaterial, location);
             
             if (success) {
                 player.sendMessage("§aСемя посажено! Растение будет готово через некоторое время.");
             } else {
                 // Возвращаем предмет, если посадка не удалась
                 player.getInventory().addItem(item);
-                player.sendMessage("§cНе удалось посадить семя! Убедитесь, что вы на своём участке и земля вспахана.");
+                player.sendMessage("§cНе удалось посадить семя! Убедитесь, что земля вспахана.");
+            }
+        } else if (isSeed(item.getType())) {
+            // Если это обычное семя
+            if (isOnPlot) {
+                // На участке разрешены только кастомные семена
+                if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
+                    event.setCancelled(true);
+                    player.sendMessage("§cНа участках можно сажать только кастомные семена!");
+                    return;
+                }
             }
         }
     }

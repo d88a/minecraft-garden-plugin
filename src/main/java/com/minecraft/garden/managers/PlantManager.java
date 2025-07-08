@@ -10,11 +10,11 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.bukkit.inventory.ItemStack;
 
 public class PlantManager {
     
@@ -110,23 +110,48 @@ public class PlantManager {
      * Пытается посадить семя на участке игрока
      */
     public boolean plantSeed(Player player, Material seedType, Location location) {
-        // Проверяем, что у игрока есть участок
-        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
-            player.sendMessage("§cУ вас нет участка для посадки!");
-            return false;
-        }
-        
         // Проверяем, что семя можно посадить
         if (!seedToCrop.containsKey(seedType)) {
             player.sendMessage("§cЭтот предмет нельзя посадить!");
             return false;
         }
         
-        // Проверяем, что место находится на участке игрока
-        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
-        if (!plot.isInPlot(location)) {
-            player.sendMessage("§cВы можете сажать только на своем участке!");
-            return false;
+        // Проверяем, находится ли место на участке
+        boolean isOnPlot = false;
+        UUID plotOwner = null;
+        PlotManager.PlotData plot = null;
+        
+        for (Map.Entry<UUID, PlotManager.PlotData> entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+            if (entry.getValue().isInPlot(location)) {
+                isOnPlot = true;
+                plotOwner = entry.getKey();
+                plot = entry.getValue();
+                break;
+            }
+        }
+        
+        if (isOnPlot) {
+            // На участке - проверяем права
+            if (!plotOwner.equals(player.getUniqueId())) {
+                player.sendMessage("§cВы можете сажать только на своем участке!");
+                return false;
+            }
+            
+            // Проверяем, что это кастомное семя (если включена настройка)
+            if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
+                // Проверяем, что игрок использует кастомное семя
+                ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                if (!plugin.getCustomItemManager().isCustomSeed(itemInHand)) {
+                    player.sendMessage("§cНа участках можно сажать только кастомные семена!");
+                    return false;
+                }
+            }
+        } else {
+            // Вне участка - проверяем настройки
+            if (!plugin.getConfigManager().isAllowVanillaSeedsOutside()) {
+                player.sendMessage("§cКастомные семена можно сажать только на участках!");
+                return false;
+            }
         }
         
         // Проверяем, что место подходит для посадки
@@ -153,7 +178,7 @@ public class PlantManager {
         plantData.cropType = cropType;
         plantData.plantedTime = System.currentTimeMillis();
         plantData.ownerUuid = player.getUniqueId();
-        plantData.plotId = plot.id;
+        plantData.plotId = plot != null ? plot.id : -1; // -1 для растений вне участков
         
         plantedCrops.put(location, plantData);
         savePlantedCrops();
@@ -285,6 +310,26 @@ public class PlantManager {
         if (!plantData.ownerUuid.equals(player.getUniqueId())) {
             player.sendMessage("§cЭто не ваш урожай!");
             return false;
+        }
+        
+        // Проверяем, находится ли растение на участке
+        boolean isOnPlot = false;
+        UUID plotOwner = null;
+        
+        for (Map.Entry<UUID, PlotManager.PlotData> entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+            if (entry.getValue().isInPlot(location)) {
+                isOnPlot = true;
+                plotOwner = entry.getKey();
+                break;
+            }
+        }
+        
+        if (isOnPlot) {
+            // На участке - проверяем права
+            if (!plotOwner.equals(player.getUniqueId())) {
+                player.sendMessage("§cВы можете собирать урожай только на своем участке!");
+                return false;
+            }
         }
         
         // Проверяем, что растение созрело
