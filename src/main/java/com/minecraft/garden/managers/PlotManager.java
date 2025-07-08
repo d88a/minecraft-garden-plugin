@@ -106,14 +106,19 @@ public class PlotManager {
         
         int plotsPerRow = totalWidth / plotWithPath;
         int maxRows = totalDepth / plotWithPath;
+        int maxPlots = plotsPerRow * maxRows;
+        
+        // Находим свободный ID для нового участка
+        int newPlotId = findNextAvailablePlotId(maxPlots);
         
         // Находим позицию для нового участка
-        int plotRow = nextPlotId / plotsPerRow;
-        int plotCol = nextPlotId % plotsPerRow;
+        int plotRow = newPlotId / plotsPerRow;
+        int plotCol = newPlotId % plotsPerRow;
         
         // Проверяем, есть ли место
         if (plotRow >= maxRows) {
             plugin.getLogger().warning("Нет места для нового участка! Все места заняты.");
+            plugin.getLogger().info("Текущий ID: " + newPlotId + ", Максимум участков: " + maxPlots);
             return null;
         }
         
@@ -123,7 +128,7 @@ public class PlotManager {
         int plotY = areaHeight;
         
         PlotData plotData = new PlotData();
-        plotData.id = nextPlotId++;
+        plotData.id = newPlotId;
         plotData.x = plotX;
         plotData.z = plotZ;
         plotData.y = plotY;
@@ -137,6 +142,31 @@ public class PlotManager {
         createPlotFence(plotData, playerUuid);
         
         return plotData;
+    }
+    
+    /**
+     * Находит следующий доступный ID участка
+     */
+    private int findNextAvailablePlotId(int maxPlots) {
+        // Создаем массив занятых ID
+        boolean[] usedIds = new boolean[maxPlots];
+        
+        // Отмечаем занятые ID
+        for (PlotData plot : playerPlots.values()) {
+            if (plot.id < maxPlots) {
+                usedIds[plot.id] = true;
+            }
+        }
+        
+        // Ищем первый свободный ID
+        for (int i = 0; i < maxPlots; i++) {
+            if (!usedIds[i]) {
+                return i;
+            }
+        }
+        
+        // Если все заняты, возвращаем следующий после максимального
+        return nextPlotId;
     }
     
     /**
@@ -245,13 +275,63 @@ public class PlotManager {
         PlotData plot = playerPlots.get(playerUuid);
         plugin.getLogger().info("Удаление участка ID " + plot.id + " для игрока " + playerUuid);
         
+        // Удаляем забор и табличку
+        removePlotFence(plot);
+        
         // Удаляем участок из памяти
         playerPlots.remove(playerUuid);
+        
+        // Сбрасываем nextPlotId, если это был последний участок
+        if (playerPlots.isEmpty()) {
+            nextPlotId = 0;
+        } else {
+            // Находим максимальный ID среди оставшихся участков
+            int maxId = -1;
+            for (PlotData remainingPlot : playerPlots.values()) {
+                if (remainingPlot.id > maxId) {
+                    maxId = remainingPlot.id;
+                }
+            }
+            nextPlotId = maxId + 1;
+        }
         
         // Сохраняем изменения
         savePlots();
         
         return true;
+    }
+    
+    /**
+     * Удаляет забор вокруг участка и табличку
+     */
+    private void removePlotFence(PlotData plot) {
+        World world = plugin.getServer().getWorld(plugin.getConfigManager().getWorldName());
+        if (world == null) return;
+        
+        // Удаляем забор вокруг участка (учитываем максимальный размер)
+        int fenceX = plot.x - 1;
+        int fenceZ = plot.z - 1;
+        int fenceSize = plot.maxSize + 2; // +2 для забора
+        
+        // Удаляем периметр забора
+        for (int i = 0; i < fenceSize; i++) {
+            // Нижняя сторона
+            world.getBlockAt(fenceX + i, plot.y, fenceZ).setType(org.bukkit.Material.AIR);
+            // Верхняя сторона
+            world.getBlockAt(fenceX + i, plot.y, fenceZ + fenceSize - 1).setType(org.bukkit.Material.AIR);
+            // Левая сторона
+            world.getBlockAt(fenceX, plot.y, fenceZ + i).setType(org.bukkit.Material.AIR);
+            // Правая сторона
+            world.getBlockAt(fenceX + fenceSize - 1, plot.y, fenceZ + i).setType(org.bukkit.Material.AIR);
+        }
+        
+        // Удаляем табличку с именем игрока (в центре передней стороны)
+        int signX = fenceX + (fenceSize / 2);
+        int signZ = fenceZ - 1;
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, plot.y, signZ);
+        signBlock.setType(org.bukkit.Material.AIR);
+        
+        plugin.getLogger().info("Удален забор для участка " + plot.id);
     }
     
     /**

@@ -81,30 +81,13 @@ public class GuiManager {
     public void openShop(Player player) {
         Inventory inv = Bukkit.createInventory(null, 36, "§6=== Магазин семян ===");
         
-        // Семена
-        inv.setItem(10, createShopItem(Material.WHEAT_SEEDS, "§eСемена пшеницы", 
-            "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("wheat") + " §7рублей", 
-            "§7Нажмите, чтобы купить"));
-        
-        inv.setItem(11, createShopItem(Material.CARROT, "§eМорковь", 
-            "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("carrot") + " §7рублей", 
-            "§7Нажмите, чтобы купить"));
-        
-        inv.setItem(12, createShopItem(Material.POTATO, "§eКартофель", 
-            "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("potato") + " §7рублей", 
-            "§7Нажмите, чтобы купить"));
-        
-        inv.setItem(13, createShopItem(Material.BEETROOT_SEEDS, "§eСемена свеклы", 
-            "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("beetroot") + " §7рублей", 
-            "§7Нажмите, чтобы купить"));
-        
-        inv.setItem(14, createShopItem(Material.PUMPKIN_SEEDS, "§eСемена тыквы", 
-            "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("pumpkin") + " §7рублей", 
-            "§7Нажмите, чтобы купить"));
-        
-        inv.setItem(15, createShopItem(Material.MELON_SEEDS, "§eСемена арбуза", 
-            "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("melon") + " §7рублей", 
-            "§7Нажмите, чтобы купить"));
+        // Семена - используем кастомные предметы
+        inv.setItem(10, plugin.getCustomItemManager().getCustomSeed(Material.WHEAT_SEEDS));
+        inv.setItem(11, plugin.getCustomItemManager().getCustomSeed(Material.CARROT));
+        inv.setItem(12, plugin.getCustomItemManager().getCustomSeed(Material.POTATO));
+        inv.setItem(13, plugin.getCustomItemManager().getCustomSeed(Material.BEETROOT_SEEDS));
+        inv.setItem(14, plugin.getCustomItemManager().getCustomSeed(Material.PUMPKIN_SEEDS));
+        inv.setItem(15, plugin.getCustomItemManager().getCustomSeed(Material.MELON_SEEDS));
         
         // Кнопка "Назад"
         inv.setItem(31, createItem(Material.ARROW, "§cНазад", 
@@ -124,30 +107,13 @@ public class GuiManager {
     public void openSellMenu(Player player) {
         Inventory inv = Bukkit.createInventory(null, 36, "§6=== Продажа урожая ===");
         
-        // Урожай
-        inv.setItem(10, createSellItem(Material.WHEAT, "§eПшеница", 
-            "§7Цена продажи: §e" + plugin.getConfigManager().getCropPrice("wheat") + " §7рублей", 
-            "§7Нажмите, чтобы продать"));
-        
-        inv.setItem(11, createSellItem(Material.CARROT, "§eМорковь", 
-            "§7Цена продажи: §e" + plugin.getConfigManager().getCropPrice("carrot") + " §7рублей", 
-            "§7Нажмите, чтобы продать"));
-        
-        inv.setItem(12, createSellItem(Material.POTATO, "§eКартофель", 
-            "§7Цена продажи: §e" + plugin.getConfigManager().getCropPrice("potato") + " §7рублей", 
-            "§7Нажмите, чтобы продать"));
-        
-        inv.setItem(13, createSellItem(Material.BEETROOT, "§eСвекла", 
-            "§7Цена продажи: §e" + plugin.getConfigManager().getCropPrice("beetroot") + " §7рублей", 
-            "§7Нажмите, чтобы продать"));
-        
-        inv.setItem(14, createSellItem(Material.PUMPKIN, "§eТыква", 
-            "§7Цена продажи: §e" + plugin.getConfigManager().getCropPrice("pumpkin") + " §7рублей", 
-            "§7Нажмите, чтобы продать"));
-        
-        inv.setItem(15, createSellItem(Material.MELON, "§eАрбуз", 
-            "§7Цена продажи: §e" + plugin.getConfigManager().getCropPrice("melon") + " §7рублей", 
-            "§7Нажмите, чтобы продать"));
+        // Урожай - используем кастомные предметы
+        inv.setItem(10, plugin.getCustomItemManager().getCustomCrop(Material.WHEAT));
+        inv.setItem(11, plugin.getCustomItemManager().getCustomCrop(Material.CARROTS));
+        inv.setItem(12, plugin.getCustomItemManager().getCustomCrop(Material.POTATOES));
+        inv.setItem(13, plugin.getCustomItemManager().getCustomCrop(Material.BEETROOTS));
+        inv.setItem(14, plugin.getCustomItemManager().getCustomCrop(Material.PUMPKIN));
+        inv.setItem(15, plugin.getCustomItemManager().getCustomCrop(Material.MELON));
         
         // Продать все
         inv.setItem(21, createItem(Material.HOPPER, "§aПродать весь урожай", 

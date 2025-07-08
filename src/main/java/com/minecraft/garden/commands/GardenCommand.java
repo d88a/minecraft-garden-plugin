@@ -10,6 +10,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 public class GardenCommand implements CommandExecutor {
     
@@ -344,7 +345,9 @@ public class GardenCommand implements CommandExecutor {
         plugin.getEconomyManager().withdrawMoney(player, totalCost);
         
         // Даем семена
-        player.getInventory().addItem(new org.bukkit.inventory.ItemStack(seedType, amount));
+        ItemStack customSeed = plugin.getCustomItemManager().getCustomSeed(seedType);
+        customSeed.setAmount(amount);
+        player.getInventory().addItem(customSeed);
         
         player.sendMessage("§aПокупка успешна!");
         player.sendMessage("§eПолучено: §7" + amount + "x " + getSeedDisplayName(seedName));
@@ -568,5 +571,17 @@ public class GardenCommand implements CommandExecutor {
                 }
             }
         }
+    }
+
+    private void giveHarvestToPlayer(Player player, Material cropType) {
+        // Даем кастомный урожай
+        ItemStack customCrop = plugin.getCustomItemManager().getCustomCrop(cropType);
+        player.getInventory().addItem(customCrop);
+        
+        String cropName = getCropName(cropType);
+        int price = plugin.getConfigManager().getCropPrice(cropName);
+        
+        player.sendMessage("§aСобран урожай: §e" + getCropDisplayName(cropName));
+        player.sendMessage("§eЦена продажи: §7" + price + " рублей");
     }
 } 

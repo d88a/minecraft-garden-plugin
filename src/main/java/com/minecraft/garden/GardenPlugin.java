@@ -9,6 +9,7 @@ import com.minecraft.garden.managers.EconomyManager;
 import com.minecraft.garden.managers.PlotManager;
 import com.minecraft.garden.managers.PlantManager;
 import com.minecraft.garden.managers.GuiManager;
+import com.minecraft.garden.managers.CustomItemManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GardenPlugin extends JavaPlugin {
@@ -20,6 +21,7 @@ public class GardenPlugin extends JavaPlugin {
     private PlotManager plotManager;
     private PlantManager plantManager;
     private GuiManager guiManager;
+    private CustomItemManager customItemManager;
     
     @Override
     public void onEnable() {
@@ -36,6 +38,7 @@ public class GardenPlugin extends JavaPlugin {
             plotManager = new PlotManager(this);
             plantManager = new PlantManager(this);
             guiManager = new GuiManager(this);
+            customItemManager = new CustomItemManager(this);
             getLogger().info("✓ Менеджеры инициализированы");
             
             // Регистрация команд
@@ -123,5 +126,9 @@ public class GardenPlugin extends JavaPlugin {
     
     public GuiManager getGuiManager() {
         return guiManager;
+    }
+    
+    public CustomItemManager getCustomItemManager() {
+        return customItemManager;
     }
 } 

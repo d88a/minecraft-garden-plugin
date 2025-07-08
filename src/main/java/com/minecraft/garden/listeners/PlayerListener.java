@@ -40,8 +40,8 @@ public class PlayerListener implements Listener {
         Block block = event.getBlock();
         ItemStack item = event.getItemInHand();
         
-        // Проверяем, что это семя
-        if (isSeed(item.getType())) {
+        // Проверяем, что это кастомное семя
+        if (plugin.getCustomItemManager().isCustomSeed(item)) {
             // Отменяем стандартное размещение блока
             event.setCancelled(true);
             
@@ -52,12 +52,18 @@ public class PlayerListener implements Listener {
                 player.getInventory().setItemInMainHand(null);
             }
             
-            // Пытаемся посадить семя
-            boolean success = plugin.getPlantManager().plantSeed(player, item.getType(), block.getLocation());
+            // Получаем базовый материал для посадки
+            Material baseMaterial = plugin.getCustomItemManager().getBaseMaterial(item);
             
-            if (!success) {
+            // Пытаемся посадить семя
+            boolean success = plugin.getPlantManager().plantSeed(player, baseMaterial, block.getLocation());
+            
+            if (success) {
+                player.sendMessage("§aСемя посажено! Растение будет готово через некоторое время.");
+            } else {
                 // Возвращаем предмет, если посадка не удалась
                 player.getInventory().addItem(item);
+                player.sendMessage("§cНе удалось посадить семя! Убедитесь, что вы на своём участке и земля вспахана.");
             }
         }
     }

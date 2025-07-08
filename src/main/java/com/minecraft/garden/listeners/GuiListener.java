@@ -96,6 +96,8 @@ public class GuiListener implements Listener {
             case BARRIER:
                 if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
                     deletePlot(player);
+                } else {
+                    player.sendMessage("§cУ вас нет участка для удаления!");
                 }
                 break;
                 
@@ -127,27 +129,27 @@ public class GuiListener implements Listener {
         
         switch (material) {
             case WHEAT_SEEDS:
-                buySeeds(player, "wheat", 1);
+                buySeed(player, "wheat");
                 break;
                 
             case CARROT:
-                buySeeds(player, "carrot", 1);
+                buySeed(player, "carrot");
                 break;
                 
             case POTATO:
-                buySeeds(player, "potato", 1);
+                buySeed(player, "potato");
                 break;
                 
             case BEETROOT_SEEDS:
-                buySeeds(player, "beetroot", 1);
+                buySeed(player, "beetroot");
                 break;
                 
             case PUMPKIN_SEEDS:
-                buySeeds(player, "pumpkin", 1);
+                buySeed(player, "pumpkin");
                 break;
                 
             case MELON_SEEDS:
-                buySeeds(player, "melon", 1);
+                buySeed(player, "melon");
                 break;
                 
             case ARROW:
@@ -283,11 +285,13 @@ public class GuiListener implements Listener {
         }
         
         var plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        
         boolean success = plugin.getPlotManager().deletePlot(player.getUniqueId());
         
         if (success) {
             player.sendMessage("§aУчасток успешно удален!");
             player.sendMessage("§eУдаленный участок: §7ID " + plot.id + ", " + plot.getCoordinates());
+            player.sendMessage("§eДля создания нового участка используйте: §6/garden create");
         } else {
             player.sendMessage("§cОшибка при удалении участка!");
         }
@@ -305,28 +309,35 @@ public class GuiListener implements Listener {
         player.sendMessage("§e/garden help §7- Эта справка");
     }
     
-    private void buySeeds(Player player, String seedName, int amount) {
+    private void buySeed(Player player, String seedName) {
+        // Проверяем баланс
+        int price = plugin.getConfigManager().getSeedPrice(seedName);
+        if (!plugin.getEconomyManager().hasMoney(player, price)) {
+            player.sendMessage("§cНедостаточно денег! Нужно: §e" + price + " §cрублей");
+            return;
+        }
+        
+        // Списываем деньги
+        plugin.getEconomyManager().withdrawMoney(player, price);
+        
+        // Определяем тип семени
         Material seedType = getSeedMaterial(seedName);
         if (seedType == null) {
             player.sendMessage("§cНеизвестное семя: " + seedName);
             return;
         }
         
-        int price = plugin.getConfigManager().getSeedPrice(seedName);
-        int totalCost = price * amount;
+        // Даем кастомное семя
+        ItemStack customSeed = plugin.getCustomItemManager().getCustomSeed(seedType);
+        player.getInventory().addItem(customSeed);
         
-        if (!plugin.getEconomyManager().hasMoney(player, totalCost)) {
-            player.sendMessage("§cНедостаточно денег! Нужно: §e" + totalCost + " §cрублей");
-            return;
-        }
+        player.sendMessage("§aПокупка успешна!");
+        player.sendMessage("§eПолучено: §7" + getSeedDisplayName(seedName));
+        player.sendMessage("§eСтоимость: §7" + price + " рублей");
         
-        plugin.getEconomyManager().withdrawMoney(player, totalCost);
-        player.getInventory().addItem(new ItemStack(seedType, amount));
-        
-        player.sendMessage("§aПокупка успешна! Получено: §e" + amount + "x " + getSeedDisplayName(seedName));
-        
-        // Обновляем GUI
-        plugin.getGuiManager().openShop(player);
+        // Обновляем баланс
+        int newBalance = plugin.getEconomyManager().getBalance(player);
+        player.sendMessage("§aНовый баланс: §e" + newBalance + " §aрублей");
     }
     
     private void sellCrops(Player player, String cropName, int amount) {

@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.inventory.ItemStack;
 
 public class PlantManager {
     
@@ -175,7 +176,10 @@ public class PlantManager {
         Material belowType = belowBlock.getType();
         boolean validSoil = belowType == Material.FARMLAND || 
                            belowType == Material.GRASS_BLOCK || 
-                           belowType == Material.DIRT;
+                           belowType == Material.DIRT ||
+                           belowType == Material.COARSE_DIRT ||
+                           belowType == Material.ROOTED_DIRT ||
+                           belowType == Material.PODZOL;
         
         // Проверяем, что место для посадки свободно
         boolean spaceFree = block.getType().isAir();
@@ -319,13 +323,15 @@ public class PlantManager {
      * Дает игроку собранный урожай
      */
     private void giveHarvestToPlayer(Player player, Material cropType) {
-        Material harvestItem = getHarvestItem(cropType);
-        int amount = getHarvestAmount(cropType);
+        // Даем кастомный урожай
+        ItemStack customCrop = plugin.getCustomItemManager().getCustomCrop(cropType);
+        player.getInventory().addItem(customCrop);
         
-        // Добавляем предметы в инвентарь игрока
-        player.getInventory().addItem(new org.bukkit.inventory.ItemStack(harvestItem, amount));
+        String cropName = getCropName(cropType);
+        int price = plugin.getConfigManager().getCropPrice(cropName);
         
-        player.sendMessage("§aПолучено: §e" + amount + "x " + getCropDisplayName(harvestItem));
+        player.sendMessage("§aСобран урожай: §e" + getCropDisplayName(cropName));
+        player.sendMessage("§eЦена продажи: §7" + price + " рублей");
     }
     
     /**
