@@ -1,6 +1,7 @@
 package com.minecraft.garden.listeners;
 
 import com.minecraft.garden.GardenPlugin;
+import com.minecraft.garden.managers.PlotManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
