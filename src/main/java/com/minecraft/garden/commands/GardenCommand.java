@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.block.Block;
 
 public class GardenCommand implements CommandExecutor {
     
@@ -84,6 +85,16 @@ public class GardenCommand implements CommandExecutor {
                 break;
             case "expand":
                 showExpandMenu(player);
+                break;
+            case "balance":
+                int balance = plugin.getEconomyManager().getBalance(player);
+                player.sendMessage("§aВаш баланс: §e" + balance + " §aрублей");
+                break;
+            case "test":
+                testCustomSeeds(player);
+                break;
+            case "debug":
+                debugSystem(player);
                 break;
             case "help":
                 showHelp(player);
@@ -376,8 +387,11 @@ public class GardenCommand implements CommandExecutor {
             player.getInventory().addItem(customSeed);
         }
         
+        // Вычисляем общее количество выданных семян
+        int totalGiven = Integer.parseInt(amountStr) - amount;
+        
         player.sendMessage("§aПокупка успешна!");
-        player.sendMessage("§eПолучено: §7" + amount + "x " + getSeedDisplayName(seedName));
+        player.sendMessage("§eПолучено: §7" + totalGiven + "x " + getSeedDisplayName(seedName));
         player.sendMessage("§eСтоимость: §7" + totalCost + " рублей");
         
         // Обновляем баланс
@@ -431,9 +445,12 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e/garden sell §7- Продажа урожая");
         player.sendMessage("§e/garden buy <семя> <количество> §7- Купить семена");
         player.sendMessage("§e/garden sell <урожай> <количество> §7- Продать урожай");
+        player.sendMessage("§e/garden balance §7- Проверить баланс");
         player.sendMessage("§e/garden give <семя> <количество> §7- Выдать тестовые семена");
         player.sendMessage("§e/garden plant <семя> §7- Тестовая посадка");
+        player.sendMessage("§e/garden till §7- Вспахать землю на участке");
         player.sendMessage("§e/garden test §7- Тестовая команда");
+        player.sendMessage("§e/garden debug §7- Отладка системы");
         player.sendMessage("§e/garden help §7- Эта справка");
         player.sendMessage("§7");
         player.sendMessage("§6=== Игровой процесс ===");
@@ -701,5 +718,96 @@ public class GardenCommand implements CommandExecutor {
 
         player.sendMessage("§aВыдано тестовых семян!");
         player.sendMessage("§eПолучено: §7" + amount + "x " + getSeedDisplayName(seedName));
+    }
+    
+    private void debugSystem(Player player) {
+        player.sendMessage("§6=== Отладка системы ===");
+        
+        // Проверяем участок
+        if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+            player.sendMessage("§a✓ Участок найден: " + plot.getPlotInfo());
+            
+            // Проверяем место посадки
+            String worldName = plugin.getConfigManager().getWorldName();
+            World world = Bukkit.getWorld(worldName);
+            if (world != null) {
+                Location plantLoc = plot.getPlantLocation(world);
+                Location tillLoc = plot.getTillLocation(world);
+                
+                player.sendMessage("§eМесто посадки: " + plantLoc.getBlockX() + ", " + plantLoc.getBlockY() + ", " + plantLoc.getBlockZ());
+                player.sendMessage("§eМесто вспашки: " + tillLoc.getBlockX() + ", " + tillLoc.getBlockY() + ", " + tillLoc.getBlockZ());
+                
+                // Проверяем блоки
+                Block plantBlock = world.getBlockAt(plantLoc);
+                Block tillBlock = world.getBlockAt(tillLoc);
+                Block belowPlantBlock = world.getBlockAt(plantLoc.clone().subtract(0, 1, 0));
+                
+                player.sendMessage("§eБлок посадки: " + plantBlock.getType());
+                player.sendMessage("§eБлок вспашки: " + tillBlock.getType());
+                player.sendMessage("§eБлок под посадкой: " + belowPlantBlock.getType());
+            }
+        } else {
+            player.sendMessage("§c✗ Участок не найден");
+        }
+        
+        // Проверяем баланс
+        int balance = plugin.getEconomyManager().getBalance(player);
+        player.sendMessage("§eБаланс: " + balance + " рублей");
+        
+        // Проверяем кастомные семена
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        if (itemInHand != null && itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName()) {
+            String displayName = itemInHand.getItemMeta().getDisplayName();
+            boolean isCustom = plugin.getCustomItemManager().isCustomSeed(itemInHand);
+            player.sendMessage("§eПредмет в руке: " + itemInHand.getType());
+            player.sendMessage("§eНазвание: " + displayName);
+            player.sendMessage("§eКастомное семя: " + (isCustom ? "✓ Да" : "✗ Нет"));
+        } else {
+            player.sendMessage("§eПредмет в руке: " + (itemInHand != null ? itemInHand.getType() : "пусто"));
+        }
+        
+        player.sendMessage("§6=== Конец отладки ===");
+    }
+
+    private void tillPlot(Player player) {
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка! Используйте §6/garden create §cдля получения участка.");
+            return;
+        }
+
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        if (plot == null) {
+            player.sendMessage("§cОшибка: данные участка не найдены!");
+            return;
+        }
+
+        String worldName = plugin.getConfigManager().getWorldName();
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            player.sendMessage("§cОшибка: мир '" + worldName + "' не найден!");
+            return;
+        }
+
+        Location tillLocation = plot.getTillLocation(world);
+        if (tillLocation == null) {
+            player.sendMessage("§cОшибка: место для вспашки не найдено!");
+            return;
+        }
+
+        if (world.getBlockAt(tillLocation).getType().isSolid()) {
+            player.sendMessage("§cМесто для вспашки занято!");
+            return;
+        }
+
+        if (!isLocationSafe(world, tillLocation)) {
+            player.sendMessage("§cМесто для вспашки небезопасно!");
+            return;
+        }
+
+        // Вспашка
+        plugin.getPlotManager().tillPlot(player.getUniqueId(), tillLocation);
+        player.sendMessage("§aУчасток вспахан!");
+        player.sendMessage("§eКоординаты вспаханного участка: §7" + tillLocation.getBlockX() + ", " + tillLocation.getBlockY() + ", " + tillLocation.getBlockZ());
     }
 } 

@@ -110,9 +110,13 @@ public class PlantManager {
      * Пытается посадить семя на участке игрока
      */
     public boolean plantSeed(Player player, Material seedType, Location location) {
+        plugin.getLogger().info("Попытка посадки семени " + seedType + " игроком " + player.getName());
+        plugin.getLogger().info("Координаты посадки: " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+        
         // Проверяем, что семя можно посадить
         if (!seedToCrop.containsKey(seedType)) {
             player.sendMessage("§cЭтот предмет нельзя посадить!");
+            plugin.getLogger().warning("Неизвестный тип семени: " + seedType);
             return false;
         }
         
@@ -141,7 +145,16 @@ public class PlantManager {
             if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
                 // Проверяем, что игрок использует кастомное семя
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                if (!plugin.getCustomItemManager().isCustomSeed(itemInHand)) {
+                boolean isCustom = plugin.getCustomItemManager().isCustomSeed(itemInHand);
+                plugin.getLogger().info("Проверка кастомного семени:");
+                plugin.getLogger().info("  Предмет в руке: " + itemInHand.getType());
+                plugin.getLogger().info("  Имеет метаданные: " + itemInHand.hasItemMeta());
+                if (itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName()) {
+                    plugin.getLogger().info("  Название: " + itemInHand.getItemMeta().getDisplayName());
+                }
+                plugin.getLogger().info("  Это кастомное семя: " + isCustom);
+                
+                if (!isCustom) {
                     player.sendMessage("§cНа участках можно сажать только кастомные семена!");
                     return false;
                 }
@@ -161,8 +174,24 @@ public class PlantManager {
             
             // Отладочная информация
             Block belowBlock = location.clone().subtract(0, 1, 0).getBlock();
+            Block targetBlock = location.getBlock();
             player.sendMessage("§eБлок под растением: " + belowBlock.getType());
-            player.sendMessage("§eМесто посадки: " + location.getBlock().getType());
+            player.sendMessage("§eМесто посадки: " + targetBlock.getType());
+            player.sendMessage("§eКоординаты: X=" + location.getBlockX() + " Y=" + location.getBlockY() + " Z=" + location.getBlockZ());
+            
+            // Проверяем, находится ли место на участке
+            boolean isOnPlot = false;
+            for (Map.Entry<UUID, PlotManager.PlotData> entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+                if (entry.getValue().isInPlot(location)) {
+                    isOnPlot = true;
+                    player.sendMessage("§eМесто находится на участке игрока: " + plugin.getServer().getOfflinePlayer(entry.getKey()).getName());
+                    break;
+                }
+            }
+            if (!isOnPlot) {
+                player.sendMessage("§eМесто НЕ находится на участке!");
+            }
+            
             return false;
         }
         
@@ -205,10 +234,22 @@ public class PlantManager {
         
         // Проверяем, что блок под растением - вспаханная земля
         Material belowType = belowBlock.getType();
-        boolean validSoil = belowType == Material.FARMLAND;
+        boolean validSoil = belowType == Material.FARMLAND || 
+                           belowType == Material.DIRT ||
+                           belowType == Material.GRASS_BLOCK;
         
         // Проверяем, что место для посадки свободно
         boolean spaceFree = block.getType().isAir();
+        
+        // Отладочная информация
+        if (!validSoil || !spaceFree) {
+            plugin.getLogger().info("Проверка места посадки:");
+            plugin.getLogger().info("  Координаты: " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+            plugin.getLogger().info("  Блок под растением: " + belowType);
+            plugin.getLogger().info("  Место посадки: " + block.getType());
+            plugin.getLogger().info("  validSoil: " + validSoil);
+            plugin.getLogger().info("  spaceFree: " + spaceFree);
+        }
         
         return validSoil && spaceFree;
     }

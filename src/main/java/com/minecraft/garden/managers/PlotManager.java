@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 
 public class PlotManager {
     
@@ -487,6 +488,42 @@ public class PlotManager {
         return false;
     }
     
+    /**
+     * Вспахивает землю на участке
+     */
+    public boolean tillPlot(UUID playerUuid, Location location) {
+        if (!hasPlot(playerUuid)) {
+            return false;
+        }
+        
+        PlotData plot = getPlot(playerUuid);
+        if (!plot.isInPlot(location)) {
+            return false;
+        }
+        
+        World world = location.getWorld();
+        if (world == null) {
+            return false;
+        }
+        
+        // Вспахиваем землю в центре участка
+        Block block = world.getBlockAt(location);
+        Material blockType = block.getType();
+        
+        // Проверяем, что блок можно вспахать
+        if (blockType == Material.GRASS_BLOCK || blockType == Material.DIRT) {
+            block.setType(Material.FARMLAND);
+            plugin.getLogger().info("Земля вспахана на участке " + plot.id + " игрока " + playerUuid);
+            return true;
+        } else if (blockType == Material.FARMLAND) {
+            plugin.getLogger().info("Земля уже вспахана на участке " + plot.id);
+            return true;
+        } else {
+            plugin.getLogger().warning("Нельзя вспахать блок типа " + blockType + " на участке " + plot.id);
+            return false;
+        }
+    }
+    
     public static class PlotData {
         public int id;
         public int x;
@@ -517,6 +554,15 @@ public class PlotManager {
             int plantY = y + 1; // На один блок выше уровня участка
             
             return new Location(world, centerX, plantY, centerZ);
+        }
+        
+        public Location getTillLocation(World world) {
+            // Место для вспашки в центре участка (на уровне участка)
+            int centerX = x + size/2;
+            int centerZ = z + size/2;
+            int tillY = y; // На уровне участка
+            
+            return new Location(world, centerX, tillY, centerZ);
         }
         
         public boolean isInPlot(Location location) {

@@ -247,10 +247,20 @@ public class CustomItemManager {
      */
     public boolean isCustomSeed(ItemStack item) {
         if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            plugin.getLogger().info("isCustomSeed: предмет не подходит - null: " + (item == null) + 
+                                   ", hasMeta: " + (item != null && item.hasItemMeta()) + 
+                                   ", hasDisplayName: " + (item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName()));
             return false;
         }
         
         String displayName = item.getItemMeta().getDisplayName();
+        boolean containsSad = displayName.contains("(Сад)");
+        boolean containsEmoji = displayName.contains("🍞") || displayName.contains("🥕") || 
+                               displayName.contains("🥔") || displayName.contains("🔴") || 
+                               displayName.contains("🎃") || displayName.contains("🍉");
+        
+        plugin.getLogger().info("isCustomSeed: название='" + displayName + "', содержит (Сад): " + containsSad + ", содержит эмодзи: " + containsEmoji);
+        
         return displayName.contains("(Сад)") && (displayName.contains("Семена") || 
                displayName.contains("🍞") || displayName.contains("🥕") || 
                displayName.contains("🥔") || displayName.contains("🔴") || 
