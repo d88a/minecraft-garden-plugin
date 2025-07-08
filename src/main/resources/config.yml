@@ -45,7 +45,7 @@ plots:
   
   # Размеры участков
   initial_size: 15
-  max_size: 60
+  max_size: 30
   
   # Расстояния
   path_width: 2

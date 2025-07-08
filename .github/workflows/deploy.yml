@@ -24,19 +24,15 @@ jobs:
     - name: Upload plugin artifact
       uses: actions/upload-artifact@v4
       with:
-        name: plugin-jar
+        name: garden-plugin
         path: ./target/*.jar
-
-    - name: Show JAR file size
-      run: ls -lh ./target/*.jar
-
-    - name: Install sshpass
-      run: sudo apt-get update && sudo apt-get install -y sshpass
-
-    - name: Deploy to SFTP server
+        if-no-files-found: error 
+    - name: Create Release and Upload JAR
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: Latest Build
+        body: Автоматическая сборка плагина Minecraft Garden Plugin
+        files: ./target/*.jar
       env:
-        SFTP_SERVER: ${{ secrets.SFTP_SERVER }}
-        SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-        SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-        SFTP_PORT: ${{ secrets.SFTP_PORT || 2022 }}
-      run: bash ./deploy_sftp.sh 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
