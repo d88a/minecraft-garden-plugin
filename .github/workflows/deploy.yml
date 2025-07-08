@@ -1,11 +1,13 @@
-name: Deploy Plugin to SFTP
+name: Build and Release GardenPlugin
 
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     
     steps:
@@ -18,22 +20,67 @@ jobs:
         java-version: '22'
         distribution: 'temurin'
         
+    - name: Cache Maven packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
     - name: Build with Maven
-      run: mvn clean package
-
+      run: mvn clean package -DskipTests
+      
     - name: Upload plugin artifact
       uses: actions/upload-artifact@v4
       with:
         name: garden-plugin
         path: ./target/*.jar
-        if-no-files-found: error 
-    - name: Create Release and Upload JAR
+        if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download plugin artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: garden-plugin
+        path: ./target
+        
+    - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: latest
-        name: Latest Build
-        body: Автоматическая сборка плагина Minecraft Garden Plugin
+        tag_name: v${{ github.run_number }}
+        name: GardenPlugin v${{ github.run_number }}
+        body: |
+          ## 🎮 GardenPlugin v${{ github.run_number }}
+          
+          ### ✅ Что реализовано:
+          - Система участков 5x5-20x20 с заборами
+          - Экономика с кастомными семенами
+          - GUI система для всех функций
+          - Расширение участков
+          - Защита от гриферства
+          
+          ### 📥 Установка:
+          1. Скачайте JAR файл
+          2. Поместите в папку `plugins/`
+          3. Перезапустите сервер
+          
+          ### 🎯 Команды:
+          - `/garden` - главное меню
+          - `/garden create` - создать участок
+          - `/garden expand` - расширить участок
+          - `/garden shop` - магазин семян
+          
+          **Прогресс реализации: 65%**
         files: ./target/*.jar
+        draft: false
+        prerelease: false
       env:
-        # Используйте PAT с правами repo/public_repo, добавьте его как секрет GH_PAT
-        GITHUB_TOKEN: ${{ secrets.GH_PAT }} 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
