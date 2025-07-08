@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import com.minecraft.garden.managers.PlotManager;
 
 public class PlantManager {
     
@@ -70,9 +71,21 @@ public class PlantManager {
                             Location location = new Location(world, x, y, z);
                             
                             PlantData plantData = new PlantData();
-                            plantData.cropType = Material.valueOf(cropSection.getString("crop_type"));
+                            String cropTypeName = cropSection.getString("crop_type");
+                            try {
+                                plantData.cropType = Material.valueOf(cropTypeName);
+                            } catch (IllegalArgumentException e) {
+                                plugin.getLogger().warning("Неизвестный тип растения: " + cropTypeName + " для локации: " + locationKey);
+                                continue; // Пропускаем это растение
+                            }
                             plantData.plantedTime = cropSection.getLong("planted_time");
-                            plantData.ownerUuid = UUID.fromString(cropSection.getString("owner"));
+                            String ownerString = cropSection.getString("owner");
+                            try {
+                                plantData.ownerUuid = UUID.fromString(ownerString);
+                            } catch (IllegalArgumentException e) {
+                                plugin.getLogger().warning("Неверный UUID владельца: " + ownerString + " для локации: " + locationKey);
+                                continue; // Пропускаем это растение
+                            }
                             plantData.plotId = cropSection.getInt("plot_id");
                             
                             plantedCrops.put(location, plantData);
@@ -145,6 +158,11 @@ public class PlantManager {
             if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
                 // Проверяем, что игрок использует кастомное семя
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+                    player.sendMessage("§cУ вас нет предмета в руке!");
+                    return false;
+                }
+                
                 boolean isCustom = plugin.getCustomItemManager().isCustomSeed(itemInHand);
                 plugin.getLogger().info("Проверка кастомного семени:");
                 plugin.getLogger().info("  Предмет в руке: " + itemInHand.getType());
@@ -181,7 +199,12 @@ public class PlantManager {
             
             // Проверяем, находится ли место на участке (используем уже определенную переменную isOnPlot)
             if (isOnPlot) {
-                player.sendMessage("§eМесто находится на участке игрока: " + plugin.getServer().getOfflinePlayer(plotOwner).getName());
+                String ownerName = plugin.getServer().getOfflinePlayer(plotOwner).getName();
+                if (ownerName != null) {
+                    player.sendMessage("§eМесто находится на участке игрока: " + ownerName);
+                } else {
+                    player.sendMessage("§eМесто находится на участке игрока: " + plotOwner);
+                }
             } else {
                 player.sendMessage("§eМесто НЕ находится на участке!");
             }
@@ -406,7 +429,11 @@ public class PlantManager {
     private void giveHarvestToPlayer(Player player, Material cropType) {
         // Даем кастомный урожай
         ItemStack customCrop = plugin.getCustomItemManager().getCustomCrop(cropType);
-        player.getInventory().addItem(customCrop);
+        if (customCrop != null) {
+            player.getInventory().addItem(customCrop);
+        } else {
+            plugin.getLogger().warning("Не удалось получить кастомный урожай для типа: " + cropType);
+        }
         
         String cropName = getCropName(cropType);
         int price = plugin.getConfigManager().getCropPrice(cropName);
@@ -427,36 +454,6 @@ public class PlantManager {
             case PUMPKIN: return "pumpkin";
             case MELON: return "melon";
             default: return cropType.name().toLowerCase();
-        }
-    }
-    
-    /**
-     * Получает предмет урожая для типа растения
-     */
-    private Material getHarvestItem(Material cropType) {
-        switch (cropType) {
-            case WHEAT: return Material.WHEAT;
-            case CARROTS: return Material.CARROT;
-            case POTATOES: return Material.POTATO;
-            case BEETROOTS: return Material.BEETROOT;
-            case PUMPKIN: return Material.PUMPKIN;
-            case MELON: return Material.MELON;
-            default: return cropType;
-        }
-    }
-    
-    /**
-     * Получает количество урожая с одного растения
-     */
-    private int getHarvestAmount(Material cropType) {
-        switch (cropType) {
-            case WHEAT: return 1;
-            case CARROTS: return 1;
-            case POTATOES: return 1;
-            case BEETROOTS: return 1;
-            case PUMPKIN: return 1;
-            case MELON: return 1;
-            default: return 1;
         }
     }
     
