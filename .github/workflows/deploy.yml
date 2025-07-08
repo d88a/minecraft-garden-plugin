@@ -27,6 +27,9 @@ jobs:
         name: plugin-jar
         path: ./target/*.jar
 
+    - name: Show JAR file size
+      run: ls -lh ./target/*.jar
+
     - name: Install sshpass
       run: sudo apt-get update && sudo apt-get install -y sshpass
 
