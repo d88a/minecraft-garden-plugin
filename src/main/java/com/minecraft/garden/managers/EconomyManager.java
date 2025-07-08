@@ -75,11 +75,9 @@ public class EconomyManager {
      * Выдает начальный баланс игроку при получении участка
      */
     public void givePlotStartingBalance(Player player) {
-        if (!playerBalances.containsKey(player.getUniqueId())) {
-            int startingBalance = plugin.getConfigManager().getPlotStartingBalance();
-            setBalance(player, startingBalance);
-            player.sendMessage("§aПолучен начальный капитал: §e" + startingBalance + " рублей");
-        }
+        int startingBalance = plugin.getConfigManager().getPlotStartingBalance();
+        setBalance(player, startingBalance);
+        player.sendMessage("§aПолучен начальный капитал: §e" + startingBalance + " рублей");
     }
     
     /**

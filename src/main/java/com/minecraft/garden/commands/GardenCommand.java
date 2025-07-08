@@ -397,17 +397,15 @@ public class GardenCommand implements CommandExecutor {
     }
     
     private void showHelp(Player player) {
-        player.sendMessage("§6=== Справка по командам ===");
-        player.sendMessage("§e/garden §7- Главное меню");
-        player.sendMessage("§e/garden create §7- Получить участок");
-        player.sendMessage("§e/garden plot §7- Информация об участке");
-        player.sendMessage("§e/garden tp §7- Телепорт на участок");
-        player.sendMessage("§c/garden delete §7- Удалить участок");
-        player.sendMessage("§e/garden shop §7- Магазин семян");
-        player.sendMessage("§e/garden buy <семя> <количество> §7- Купить семена");
-        player.sendMessage("§e/garden sell §7- Продажа урожая");
-        player.sendMessage("§e/garden invite <игрок> §7- Пригласить игрока");
+        player.sendMessage("§6=== Команды плагина 'Вырасти сад' ===");
+        player.sendMessage("§e/garden create §7- Создать участок");
         player.sendMessage("§e/garden expand §7- Расширить участок");
+        player.sendMessage("§e/garden shop §7- Магазин семян");
+        player.sendMessage("§e/garden sell §7- Продажа урожая");
+        player.sendMessage("§e/garden buy <семя> <количество> §7- Купить семена");
+        player.sendMessage("§e/garden sell <урожай> <количество> §7- Продать урожай");
+        player.sendMessage("§e/garden give <семя> <количество> §7- Выдать тестовые семена");
+        player.sendMessage("§e/garden test §7- Тестовая команда");
         player.sendMessage("§e/garden help §7- Эта справка");
         player.sendMessage("§7");
         player.sendMessage("§6=== Игровой процесс ===");
@@ -583,5 +581,40 @@ public class GardenCommand implements CommandExecutor {
         
         player.sendMessage("§aСобран урожай: §e" + getCropDisplayName(cropName));
         player.sendMessage("§eЦена продажи: §7" + price + " рублей");
+    }
+
+    private void testCustomSeeds(Player player) {
+        player.sendMessage("§aТестовая команда для отладки кастомных семян.");
+        player.sendMessage("§eВы можете попробовать купить кастомные семена.");
+        player.sendMessage("§eИспользуйте: §6/garden buy <семя> <количество>");
+        player.sendMessage("§eПример: §6/garden buy custom_wheat 10");
+    }
+
+    private void giveTestSeeds(Player player, String seedName, String amountStr) {
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr);
+            if (amount <= 0 || amount > 64) {
+                player.sendMessage("§cКоличество должно быть от 1 до 64!");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cНеверное количество!");
+            return;
+        }
+
+        Material seedType = getSeedMaterial(seedName);
+        if (seedType == null) {
+            player.sendMessage("§cНеизвестное семя: " + seedName);
+            player.sendMessage("§eДоступные семена: wheat, carrot, potato, beetroot, pumpkin, melon");
+            return;
+        }
+
+        ItemStack customSeed = plugin.getCustomItemManager().getCustomSeed(seedType);
+        customSeed.setAmount(amount);
+        player.getInventory().addItem(customSeed);
+
+        player.sendMessage("§aВыдано тестовых семян!");
+        player.sendMessage("§eПолучено: §7" + amount + "x " + getSeedDisplayName(seedName));
     }
 } 

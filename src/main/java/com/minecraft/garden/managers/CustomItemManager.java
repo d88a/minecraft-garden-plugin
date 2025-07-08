@@ -251,7 +251,10 @@ public class CustomItemManager {
         }
         
         String displayName = item.getItemMeta().getDisplayName();
-        return displayName.contains("(Сад)") && displayName.contains("Семена");
+        return displayName.contains("(Сад)") && (displayName.contains("Семена") || 
+               displayName.contains("🍞") || displayName.contains("🥕") || 
+               displayName.contains("🥔") || displayName.contains("🔴") || 
+               displayName.contains("🎃") || displayName.contains("🍉"));
     }
     
     /**

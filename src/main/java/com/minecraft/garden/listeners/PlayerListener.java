@@ -60,6 +60,8 @@ public class PlayerListener implements Listener {
         
         // Если это кастомное семя
         if (plugin.getCustomItemManager().isCustomSeed(item)) {
+            player.sendMessage("§aОбнаружено кастомное семя: " + item.getItemMeta().getDisplayName());
+            
             // Отменяем стандартное размещение блока
             event.setCancelled(true);
             
@@ -104,8 +106,15 @@ public class PlayerListener implements Listener {
                 if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
                     event.setCancelled(true);
                     player.sendMessage("§cНа участках можно сажать только кастомные семена!");
+                    player.sendMessage("§eПопробуйте купить кастомные семена в магазине: §6/garden shop");
                     return;
                 }
+            }
+        } else {
+            // Отладочная информация
+            if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                player.sendMessage("§eПредмет: " + item.getItemMeta().getDisplayName());
+                player.sendMessage("§eТип: " + item.getType());
             }
         }
     }
