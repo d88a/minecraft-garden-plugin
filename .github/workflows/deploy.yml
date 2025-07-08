@@ -35,4 +35,5 @@ jobs:
         body: Автоматическая сборка плагина Minecraft Garden Plugin
         files: ./target/*.jar
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        # Используйте PAT с правами repo/public_repo, добавьте его как секрет GH_PAT
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }} 
