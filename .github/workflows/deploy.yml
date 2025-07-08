@@ -28,11 +28,15 @@ jobs:
         path: ./target/*.jar
 
     - name: Deploy to SFTP server
-      uses: atymic/sftp-deploy@v2.0.0
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.SFTP_SERVER }}
         username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
+        protocol: sftp
         port: 2022
-        local_path: './target/*.jar'
-        remote_path: '/root/aurorix/plugins/' 
+        local-dir: ./target/
+        server-dir: /root/aurorix/plugins/
+        exclude: |
+          **/*.md
+          **/*.txt 
