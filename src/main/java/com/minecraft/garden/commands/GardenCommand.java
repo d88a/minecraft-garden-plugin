@@ -347,7 +347,34 @@ public class GardenCommand implements CommandExecutor {
         // Даем семена
         ItemStack customSeed = plugin.getCustomItemManager().getCustomSeed(seedType);
         customSeed.setAmount(amount);
-        player.getInventory().addItem(customSeed);
+        
+        // Проверяем, есть ли уже такие семена в инвентаре
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) {
+            ItemStack existingItem = contents[i];
+            if (existingItem != null && 
+                existingItem.getType() == customSeed.getType() && 
+                existingItem.hasItemMeta() && 
+                existingItem.getItemMeta().hasDisplayName() &&
+                existingItem.getItemMeta().getDisplayName().equals(customSeed.getItemMeta().getDisplayName())) {
+                
+                // Добавляем к существующему стаку
+                int spaceInStack = 64 - existingItem.getAmount();
+                if (spaceInStack > 0) {
+                    int toAdd = Math.min(amount, spaceInStack);
+                    existingItem.setAmount(existingItem.getAmount() + toAdd);
+                    amount -= toAdd;
+                    
+                    if (amount <= 0) break;
+                }
+            }
+        }
+        
+        // Если остались семена, добавляем новый стак
+        if (amount > 0) {
+            customSeed.setAmount(amount);
+            player.getInventory().addItem(customSeed);
+        }
         
         player.sendMessage("§aПокупка успешна!");
         player.sendMessage("§eПолучено: §7" + amount + "x " + getSeedDisplayName(seedName));
@@ -405,6 +432,7 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e/garden buy <семя> <количество> §7- Купить семена");
         player.sendMessage("§e/garden sell <урожай> <количество> §7- Продать урожай");
         player.sendMessage("§e/garden give <семя> <количество> §7- Выдать тестовые семена");
+        player.sendMessage("§e/garden plant <семя> §7- Тестовая посадка");
         player.sendMessage("§e/garden test §7- Тестовая команда");
         player.sendMessage("§e/garden help §7- Эта справка");
         player.sendMessage("§7");
@@ -588,6 +616,63 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§eВы можете попробовать купить кастомные семена.");
         player.sendMessage("§eИспользуйте: §6/garden buy <семя> <количество>");
         player.sendMessage("§eПример: §6/garden buy custom_wheat 10");
+    }
+
+    private void testPlanting(Player player, String seedName) {
+        Material seedType = getSeedMaterial(seedName);
+        if (seedType == null) {
+            player.sendMessage("§cНеизвестное семя для посадки: " + seedName);
+            player.sendMessage("§eДоступные семена: wheat, carrot, potato, beetroot, pumpkin, melon");
+            return;
+        }
+
+        ItemStack customSeed = plugin.getCustomItemManager().getCustomSeed(seedType);
+        if (customSeed == null) {
+            player.sendMessage("§cОшибка: кастомное семя не найдено для типа " + seedType.name());
+            return;
+        }
+
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка! Используйте §6/garden create §cдля получения участка.");
+            return;
+        }
+
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        if (plot == null) {
+            player.sendMessage("§cОшибка: данные участка не найдены!");
+            return;
+        }
+
+        String worldName = plugin.getConfigManager().getWorldName();
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            player.sendMessage("§cОшибка: мир '" + worldName + "' не найден!");
+            return;
+        }
+
+        Location plantLocation = plot.getPlantLocation(world);
+        if (plantLocation == null) {
+            player.sendMessage("§cОшибка: место для посадки не найдено!");
+            return;
+        }
+
+        if (world.getBlockAt(plantLocation).getType().isSolid()) {
+            player.sendMessage("§cМесто для посадки занято!");
+            return;
+        }
+
+        if (!isLocationSafe(world, plantLocation)) {
+            player.sendMessage("§cМесто для посадки небезопасно!");
+            return;
+        }
+
+        // Удаляем семена из инвентаря
+        player.getInventory().removeItem(customSeed);
+
+        // Посадка
+        plugin.getPlotManager().plantCrop(player.getUniqueId(), seedType, plantLocation);
+        player.sendMessage("§aСемена посажены!");
+        player.sendMessage("§eКоординаты посадки: §7" + plantLocation.getBlockX() + ", " + plantLocation.getBlockY() + ", " + plantLocation.getBlockZ());
     }
 
     private void giveTestSeeds(Player player, String seedName, String amountStr) {

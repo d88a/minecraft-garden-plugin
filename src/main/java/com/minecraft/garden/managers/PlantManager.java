@@ -157,6 +157,12 @@ public class PlantManager {
         // Проверяем, что место подходит для посадки
         if (!isValidPlantingLocation(location)) {
             player.sendMessage("§cЗдесь нельзя посадить растение!");
+            player.sendMessage("§eУбедитесь, что земля вспахана мотыгой!");
+            
+            // Отладочная информация
+            Block belowBlock = location.clone().subtract(0, 1, 0).getBlock();
+            player.sendMessage("§eБлок под растением: " + belowBlock.getType());
+            player.sendMessage("§eМесто посадки: " + location.getBlock().getType());
             return false;
         }
         
@@ -197,14 +203,9 @@ public class PlantManager {
         Block block = location.getBlock();
         Block belowBlock = location.clone().subtract(0, 1, 0).getBlock();
         
-        // Проверяем, что блок под растением подходящий
+        // Проверяем, что блок под растением - вспаханная земля
         Material belowType = belowBlock.getType();
-        boolean validSoil = belowType == Material.FARMLAND || 
-                           belowType == Material.GRASS_BLOCK || 
-                           belowType == Material.DIRT ||
-                           belowType == Material.COARSE_DIRT ||
-                           belowType == Material.ROOTED_DIRT ||
-                           belowType == Material.PODZOL;
+        boolean validSoil = belowType == Material.FARMLAND;
         
         // Проверяем, что место для посадки свободно
         boolean spaceFree = block.getType().isAir();

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.Material;
 
 public class PlotManager {
     
@@ -145,7 +146,10 @@ public class PlotManager {
         // Выдаем начальный баланс игроку
         Player player = plugin.getServer().getPlayer(playerUuid);
         if (player != null) {
+            plugin.getLogger().info("Выдаем начальный баланс игроку " + player.getName());
             plugin.getEconomyManager().givePlotStartingBalance(player);
+        } else {
+            plugin.getLogger().warning("Игрок " + playerUuid + " не найден онлайн, баланс не выдан");
         }
         
         return plotData;
@@ -461,6 +465,28 @@ public class PlotManager {
                            totalPlots, currentRow, currentCol);
     }
     
+    /**
+     * Тестовая посадка растения на участке
+     */
+    public boolean plantCrop(UUID playerUuid, Material seedType, Location location) {
+        if (!hasPlot(playerUuid)) {
+            return false;
+        }
+        
+        PlotData plot = getPlot(playerUuid);
+        if (!plot.isInPlot(location)) {
+            return false;
+        }
+        
+        // Используем PlantManager для посадки
+        Player player = plugin.getServer().getPlayer(playerUuid);
+        if (player != null) {
+            return plugin.getPlantManager().plantSeed(player, seedType, location);
+        }
+        
+        return false;
+    }
+    
     public static class PlotData {
         public int id;
         public int x;
@@ -482,6 +508,15 @@ public class PlotManager {
             int safeY = world.getHighestBlockYAt(centerX, centerZ) + 2;
             
             return new Location(world, centerX, safeY, centerZ);
+        }
+        
+        public Location getPlantLocation(World world) {
+            // Место для посадки в центре участка
+            int centerX = x + size/2;
+            int centerZ = z + size/2;
+            int plantY = y + 1; // На один блок выше уровня участка
+            
+            return new Location(world, centerX, plantY, centerZ);
         }
         
         public boolean isInPlot(Location location) {
