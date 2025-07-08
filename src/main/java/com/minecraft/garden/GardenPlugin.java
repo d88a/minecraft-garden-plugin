@@ -32,13 +32,35 @@ public class GardenPlugin extends JavaPlugin {
         try {
             // Инициализация менеджеров
             getLogger().info("Инициализация менеджеров...");
+            
+            getLogger().info("  - Инициализация ConfigManager...");
             configManager = new ConfigManager(this);
+            getLogger().info("  ✓ ConfigManager инициализирован");
+            
+            getLogger().info("  - Инициализация DataManager...");
             dataManager = new DataManager(this);
+            getLogger().info("  ✓ DataManager инициализирован");
+            
+            getLogger().info("  - Инициализация EconomyManager...");
             economyManager = new EconomyManager(this);
+            getLogger().info("  ✓ EconomyManager инициализирован");
+            
+            getLogger().info("  - Инициализация PlotManager...");
             plotManager = new PlotManager(this);
+            getLogger().info("  ✓ PlotManager инициализирован");
+            
+            getLogger().info("  - Инициализация PlantManager...");
             plantManager = new PlantManager(this);
+            getLogger().info("  ✓ PlantManager инициализирован");
+            
+            getLogger().info("  - Инициализация GuiManager...");
             guiManager = new GuiManager(this);
+            getLogger().info("  ✓ GuiManager инициализирован");
+            
+            getLogger().info("  - Инициализация CustomItemManager...");
             customItemManager = new CustomItemManager(this);
+            getLogger().info("  ✓ CustomItemManager инициализирован");
+            
             getLogger().info("✓ Менеджеры инициализированы");
             
             // Регистрация команд
@@ -66,6 +88,7 @@ public class GardenPlugin extends JavaPlugin {
             
         } catch (Exception e) {
             getLogger().severe("✗ КРИТИЧЕСКАЯ ОШИБКА при загрузке плагина: " + e.getMessage());
+            getLogger().severe("✗ Стек вызовов:");
             e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
         }
