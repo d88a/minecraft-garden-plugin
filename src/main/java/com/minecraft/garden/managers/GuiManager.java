@@ -43,7 +43,10 @@ public class GuiManager {
             inv.setItem(11, createItem(Material.ENDER_PEARL, "§bТелепорт на участок", 
                 "§7Нажмите, чтобы телепортироваться", "§7на свой участок"));
             
-            inv.setItem(12, createItem(Material.BARRIER, "§cУдалить участок", 
+            inv.setItem(12, createItem(Material.WOODEN_HOE, "§dВспахать участок", 
+                "§7Нажмите, чтобы вспахать", "§7землю на участке"));
+            
+            inv.setItem(13, createItem(Material.BARRIER, "§cУдалить участок", 
                 "§7Нажмите, чтобы удалить", "§7свой участок"));
         } else {
             inv.setItem(10, createItem(Material.GRASS_BLOCK, "§aПолучить участок", 
@@ -51,19 +54,19 @@ public class GuiManager {
         }
         
         // Магазин
-        inv.setItem(13, createItem(Material.WHEAT_SEEDS, "§eМагазин семян", 
+        inv.setItem(14, createItem(Material.WHEAT_SEEDS, "§eМагазин семян", 
             "§7Нажмите, чтобы открыть", "§7магазин семян"));
         
         // Продажа
-        inv.setItem(14, createItem(Material.GOLD_INGOT, "§6Продажа урожая", 
+        inv.setItem(15, createItem(Material.GOLD_INGOT, "§6Продажа урожая", 
             "§7Нажмите, чтобы продать", "§7свой урожай"));
         
         // Расширение
-        inv.setItem(15, createItem(Material.IRON_AXE, "§dРасширить участок", 
+        inv.setItem(16, createItem(Material.IRON_AXE, "§dРасширить участок", 
             "§7Нажмите, чтобы расширить", "§7свой участок"));
         
         // Справка
-        inv.setItem(16, createItem(Material.BOOK, "§fСправка", 
+        inv.setItem(17, createItem(Material.BOOK, "§fСправка", 
             "§7Нажмите, чтобы посмотреть", "§7справку по командам"));
         
         // Баланс

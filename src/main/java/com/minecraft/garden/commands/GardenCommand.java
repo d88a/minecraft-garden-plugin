@@ -53,6 +53,10 @@ public class GardenCommand implements CommandExecutor {
             case "remove":
                 deletePlot(player);
                 break;
+            case "till":
+            case "вспахать":
+                tillPlot(player);
+                break;
             case "shop":
                 showShop(player);
                 break;
@@ -94,6 +98,15 @@ public class GardenCommand implements CommandExecutor {
                 break;
             case "test":
                 testCustomSeeds(player);
+                break;
+            case "testseeds":
+                if (args.length < 2) {
+                    player.sendMessage("§cИспользование: /garden testseeds <семя> [количество]");
+                    player.sendMessage("§eПример: /garden testseeds wheat 5");
+                    return true;
+                }
+                String amountStr = args.length >= 3 ? args[2] : "1";
+                giveTestSeeds(player, args[1], amountStr);
                 break;
             case "debug":
                 debugSystem(player);
@@ -459,17 +472,19 @@ public class GardenCommand implements CommandExecutor {
         player.sendMessage("§e/garden plant <семя> §7- Тестовая посадка");
         player.sendMessage("§e/garden till §7- Вспахать землю на участке");
         player.sendMessage("§e/garden test §7- Тестовая команда");
+        player.sendMessage("§e/garden testseeds <семя> [количество] §7- Выдать кастомные семена");
         player.sendMessage("§e/garden debug §7- Отладка системы");
         player.sendMessage("§e/garden custom §7- Кастомные растения");
         player.sendMessage("§e/garden help §7- Эта справка");
         player.sendMessage("§7");
         player.sendMessage("§6=== Игровой процесс ===");
         player.sendMessage("§e1. Создайте участок: §6/garden create");
-        player.sendMessage("§e2. Купите семена: §6/garden shop");
-        player.sendMessage("§e3. Посадите семена на участке");
-        player.sendMessage("§e4. Дождитесь созревания");
-        player.sendMessage("§e5. Соберите урожай правым кликом");
-        player.sendMessage("§e6. Продайте урожай: §6/garden sell");
+        player.sendMessage("§e2. Вспашите землю: §6/garden till");
+        player.sendMessage("§e3. Купите семена: §6/garden shop");
+        player.sendMessage("§e4. Посадите семена на участке");
+        player.sendMessage("§e5. Дождитесь созревания");
+        player.sendMessage("§e6. Соберите урожай правым кликом");
+        player.sendMessage("§e7. Продайте урожай: §6/garden sell");
         player.sendMessage("§7");
         player.sendMessage("§6=== Кастомные растения ===");
         player.sendMessage("§e/garden custom list §7- Список кастомных растений");

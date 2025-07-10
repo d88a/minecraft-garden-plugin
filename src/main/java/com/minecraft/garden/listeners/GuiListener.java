@@ -94,6 +94,14 @@ public class GuiListener implements Listener {
                 }
                 break;
                 
+            case WOODEN_HOE:
+                if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+                    tillPlot(player);
+                } else {
+                    player.sendMessage("§cУ вас нет участка для вспашки!");
+                }
+                break;
+                
             case BARRIER:
                 if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
                     deletePlot(player);
@@ -362,17 +370,63 @@ public class GuiListener implements Listener {
             return;
         }
         
-        var plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
         
+        // Удаляем участок
         boolean success = plugin.getPlotManager().deletePlot(player.getUniqueId());
-        
         if (success) {
             player.sendMessage("§aУчасток успешно удален!");
-            player.sendMessage("§eУдаленный участок: §7ID " + plot.id + ", " + plot.getCoordinates());
-            player.sendMessage("§eДля создания нового участка используйте: §6/garden create");
+            player.sendMessage("§eРазмер участка был: §7" + plot.size + "x" + plot.size);
+            player.sendMessage("§eКоординаты: §7" + plot.getCoordinates());
         } else {
             player.sendMessage("§cОшибка при удалении участка!");
         }
+        
+        // Обновляем GUI
+        plugin.getGuiManager().openMainMenu(player);
+    }
+    
+    private void tillPlot(Player player) {
+        if (!plugin.getPlotManager().hasPlot(player.getUniqueId())) {
+            player.sendMessage("§cУ вас нет участка для вспашки!");
+            return;
+        }
+        
+        PlotManager.PlotData plot = plugin.getPlotManager().getPlot(player.getUniqueId());
+        if (plot == null) {
+            player.sendMessage("§cОшибка: данные участка не найдены!");
+            return;
+        }
+        
+        String worldName = plugin.getConfigManager().getWorldName();
+        org.bukkit.World world = plugin.getServer().getWorld(worldName);
+        if (world == null) {
+            player.sendMessage("§cОшибка: мир '" + worldName + "' не найден!");
+            return;
+        }
+        
+        org.bukkit.Location tillLocation = plot.getTillLocation(world);
+        if (tillLocation == null) {
+            player.sendMessage("§cОшибка: место для вспашки не найдено!");
+            return;
+        }
+        
+        if (world.getBlockAt(tillLocation).getType().isSolid()) {
+            player.sendMessage("§cМесто для вспашки занято!");
+            return;
+        }
+        
+        // Вспашка
+        boolean success = plugin.getPlotManager().tillPlot(player.getUniqueId(), tillLocation);
+        if (success) {
+            player.sendMessage("§aУчасток вспахан!");
+            player.sendMessage("§eКоординаты вспаханного участка: §7" + tillLocation.getBlockX() + ", " + tillLocation.getBlockY() + ", " + tillLocation.getBlockZ());
+        } else {
+            player.sendMessage("§cОшибка при вспашке участка!");
+        }
+        
+        // Обновляем GUI
+        plugin.getGuiManager().openMainMenu(player);
     }
     
     private void showHelp(Player player) {

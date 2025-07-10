@@ -255,16 +255,11 @@ public class CustomItemManager {
         
         String displayName = item.getItemMeta().getDisplayName();
         boolean containsSad = displayName.contains("(Сад)");
-        boolean containsEmoji = displayName.contains("🍞") || displayName.contains("🥕") || 
-                               displayName.contains("🥔") || displayName.contains("🔴") || 
-                               displayName.contains("🎃") || displayName.contains("🍉");
+        boolean containsSeeds = displayName.contains("Семена");
         
-        plugin.getLogger().info("isCustomSeed: название='" + displayName + "', содержит (Сад): " + containsSad + ", содержит эмодзи: " + containsEmoji);
+        plugin.getLogger().info("isCustomSeed: название='" + displayName + "', содержит (Сад): " + containsSad + ", содержит Семена: " + containsSeeds);
         
-        return displayName.contains("(Сад)") && (displayName.contains("Семена") || 
-               displayName.contains("🍞") || displayName.contains("🥕") || 
-               displayName.contains("🥔") || displayName.contains("🔴") || 
-               displayName.contains("🎃") || displayName.contains("🍉"));
+        return displayName.contains("(Сад)") && displayName.contains("Семена");
     }
     
     /**

@@ -163,17 +163,30 @@ public class PlantManager {
                     return false;
                 }
                 
-                boolean isCustom = plugin.getCustomItemManager().isCustomSeed(itemInHand);
-                plugin.getLogger().info("Проверка кастомного семени:");
+                // Подробная отладочная информация
+                plugin.getLogger().info("=== Проверка кастомного семени ===");
                 plugin.getLogger().info("  Предмет в руке: " + itemInHand.getType());
+                plugin.getLogger().info("  Количество: " + itemInHand.getAmount());
                 plugin.getLogger().info("  Имеет метаданные: " + itemInHand.hasItemMeta());
-                if (itemInHand.hasItemMeta() && itemInHand.getItemMeta().hasDisplayName()) {
-                    plugin.getLogger().info("  Название: " + itemInHand.getItemMeta().getDisplayName());
+                
+                if (itemInHand.hasItemMeta()) {
+                    plugin.getLogger().info("  Имеет название: " + itemInHand.getItemMeta().hasDisplayName());
+                    if (itemInHand.getItemMeta().hasDisplayName()) {
+                        plugin.getLogger().info("  Название: " + itemInHand.getItemMeta().getDisplayName());
+                    }
+                    plugin.getLogger().info("  Имеет Lore: " + itemInHand.getItemMeta().hasLore());
+                    if (itemInHand.getItemMeta().hasLore()) {
+                        plugin.getLogger().info("  Lore: " + itemInHand.getItemMeta().getLore());
+                    }
                 }
+                
+                boolean isCustom = plugin.getCustomItemManager().isCustomSeed(itemInHand);
                 plugin.getLogger().info("  Это кастомное семя: " + isCustom);
+                plugin.getLogger().info("=== Конец проверки ===");
                 
                 if (!isCustom) {
                     player.sendMessage("§cНа участках можно сажать только кастомные семена!");
+                    player.sendMessage("§eПолучите кастомные семена у администратора или в магазине!");
                     return false;
                 }
             }
