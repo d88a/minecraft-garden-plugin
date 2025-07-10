@@ -173,10 +173,18 @@ public class PlantManager {
                 plugin.getLogger().info("  Предмет в руке: " + (itemInHand != null ? itemInHand.getType() : "null"));
                 plugin.getLogger().info("  Количество: " + (itemInHand != null ? itemInHand.getAmount() : "N/A"));
                 plugin.getLogger().info("  Имеет метаданные: " + (itemInHand != null && itemInHand.hasItemMeta()));
+                plugin.getLogger().info("  itemInHand == null: " + (itemInHand == null));
+                plugin.getLogger().info("  itemInHand.getType() == Material.AIR: " + (itemInHand != null && itemInHand.getType() == Material.AIR));
                 
-                if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+                if (itemInHand == null) {
                     player.sendMessage("§cУ вас нет предмета в руке!");
-                    plugin.getLogger().warning("  ОШИБКА: Предмет в руке пустой или null");
+                    plugin.getLogger().warning("  ОШИБКА: Предмет в руке null");
+                    return false;
+                }
+                
+                if (itemInHand.getType() == Material.AIR) {
+                    player.sendMessage("§cУ вас нет предмета в руке!");
+                    plugin.getLogger().warning("  ОШИБКА: Предмет в руке AIR");
                     return false;
                 }
                 
@@ -611,6 +619,13 @@ public class PlantManager {
             case MELON: return "melon";
             default: return cropType.name().toLowerCase();
         }
+    }
+    
+    /**
+     * Проверяет, является ли материал валидным семенем
+     */
+    public boolean isValidSeed(Material material) {
+        return seedToCrop.containsKey(material);
     }
     
     /**

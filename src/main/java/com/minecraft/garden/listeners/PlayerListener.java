@@ -8,12 +8,16 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.block.BlockFace;
+import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.util.Map;
+import java.util.Iterator;
 import java.util.UUID;
 
 public class PlayerListener implements Listener {
@@ -22,6 +26,134 @@ public class PlayerListener implements Listener {
     
     public PlayerListener(GardenPlugin plugin) {
         this.plugin = plugin;
+    }
+    
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+        Block clickedBlock = event.getClickedBlock();
+        
+        if (action == Action.RIGHT_CLICK_BLOCK && clickedBlock != null) {
+            // Проверяем, что игрок кликает по вспаханной земле
+            if (clickedBlock.getType() == Material.FARMLAND) {
+                Location plantLocation = clickedBlock.getLocation().add(0, 1, 0);
+                
+                // Проверяем, что место для посадки свободно
+                if (plantLocation.getBlock().getType().isAir()) {
+                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
+                    
+                    if (itemInHand != null && itemInHand.getType() != Material.AIR) {
+                        // Проверяем, является ли это семенем
+                        Material seedType = itemInHand.getType();
+                        
+                        // Проверяем, что это известное семя
+                        if (plugin.getPlantManager().isValidSeed(seedType) || 
+                            plugin.getCustomPlantManager().isCustomPlantSeed(itemInHand)) {
+                            
+                            // Пытаемся посадить семя
+                            boolean success = plugin.getPlantManager().plantSeed(player, seedType, plantLocation);
+                            
+                            if (success) {
+                                // Отменяем стандартное взаимодействие
+                                event.setCancelled(true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+        Location location = block.getLocation();
+        
+        // Проверяем, находится ли блок на участке
+        boolean isOnPlot = false;
+        UUID plotOwner = null;
+        
+        for (var entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+            if (entry.getValue().isInPlot(location)) {
+                isOnPlot = true;
+                plotOwner = entry.getKey();
+                break;
+            }
+        }
+        
+        if (isOnPlot) {
+            // Проверяем права на участке
+            if (!plotOwner.equals(player.getUniqueId())) {
+                event.setCancelled(true);
+                player.sendMessage("§cВы не можете ломать блоки на чужом участке!");
+                return;
+            }
+            
+            // Проверяем, не является ли это посаженным растением
+            if (plugin.getPlantManager().hasPlantedCrop(location)) {
+                // Позволяем собирать урожай
+                boolean harvested = plugin.getPlantManager().harvestCrop(player, location);
+                if (harvested) {
+                    event.setCancelled(true); // Отменяем стандартный сбор
+                }
+            }
+        }
+    }
+    
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+        Location location = block.getLocation();
+        
+        // Проверяем, находится ли блок на участке
+        boolean isOnPlot = false;
+        UUID plotOwner = null;
+        
+        for (var entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+            if (entry.getValue().isInPlot(location)) {
+                isOnPlot = true;
+                plotOwner = entry.getKey();
+                break;
+            }
+        }
+        
+        if (isOnPlot) {
+            // Проверяем права на участке
+            if (!plotOwner.equals(player.getUniqueId())) {
+                event.setCancelled(true);
+                player.sendMessage("§cВы не можете ставить блоки на чужом участке!");
+            }
+        }
+    }
+    
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent event) {
+        // Защищаем участки от взрывов
+        Iterator<Block> iterator = event.blockList().iterator();
+        
+        while (iterator.hasNext()) {
+            Block block = iterator.next();
+            Location location = block.getLocation();
+            
+            // Проверяем, находится ли блок на участке
+            boolean isOnPlot = false;
+            
+            for (var entry : plugin.getPlotManager().getAllPlots().entrySet()) {
+                if (entry.getValue().isInPlot(location)) {
+                    isOnPlot = true;
+                    break;
+                }
+            }
+            
+            // Если блок на участке, убираем его из списка взрыва
+            if (isOnPlot) {
+                iterator.remove();
+                plugin.getLogger().info("Защищен блок от взрыва на участке: " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+            }
+        }
     }
     
     @EventHandler
@@ -37,125 +169,5 @@ public class PlayerListener implements Listener {
             int balance = plugin.getEconomyManager().getBalance(player);
             player.sendMessage("§aДобро пожаловать обратно! Ваш баланс: §e" + balance + " рублей");
         }
-    }
-    
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-        ItemStack item = event.getItemInHand();
-        Location location = block.getLocation();
-        
-        // Проверяем, находится ли место на участке
-        boolean isOnPlot = false;
-        UUID plotOwner = null;
-        
-        for (Map.Entry<UUID, PlotManager.PlotData> entry : plugin.getPlotManager().getAllPlots().entrySet()) {
-            if (entry.getValue().isInPlot(location)) {
-                isOnPlot = true;
-                plotOwner = entry.getKey();
-                break;
-            }
-        }
-        
-        // Если это кастомное семя
-        if (plugin.getCustomItemManager().isCustomSeed(item)) {
-            player.sendMessage("§aОбнаружено кастомное семя: " + item.getItemMeta().getDisplayName());
-            
-            // Отменяем стандартное размещение блока
-            event.setCancelled(true);
-            
-            // Проверяем права на посадку
-            if (isOnPlot) {
-                if (!plotOwner.equals(player.getUniqueId())) {
-                    player.sendMessage("§cВы можете сажать только на своем участке!");
-                    return;
-                }
-            } else {
-                // Проверяем, разрешена ли посадка кастомных семян вне участков
-                if (!plugin.getConfigManager().isAllowVanillaSeedsOutside()) {
-                    player.sendMessage("§cКастомные семена можно сажать только на участках!");
-                    return;
-                }
-            }
-            
-            // Убираем один предмет из руки
-            if (item.getAmount() > 1) {
-                item.setAmount(item.getAmount() - 1);
-            } else {
-                player.getInventory().setItemInMainHand(null);
-            }
-            
-            // Получаем базовый материал для посадки
-            Material baseMaterial = plugin.getCustomItemManager().getBaseMaterial(item);
-            
-            // Пытаемся посадить семя
-            boolean success = plugin.getPlantManager().plantSeed(player, baseMaterial, location);
-            
-            if (success) {
-                player.sendMessage("§aСемя посажено! Растение будет готово через некоторое время.");
-            } else {
-                // Возвращаем предмет, если посадка не удалась
-                player.getInventory().addItem(item);
-                player.sendMessage("§cНе удалось посадить семя! Убедитесь, что земля вспахана.");
-            }
-        } else if (isSeed(item.getType())) {
-            // Если это обычное семя
-            if (isOnPlot) {
-                // На участке разрешены только кастомные семена
-                if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
-                    event.setCancelled(true);
-                    player.sendMessage("§cНа участках можно сажать только кастомные семена!");
-                    player.sendMessage("§eПопробуйте купить кастомные семена в магазине: §6/garden shop");
-                    return;
-                }
-            }
-        } else {
-            // Отладочная информация
-            if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-                player.sendMessage("§eПредмет: " + item.getItemMeta().getDisplayName());
-                player.sendMessage("§eТип: " + item.getType());
-            }
-        }
-    }
-    
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getClickedBlock();
-        
-        if (block == null) return;
-        
-        // Проверяем, что игрок кликает правой кнопкой мыши
-        if (!event.getAction().toString().contains("RIGHT_CLICK")) return;
-        
-        // Проверяем, что это растение
-        if (isCrop(block.getType())) {
-            // Пытаемся собрать урожай
-            boolean success = plugin.getPlantManager().harvestCrop(player, block.getLocation());
-            
-            if (success) {
-                // Отменяем стандартное взаимодействие
-                event.setCancelled(true);
-            }
-        }
-    }
-    
-    private boolean isSeed(Material material) {
-        return material == Material.WHEAT_SEEDS ||
-               material == Material.CARROT ||
-               material == Material.POTATO ||
-               material == Material.BEETROOT_SEEDS ||
-               material == Material.PUMPKIN_SEEDS ||
-               material == Material.MELON_SEEDS;
-    }
-    
-    private boolean isCrop(Material material) {
-        return material == Material.WHEAT ||
-               material == Material.CARROTS ||
-               material == Material.POTATOES ||
-               material == Material.BEETROOTS ||
-               material == Material.PUMPKIN ||
-               material == Material.MELON;
     }
 } 
