@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import com.minecraft.garden.managers.PlotManager;
+import com.minecraft.garden.managers.CustomPlantManager;
 
 public class PlantManager {
     
@@ -88,6 +89,9 @@ public class PlantManager {
                             }
                             plantData.plotId = cropSection.getInt("plot_id");
                             
+                            // Загружаем ID кастомного растения, если есть
+                            plantData.customPlantId = cropSection.getString("custom_plant_id");
+                            
                             plantedCrops.put(location, plantData);
                         }
                     } catch (Exception e) {
@@ -114,6 +118,11 @@ public class PlantManager {
             cropSection.set("planted_time", plantData.plantedTime);
             cropSection.set("owner", plantData.ownerUuid.toString());
             cropSection.set("plot_id", plantData.plotId);
+            
+            // Сохраняем ID кастомного растения, если есть
+            if (plantData.customPlantId != null) {
+                cropSection.set("custom_plant_id", plantData.customPlantId);
+            }
         }
         
         plugin.getDataManager().saveData();
@@ -158,16 +167,18 @@ public class PlantManager {
             if (plugin.getConfigManager().isOnlyCustomSeedsOnPlots()) {
                 // Проверяем, что игрок использует кастомное семя
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                if (itemInHand == null || itemInHand.getType() == Material.AIR) {
-                    player.sendMessage("§cУ вас нет предмета в руке!");
-                    return false;
-                }
                 
                 // Подробная отладочная информация
-                plugin.getLogger().info("=== Проверка кастомного семени ===");
-                plugin.getLogger().info("  Предмет в руке: " + itemInHand.getType());
-                plugin.getLogger().info("  Количество: " + itemInHand.getAmount());
-                plugin.getLogger().info("  Имеет метаданные: " + itemInHand.hasItemMeta());
+                plugin.getLogger().info("=== Проверка предмета в руке ===");
+                plugin.getLogger().info("  Предмет в руке: " + (itemInHand != null ? itemInHand.getType() : "null"));
+                plugin.getLogger().info("  Количество: " + (itemInHand != null ? itemInHand.getAmount() : "N/A"));
+                plugin.getLogger().info("  Имеет метаданные: " + (itemInHand != null && itemInHand.hasItemMeta()));
+                
+                if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+                    player.sendMessage("§cУ вас нет предмета в руке!");
+                    plugin.getLogger().warning("  ОШИБКА: Предмет в руке пустой или null");
+                    return false;
+                }
                 
                 if (itemInHand.hasItemMeta()) {
                     plugin.getLogger().info("  Имеет название: " + itemInHand.getItemMeta().hasDisplayName());
@@ -181,13 +192,20 @@ public class PlantManager {
                 }
                 
                 boolean isCustom = plugin.getCustomItemManager().isCustomSeed(itemInHand);
+                boolean isCustomPlant = plugin.getCustomPlantManager().isCustomPlantSeed(itemInHand);
                 plugin.getLogger().info("  Это кастомное семя: " + isCustom);
+                plugin.getLogger().info("  Это кастомное растение: " + isCustomPlant);
                 plugin.getLogger().info("=== Конец проверки ===");
                 
-                if (!isCustom) {
+                if (!isCustom && !isCustomPlant) {
                     player.sendMessage("§cНа участках можно сажать только кастомные семена!");
                     player.sendMessage("§eПолучите кастомные семена у администратора или в магазине!");
                     return false;
+                }
+                
+                // Если это кастомное растение, обрабатываем его отдельно
+                if (isCustomPlant) {
+                    return plantCustomPlant(player, itemInHand, location, plot);
                 }
             }
         } else {
@@ -256,6 +274,61 @@ public class PlantManager {
     }
     
     /**
+     * Сажает кастомное растение
+     */
+    private boolean plantCustomPlant(Player player, ItemStack seedItem, Location location, PlotManager.PlotData plot) {
+        String plantId = plugin.getCustomPlantManager().getPlantIdFromSeed(seedItem);
+        if (plantId == null) {
+            player.sendMessage("§cНеизвестное кастомное растение!");
+            return false;
+        }
+        
+        CustomPlantManager.CustomPlant plant = plugin.getCustomPlantManager().getCustomPlant(plantId);
+        if (plant == null) {
+            player.sendMessage("§cОшибка: данные растения не найдены!");
+            return false;
+        }
+        
+        // Проверяем, что место подходит для посадки
+        if (!isValidPlantingLocation(location)) {
+            player.sendMessage("§cЗдесь нельзя посадить растение!");
+            player.sendMessage("§eУбедитесь, что земля вспахана мотыгой!");
+            return false;
+        }
+        
+        // Проверяем, что место не занято
+        if (plantedCrops.containsKey(location)) {
+            player.sendMessage("§cЗдесь уже растет растение!");
+            return false;
+        }
+        
+        // Убираем семя из инвентаря
+        seedItem.setAmount(seedItem.getAmount() - 1);
+        
+        // Сажаем растение (используем специальный блок для кастомных растений)
+        Block block = location.getBlock();
+        block.setType(plant.cropMaterial);
+        
+        // Создаем данные о растении
+        PlantData plantData = new PlantData();
+        plantData.cropType = plant.cropMaterial;
+        plantData.plantedTime = System.currentTimeMillis();
+        plantData.ownerUuid = player.getUniqueId();
+        plantData.plotId = plot != null ? plot.id : -1;
+        plantData.customPlantId = plantId; // Сохраняем ID кастомного растения
+        
+        plantedCrops.put(location, plantData);
+        savePlantedCrops();
+        
+        // Запускаем процесс роста с кастомным временем
+        startCustomGrowthProcess(location, plantData, plant);
+        
+        player.sendMessage("§a" + plant.displayName + " посажено!");
+        player.sendMessage("§eВремя роста: §7" + (plant.growthTimeSeconds / 60) + " минут");
+        return true;
+    }
+    
+    /**
      * Проверяет, подходит ли место для посадки
      */
     private boolean isValidPlantingLocation(Location location) {
@@ -272,14 +345,13 @@ public class PlantManager {
         boolean spaceFree = block.getType().isAir();
         
         // Отладочная информация
-        if (!validSoil || !spaceFree) {
-            plugin.getLogger().info("Проверка места посадки:");
-            plugin.getLogger().info("  Координаты: " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
-            plugin.getLogger().info("  Блок под растением: " + belowType);
-            plugin.getLogger().info("  Место посадки: " + block.getType());
-            plugin.getLogger().info("  validSoil: " + validSoil);
-            plugin.getLogger().info("  spaceFree: " + spaceFree);
-        }
+        plugin.getLogger().info("Проверка места посадки:");
+        plugin.getLogger().info("  Координаты: " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+        plugin.getLogger().info("  Блок под растением: " + belowType);
+        plugin.getLogger().info("  Место посадки: " + block.getType());
+        plugin.getLogger().info("  validSoil: " + validSoil);
+        plugin.getLogger().info("  spaceFree: " + spaceFree);
+        plugin.getLogger().info("  Результат: " + (validSoil && spaceFree));
         
         return validSoil && spaceFree;
     }
@@ -333,6 +405,39 @@ public class PlantManager {
                 }
             }
         }.runTaskTimer(plugin, growthTime * 20L, growthTime * 20L); // Конвертируем секунды в тики
+    }
+    
+    /**
+     * Запускает процесс роста кастомного растения
+     */
+    private void startCustomGrowthProcess(Location location, PlantData plantData, CustomPlantManager.CustomPlant plant) {
+        int growthTime = plant.growthTimeSeconds;
+        
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Проверяем, что растение все еще существует
+                if (!plantedCrops.containsKey(location)) {
+                    this.cancel();
+                    return;
+                }
+                
+                Block block = location.getBlock();
+                if (block.getType() != plantData.cropType) {
+                    // Растение было уничтожено
+                    plantedCrops.remove(location);
+                    savePlantedCrops();
+                    this.cancel();
+                    return;
+                }
+                
+                // Растение созрело - уведомляем владельца
+                Player owner = plugin.getServer().getPlayer(plantData.ownerUuid);
+                if (owner != null && owner.isOnline()) {
+                    owner.sendMessage("§a" + plant.displayName + " готов к сбору!");
+                }
+            }
+        }.runTaskLater(plugin, growthTime * 20L); // Конвертируем секунды в тики
     }
     
     /**
@@ -419,6 +524,18 @@ public class PlantManager {
             isMature = true;
         }
         
+        // Для кастомных растений проверяем время посадки
+        if (plantData.customPlantId != null) {
+            CustomPlantManager.CustomPlant plant = plugin.getCustomPlantManager().getCustomPlant(plantData.customPlantId);
+            if (plant != null) {
+                long currentTime = System.currentTimeMillis();
+                long plantedTime = plantData.plantedTime;
+                long growthTime = plant.growthTimeSeconds * 1000L; // Конвертируем в миллисекунды
+                
+                isMature = (currentTime - plantedTime) >= growthTime;
+            }
+        }
+        
         if (!isMature) {
             player.sendMessage("§eРастение еще не созрело!");
             return false;
@@ -430,7 +547,13 @@ public class PlantManager {
         savePlantedCrops();
         
         // Даем игроку урожай
-        giveHarvestToPlayer(player, plantData.cropType);
+        if (plantData.customPlantId != null) {
+            // Кастомное растение
+            giveCustomHarvestToPlayer(player, plantData.customPlantId);
+        } else {
+            // Обычное растение
+            giveHarvestToPlayer(player, plantData.cropType);
+        }
         
         player.sendMessage("§aУрожай собран!");
         return true;
@@ -453,6 +576,26 @@ public class PlantManager {
         
         player.sendMessage("§aСобран урожай: §e" + getCropDisplayName(cropType));
         player.sendMessage("§eЦена продажи: §7" + price + " рублей");
+    }
+    
+    /**
+     * Дает игроку собранный урожай кастомного растения
+     */
+    private void giveCustomHarvestToPlayer(Player player, String plantId) {
+        CustomPlantManager.CustomPlant plant = plugin.getCustomPlantManager().getCustomPlant(plantId);
+        if (plant == null) {
+            plugin.getLogger().warning("Не удалось получить данные кастомного растения: " + plantId);
+            return;
+        }
+        
+        // Даем кастомный урожай
+        ItemStack customCrop = plugin.getCustomPlantManager().createCustomCrop(plantId);
+        if (customCrop != null) {
+            player.getInventory().addItem(customCrop);
+        }
+        
+        player.sendMessage("§aСобран урожай: §e" + plant.displayName);
+        player.sendMessage("§eЦена продажи: §7" + plant.cropPriceValue + " рублей");
     }
     
     /**
@@ -505,5 +648,6 @@ public class PlantManager {
         public long plantedTime;
         public UUID ownerUuid;
         public int plotId;
+        public String customPlantId; // Добавляем поле для хранения ID кастомного растения
     }
 } 

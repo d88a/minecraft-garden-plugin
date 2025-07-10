@@ -10,6 +10,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import com.minecraft.garden.managers.PlotManager;
+import com.minecraft.garden.managers.CustomPlantManager;
+
+import java.util.Map;
 
 public class GuiListener implements Listener {
     
@@ -94,14 +97,6 @@ public class GuiListener implements Listener {
                 }
                 break;
                 
-            case WOODEN_HOE:
-                if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
-                    tillPlot(player);
-                } else {
-                    player.sendMessage("§cУ вас нет участка для вспашки!");
-                }
-                break;
-                
             case BARRIER:
                 if (plugin.getPlotManager().hasPlot(player.getUniqueId())) {
                     deletePlot(player);
@@ -138,36 +133,99 @@ public class GuiListener implements Listener {
         
         switch (material) {
             case WHEAT_SEEDS:
-                buySeed(player, "wheat");
+                // Показываем информацию о семени
+                player.sendMessage("§e🍞 Семена пшеницы (Сад)");
+                player.sendMessage("§7Цена: §e" + plugin.getConfigManager().getSeedPrice("wheat") + " рублей");
+                player.sendMessage("§7Время роста: §e30 секунд");
                 break;
                 
             case CARROT:
-                buySeed(player, "carrot");
+                // Показываем информацию о семени
+                player.sendMessage("§e🥕 Семена моркови (Сад)");
+                player.sendMessage("§7Цена: §e" + plugin.getConfigManager().getSeedPrice("carrot") + " рублей");
+                player.sendMessage("§7Время роста: §e45 секунд");
                 break;
                 
             case POTATO:
-                buySeed(player, "potato");
+                // Показываем информацию о семени
+                player.sendMessage("§e🥔 Семена картофеля (Сад)");
+                player.sendMessage("§7Цена: §e" + plugin.getConfigManager().getSeedPrice("potato") + " рублей");
+                player.sendMessage("§7Время роста: §e45 секунд");
                 break;
                 
             case BEETROOT_SEEDS:
-                buySeed(player, "beetroot");
+                // Показываем информацию о семени
+                player.sendMessage("§e🔴 Семена свёклы (Сад)");
+                player.sendMessage("§7Цена: §e" + plugin.getConfigManager().getSeedPrice("beetroot") + " рублей");
+                player.sendMessage("§7Время роста: §e35 секунд");
                 break;
                 
             case PUMPKIN_SEEDS:
-                buySeed(player, "pumpkin");
+                // Показываем информацию о семени
+                player.sendMessage("§e🎃 Семена тыквы (Сад)");
+                player.sendMessage("§7Цена: §e" + plugin.getConfigManager().getSeedPrice("pumpkin") + " рублей");
+                player.sendMessage("§7Время роста: §e2 минуты");
                 break;
                 
             case MELON_SEEDS:
-                buySeed(player, "melon");
+                // Показываем информацию о семени
+                player.sendMessage("§e🍉 Семена арбуза (Сад)");
+                player.sendMessage("§7Цена: §e" + plugin.getConfigManager().getSeedPrice("melon") + " рублей");
+                player.sendMessage("§7Время роста: §e2 минуты");
+                break;
+                
+            case EMERALD:
+                // Проверяем, какая кнопка покупки была нажата
+                String itemName = clickedItem.getItemMeta().getDisplayName();
+                if (itemName.contains("Купить пшеницу")) {
+                    buySeed(player, "wheat");
+                } else if (itemName.contains("Купить морковь")) {
+                    buySeed(player, "carrot");
+                } else if (itemName.contains("Купить картофель")) {
+                    buySeed(player, "potato");
+                } else if (itemName.contains("Купить свеклу")) {
+                    buySeed(player, "beetroot");
+                } else if (itemName.contains("Купить тыкву")) {
+                    buySeed(player, "pumpkin");
+                } else if (itemName.contains("Купить арбуз")) {
+                    buySeed(player, "melon");
+                } else {
+                    // Проверяем кастомные растения
+                    boolean customPlantBought = false;
+                    Map<String, CustomPlantManager.CustomPlant> customPlants = plugin.getCustomPlantManager().getAllCustomPlants();
+                    for (Map.Entry<String, CustomPlantManager.CustomPlant> entry : customPlants.entrySet()) {
+                        CustomPlantManager.CustomPlant plant = entry.getValue();
+                        if (itemName.contains("Купить " + plant.displayName)) {
+                            buyCustomSeed(player, entry.getKey());
+                            customPlantBought = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!customPlantBought) {
+                        // Обновляем баланс
+                        plugin.getGuiManager().openShop(player);
+                    }
+                }
                 break;
                 
             case ARROW:
                 plugin.getGuiManager().openMainMenu(player);
                 break;
                 
-            case EMERALD:
-                // Обновляем баланс
-                plugin.getGuiManager().openShop(player);
+            default:
+                // Проверяем, не является ли это кастомным семенем
+                if (plugin.getCustomPlantManager().isCustomPlantSeed(clickedItem)) {
+                    String plantId = plugin.getCustomPlantManager().getPlantIdFromSeed(clickedItem);
+                    if (plantId != null) {
+                        CustomPlantManager.CustomPlant plant = plugin.getCustomPlantManager().getCustomPlant(plantId);
+                        if (plant != null) {
+                            player.sendMessage("§e" + plant.displayName);
+                            player.sendMessage("§7Цена: §e" + plant.seedPriceValue + " рублей");
+                            player.sendMessage("§7Время роста: §e" + (plant.growthTimeSeconds / 60) + " минут");
+                        }
+                    }
+                }
                 break;
         }
     }
@@ -466,6 +524,35 @@ public class GuiListener implements Listener {
         player.sendMessage("§aПокупка успешна!");
         player.sendMessage("§eПолучено: §7" + getSeedDisplayName(seedName));
         player.sendMessage("§eСтоимость: §7" + price + " рублей");
+        
+        // Обновляем баланс
+        int newBalance = plugin.getEconomyManager().getBalance(player);
+        player.sendMessage("§aНовый баланс: §e" + newBalance + " §aрублей");
+    }
+    
+    private void buyCustomSeed(Player player, String plantId) {
+        CustomPlantManager.CustomPlant plant = plugin.getCustomPlantManager().getCustomPlant(plantId);
+        if (plant == null) {
+            player.sendMessage("§cНеизвестное растение!");
+            return;
+        }
+        
+        // Проверяем баланс
+        if (!plugin.getEconomyManager().hasMoney(player, plant.seedPriceValue)) {
+            player.sendMessage("§cНедостаточно денег! Нужно: §e" + plant.seedPriceValue + " §cрублей");
+            return;
+        }
+        
+        // Списываем деньги
+        plugin.getEconomyManager().withdrawMoney(player, plant.seedPriceValue);
+        
+        // Даем кастомное семя
+        ItemStack customSeed = plugin.getCustomPlantManager().createCustomSeed(plantId);
+        player.getInventory().addItem(customSeed);
+        
+        player.sendMessage("§aПокупка успешна!");
+        player.sendMessage("§eПолучено: §7" + plant.displayName);
+        player.sendMessage("§eСтоимость: §7" + plant.seedPriceValue + " рублей");
         
         // Обновляем баланс
         int newBalance = plugin.getEconomyManager().getBalance(player);

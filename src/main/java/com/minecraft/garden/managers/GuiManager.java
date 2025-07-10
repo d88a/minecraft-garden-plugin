@@ -43,10 +43,7 @@ public class GuiManager {
             inv.setItem(11, createItem(Material.ENDER_PEARL, "§bТелепорт на участок", 
                 "§7Нажмите, чтобы телепортироваться", "§7на свой участок"));
             
-            inv.setItem(12, createItem(Material.WOODEN_HOE, "§dВспахать участок", 
-                "§7Нажмите, чтобы вспахать", "§7землю на участке"));
-            
-            inv.setItem(13, createItem(Material.BARRIER, "§cУдалить участок", 
+            inv.setItem(12, createItem(Material.BARRIER, "§cУдалить участок", 
                 "§7Нажмите, чтобы удалить", "§7свой участок"));
         } else {
             inv.setItem(10, createItem(Material.GRASS_BLOCK, "§aПолучить участок", 
@@ -54,19 +51,19 @@ public class GuiManager {
         }
         
         // Магазин
-        inv.setItem(14, createItem(Material.WHEAT_SEEDS, "§eМагазин семян", 
+        inv.setItem(13, createItem(Material.WHEAT_SEEDS, "§eМагазин семян", 
             "§7Нажмите, чтобы открыть", "§7магазин семян"));
         
         // Продажа
-        inv.setItem(15, createItem(Material.GOLD_INGOT, "§6Продажа урожая", 
+        inv.setItem(14, createItem(Material.GOLD_INGOT, "§6Продажа урожая", 
             "§7Нажмите, чтобы продать", "§7свой урожай"));
         
         // Расширение
-        inv.setItem(16, createItem(Material.IRON_AXE, "§dРасширить участок", 
+        inv.setItem(15, createItem(Material.IRON_AXE, "§dРасширить участок", 
             "§7Нажмите, чтобы расширить", "§7свой участок"));
         
         // Справка
-        inv.setItem(17, createItem(Material.BOOK, "§fСправка", 
+        inv.setItem(16, createItem(Material.BOOK, "§fСправка", 
             "§7Нажмите, чтобы посмотреть", "§7справку по командам"));
         
         // Баланс
@@ -82,23 +79,55 @@ public class GuiManager {
      * Открывает магазин семян
      */
     public void openShop(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 36, "§6=== Магазин семян ===");
+        Inventory inv = Bukkit.createInventory(null, 54, "§6=== Магазин семян ===");
         
-        // Семена - используем кастомные предметы
+        // Обычные семена - используем кастомные предметы
         inv.setItem(10, plugin.getCustomItemManager().getCustomSeed(Material.WHEAT_SEEDS));
-        inv.setItem(11, plugin.getCustomItemManager().getCustomSeed(Material.CARROT));
-        inv.setItem(12, plugin.getCustomItemManager().getCustomSeed(Material.POTATO));
-        inv.setItem(13, plugin.getCustomItemManager().getCustomSeed(Material.BEETROOT_SEEDS));
-        inv.setItem(14, plugin.getCustomItemManager().getCustomSeed(Material.PUMPKIN_SEEDS));
-        inv.setItem(15, plugin.getCustomItemManager().getCustomSeed(Material.MELON_SEEDS));
+        inv.setItem(11, createItem(Material.EMERALD, "§aКупить пшеницу", "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("wheat") + " рублей", "§7Нажмите, чтобы купить"));
+        
+        inv.setItem(13, plugin.getCustomItemManager().getCustomSeed(Material.CARROT));
+        inv.setItem(14, createItem(Material.EMERALD, "§aКупить морковь", "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("carrot") + " рублей", "§7Нажмите, чтобы купить"));
+        
+        inv.setItem(16, plugin.getCustomItemManager().getCustomSeed(Material.POTATO));
+        inv.setItem(17, createItem(Material.EMERALD, "§aКупить картофель", "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("potato") + " рублей", "§7Нажмите, чтобы купить"));
+        
+        inv.setItem(19, plugin.getCustomItemManager().getCustomSeed(Material.BEETROOT_SEEDS));
+        inv.setItem(20, createItem(Material.EMERALD, "§aКупить свеклу", "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("beetroot") + " рублей", "§7Нажмите, чтобы купить"));
+        
+        inv.setItem(22, plugin.getCustomItemManager().getCustomSeed(Material.PUMPKIN_SEEDS));
+        inv.setItem(23, createItem(Material.EMERALD, "§aКупить тыкву", "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("pumpkin") + " рублей", "§7Нажмите, чтобы купить"));
+        
+        inv.setItem(25, plugin.getCustomItemManager().getCustomSeed(Material.MELON_SEEDS));
+        inv.setItem(26, createItem(Material.EMERALD, "§aКупить арбуз", "§7Цена: §e" + plugin.getConfigManager().getSeedPrice("melon") + " рублей", "§7Нажмите, чтобы купить"));
+        
+        // Кастомные растения
+        Map<String, CustomPlantManager.CustomPlant> customPlants = plugin.getCustomPlantManager().getAllCustomPlants();
+        int slot = 28;
+        
+        for (Map.Entry<String, CustomPlantManager.CustomPlant> entry : customPlants.entrySet()) {
+            CustomPlantManager.CustomPlant plant = entry.getValue();
+            
+            // Семя растения
+            ItemStack seed = plugin.getCustomPlantManager().createCustomSeed(entry.getKey());
+            inv.setItem(slot, seed);
+            
+            // Кнопка покупки
+            inv.setItem(slot + 1, createItem(Material.EMERALD, "§aКупить " + plant.displayName, 
+                "§7Цена: §e" + plant.seedPriceValue + " рублей", 
+                "§7Время роста: §e" + (plant.growthTimeSeconds / 60) + " минут",
+                "§7Нажмите, чтобы купить"));
+            
+            slot += 2;
+            if (slot >= 45) break; // Не выходим за границы инвентаря
+        }
         
         // Кнопка "Назад"
-        inv.setItem(31, createItem(Material.ARROW, "§cНазад", 
+        inv.setItem(49, createItem(Material.ARROW, "§cНазад", 
             "§7Нажмите, чтобы вернуться", "§7в главное меню"));
         
         // Баланс
         int balance = plugin.getEconomyManager().getBalance(player);
-        inv.setItem(32, createItem(Material.EMERALD, "§aБаланс: §e" + balance + " §aрублей"));
+        inv.setItem(50, createItem(Material.EMERALD, "§aБаланс: §e" + balance + " §aрублей"));
         
         player.openInventory(inv);
         openGuis.put(player, GuiType.SHOP);

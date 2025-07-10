@@ -10,6 +10,7 @@ import com.minecraft.garden.managers.PlotManager;
 import com.minecraft.garden.managers.PlantManager;
 import com.minecraft.garden.managers.GuiManager;
 import com.minecraft.garden.managers.CustomItemManager;
+import com.minecraft.garden.managers.CustomPlantManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GardenPlugin extends JavaPlugin {
@@ -22,6 +23,7 @@ public class GardenPlugin extends JavaPlugin {
     private PlantManager plantManager;
     private GuiManager guiManager;
     private CustomItemManager customItemManager;
+    private CustomPlantManager customPlantManager;
     
     @Override
     public void onEnable() {
@@ -60,6 +62,10 @@ public class GardenPlugin extends JavaPlugin {
             getLogger().info("  - Инициализация CustomItemManager...");
             customItemManager = new CustomItemManager(this);
             getLogger().info("  ✓ CustomItemManager инициализирован");
+            
+            getLogger().info("  - Инициализация CustomPlantManager...");
+            customPlantManager = new CustomPlantManager(this);
+            getLogger().info("  ✓ CustomPlantManager инициализирован");
             
             getLogger().info("✓ Менеджеры инициализированы");
             
@@ -153,5 +159,9 @@ public class GardenPlugin extends JavaPlugin {
     
     public CustomItemManager getCustomItemManager() {
         return customItemManager;
+    }
+
+    public CustomPlantManager getCustomPlantManager() {
+        return customPlantManager;
     }
 } 
