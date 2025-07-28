@@ -1,0 +1,32 @@
+# FarmerEconomist Plugin Configuration
+
+# -- Plot Settings --
+plots:
+  # Starting location for the plot grid. Set by /ogorod set_start
+  # Do not change this manually unless you know what you are doing.
+  grid_start_location: # intentionally left blank
+  # The size of one side of the square plot (e.g., 7 means 7x7)
+  size: 7
+  # The distance between each plot
+  gap: 3
+  # The material for the fence around the plot
+  fence_material: OAK_FENCE
+  # The material for the fence gate
+  gate_material: OAK_FENCE_GATE
+  
+# -- Economy Settings --
+economy:
+  # The name of the currency
+  currency_name: "монет"
+  
+# -- Messages --
+# You can use color codes like &a, &b, &c, etc.
+messages:
+  balance: "&aВаш баланс: &e%balance% %currency%"
+  plot_get_success: "&aПоздравляем! Вы получили новый участок."
+  plot_get_fail_has_plot: "&cУ вас уже есть участок."
+  plot_no_permission: "&cУ вас нет прав для этого действия."
+  plot_break_denied: "&cВы не можете ломать блоки на чужом участке."
+  plot_place_denied: "&cВы не можете ставить блоки на чужом участке."
+  plot_grid_not_set: "&cСетка огородов еще не настроена администратором."
+  plot_set_start_success: "&aНачальная точка для сетки огородов установлена здесь." 

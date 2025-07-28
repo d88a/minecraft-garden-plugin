@@ -45,9 +45,10 @@ public class OgorodCommand implements CommandExecutor {
                 break;
             case "set_start":
                 if (player.hasPermission("farmereconomist.admin.ogorod")) {
-                    player.sendMessage("Эта функция в разработке.");
+                    plugin.getConfigManager().setGridStartLocation(player.getLocation());
+                    player.sendMessage("Начальная точка для сетки огородов установлена здесь."); // TODO: msg from config
                 } else {
-                    player.sendMessage("У вас нет прав.");
+                    player.sendMessage("У вас нет прав."); // TODO: msg from config
                 }
                 break;
             default:
@@ -59,16 +60,22 @@ public class OgorodCommand implements CommandExecutor {
 
     private void handleGet(Player player) {
         if (plotManager.hasPlot(player)) {
-            player.sendMessage("У вас уже есть участок.");
+            player.sendMessage("У вас уже есть участок."); // TODO: msg from config
             return;
         }
 
-        // TODO: Replace with real plot generation logic
-        Location corner1 = new Location(player.getWorld(), 0, 64, 0);
-        Location corner2 = new Location(player.getWorld(), 6, 64, 6);
-        Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
+        if (plugin.getConfigManager().getGridStartLocation() == null) {
+            player.sendMessage("Сетка огородов еще не настроена администратором."); // TODO: msg from config
+            return;
+        }
 
-        plotManager.addPlot(player, newPlot);
-        player.sendMessage("Поздравляем! Вы получили участок. (Тестовая зона)");
+        Plot newPlot = plotManager.createNewPlotFor(player);
+
+        if (newPlot != null) {
+            player.sendMessage("Поздравляем! Вы получили новый участок."); // TODO: msg from config
+        } else {
+            // This might happen if start location is suddenly null, or other errors.
+            player.sendMessage("Не удалось создать участок. Обратитесь к администратору.");
+        }
     }
 } 

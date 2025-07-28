@@ -3,6 +3,7 @@ package com.github.d88a.farmereconomist;
 import com.github.d88a.farmereconomist.commands.BalanceCommand;
 import com.github.d88a.farmereconomist.commands.EcoCommand;
 import com.github.d88a.farmereconomist.commands.OgorodCommand;
+import com.github.d88a.farmereconomist.config.ConfigManager;
 import com.github.d88a.farmereconomist.data.DataManager;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
 import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
@@ -14,13 +15,15 @@ public final class FarmerEconomist extends JavaPlugin {
     private DataManager dataManager;
     private EconomyManager economyManager;
     private PlotManager plotManager;
+    private ConfigManager configManager;
 
     @Override
     public void onEnable() {
         // Initialize managers
+        this.configManager = new ConfigManager(this);
         this.dataManager = new DataManager(this);
         this.economyManager = new EconomyManager(dataManager);
-        this.plotManager = new PlotManager();
+        this.plotManager = new PlotManager(this);
 
         // Register commands
         getCommand("balance").setExecutor(new BalanceCommand(this));
@@ -45,5 +48,9 @@ public final class FarmerEconomist extends JavaPlugin {
 
     public PlotManager getPlotManager() {
         return plotManager;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 } 
