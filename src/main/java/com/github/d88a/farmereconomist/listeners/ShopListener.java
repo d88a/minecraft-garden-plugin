@@ -1,0 +1,81 @@
+package com.github.d88a.farmereconomist.listeners;
+
+import com.github.d88a.farmereconomist.FarmerEconomist;
+import com.github.d88a.farmereconomist.economy.EconomyManager;
+import com.github.d88a.farmereconomist.items.ItemManager;
+import com.github.d88a.farmereconomist.npc.ShopGUI;
+import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.ItemStack;
+
+public class ShopListener implements Listener {
+
+    private final FarmerEconomist plugin;
+    private final ShopGUI shopGUI;
+    private final EconomyManager economyManager;
+
+    public ShopListener(FarmerEconomist plugin) {
+        this.plugin = plugin;
+        this.shopGUI = new ShopGUI(plugin);
+        this.economyManager = plugin.getEconomyManager();
+    }
+
+    @EventHandler
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getRightClicked().getType() == EntityType.VILLAGER) {
+            if (plugin.getNpcManager().getNpcLocation() != null &&
+                event.getRightClicked().getLocation().distance(plugin.getNpcManager().getNpcLocation()) < 2) {
+                event.setCancelled(true);
+                shopGUI.open(event.getPlayer());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equals("Магазин Старого Мирона")) {
+            return;
+        }
+        event.setCancelled(true);
+
+        Player player = (Player) event.getWhoClicked();
+        ItemStack clickedItem = event.getCurrentItem();
+
+        if (clickedItem == null || clickedItem.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+            return;
+        }
+
+        // --- Buy logic ---
+        if (clickedItem.getItemMeta().getLore().get(1).contains("купить")) {
+            double price = Double.parseDouble(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+            if (economyManager.getBalance(player) >= price) {
+                economyManager.takeBalance(player, price);
+                ItemStack itemToGive = clickedItem.clone();
+                itemToGive.setLore(null);
+                player.getInventory().addItem(itemToGive);
+                player.sendMessage("Вы купили " + clickedItem.getItemMeta().getDisplayName());
+            } else {
+                player.sendMessage("У вас недостаточно монет.");
+            }
+        }
+        // --- Sell logic ---
+        else if (clickedItem.getItemMeta().getLore().get(1).contains("продать")) {
+            double price = Double.parseDouble(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+            ItemStack itemToSell = clickedItem.clone();
+            itemToSell.setLore(null);
+            
+            if(player.getInventory().containsAtLeast(itemToSell, 1)) {
+                player.getInventory().removeItem(itemToSell);
+                economyManager.addBalance(player, price);
+                player.sendMessage("Вы продали " + clickedItem.getItemMeta().getDisplayName());
+            } else {
+                player.sendMessage("У вас нет этого предмета для продажи.");
+            }
+        }
+    }
+} 
