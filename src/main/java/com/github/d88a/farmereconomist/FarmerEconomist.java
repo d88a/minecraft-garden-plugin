@@ -2,24 +2,33 @@ package com.github.d88a.farmereconomist;
 
 import com.github.d88a.farmereconomist.commands.BalanceCommand;
 import com.github.d88a.farmereconomist.commands.EcoCommand;
+import com.github.d88a.farmereconomist.commands.OgorodCommand;
 import com.github.d88a.farmereconomist.data.DataManager;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
+import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
+import com.github.d88a.farmereconomist.plots.PlotManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmerEconomist extends JavaPlugin {
 
     private DataManager dataManager;
     private EconomyManager economyManager;
+    private PlotManager plotManager;
 
     @Override
     public void onEnable() {
         // Initialize managers
         this.dataManager = new DataManager(this);
         this.economyManager = new EconomyManager(dataManager);
+        this.plotManager = new PlotManager();
 
         // Register commands
         getCommand("balance").setExecutor(new BalanceCommand(this));
         getCommand("eco").setExecutor(new EcoCommand(this));
+        getCommand("ogorod").setExecutor(new OgorodCommand(this));
+
+        // Register listeners
+        getServer().getPluginManager().registerEvents(new PlotProtectionListener(this), this);
 
         getLogger().info("FarmerEconomist has been enabled!");
     }
@@ -32,5 +41,9 @@ public final class FarmerEconomist extends JavaPlugin {
 
     public EconomyManager getEconomyManager() {
         return economyManager;
+    }
+
+    public PlotManager getPlotManager() {
+        return plotManager;
     }
 } 
