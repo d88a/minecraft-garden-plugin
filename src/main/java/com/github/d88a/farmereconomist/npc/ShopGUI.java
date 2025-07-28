@@ -42,14 +42,14 @@ public class ShopGUI {
 
     private ItemStack createBuyItem(ItemStack item, double price) {
         ItemMeta meta = item.getItemMeta();
-        meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getConfig().getString("economy.currency_name"), "§aКлик, чтобы купить."));
+        meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getCurrencyName(), "§aКлик, чтобы купить."));
         item.setItemMeta(meta);
         return item;
     }
 
     private ItemStack createSellItem(ItemStack item, double price) {
         ItemMeta meta = item.getItemMeta();
-        meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getConfig().getString("economy.currency_name"), "§cКлик, чтобы продать."));
+        meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getCurrencyName(), "§cКлик, чтобы продать."));
         item.setItemMeta(meta);
         return item;
     }

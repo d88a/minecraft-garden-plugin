@@ -45,4 +45,8 @@ public class ConfigManager {
     public Material getGateMaterial() {
         return Material.getMaterial(config.getString("plots.gate_material", "OAK_FENCE_GATE"));
     }
+
+    public String getCurrencyName() {
+        return config.getString("economy.currency_name", "монет");
+    }
 } 
