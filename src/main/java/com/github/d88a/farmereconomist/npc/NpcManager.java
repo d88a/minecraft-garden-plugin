@@ -7,13 +7,14 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 public class NpcManager {
 
     private final FarmerEconomist plugin;
     private final File npcFile;
     private final FileConfiguration npcConfig;
-    private Location npcLocation;
+    private UUID npcUniqueId;
 
     public NpcManager(FarmerEconomist plugin) {
         this.plugin = plugin;
@@ -26,16 +27,22 @@ public class NpcManager {
             }
         }
         this.npcConfig = YamlConfiguration.loadConfiguration(npcFile);
-        this.npcLocation = npcConfig.getLocation("location");
+        if (npcConfig.contains("npc-uuid")) {
+            this.npcUniqueId = UUID.fromString(npcConfig.getString("npc-uuid"));
+        }
     }
 
-    public Location getNpcLocation() {
-        return npcLocation;
+    public UUID getNpcUniqueId() {
+        return npcUniqueId;
     }
 
-    public void setNpcLocation(Location location) {
-        this.npcLocation = location;
-        npcConfig.set("location", location);
+    public void setNpcUniqueId(UUID npcUniqueId) {
+        this.npcUniqueId = npcUniqueId;
+        if (npcUniqueId != null) {
+            npcConfig.set("npc-uuid", npcUniqueId.toString());
+        } else {
+            npcConfig.set("npc-uuid", null);
+        }
         try {
             npcConfig.save(npcFile);
         } catch (IOException e) {

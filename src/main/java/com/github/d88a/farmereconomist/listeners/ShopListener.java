@@ -14,6 +14,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
+
 public class ShopListener implements Listener {
 
     private final FarmerEconomist plugin;
@@ -29,8 +31,8 @@ public class ShopListener implements Listener {
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         if (event.getRightClicked().getType() == EntityType.VILLAGER) {
-            if (plugin.getNpcManager().getNpcLocation() != null &&
-                event.getRightClicked().getLocation().distance(plugin.getNpcManager().getNpcLocation()) < 2) {
+            UUID npcId = plugin.getNpcManager().getNpcUniqueId();
+            if (npcId != null && event.getRightClicked().getUniqueId().equals(npcId)) {
                 event.setCancelled(true);
                 shopGUI.open(event.getPlayer());
             }
