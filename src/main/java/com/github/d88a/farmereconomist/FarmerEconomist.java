@@ -45,7 +45,9 @@ public final class FarmerEconomist extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        // Save all plots to file
+        plotManager.savePlots();
+
         getLogger().info("FarmerEconomist has been disabled!");
     }
 

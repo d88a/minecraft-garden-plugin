@@ -4,6 +4,7 @@ import com.github.d88a.farmereconomist.FarmerEconomist;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -18,7 +19,31 @@ public class PlotManager {
 
     public PlotManager(FarmerEconomist plugin) {
         this.plugin = plugin;
-        // TODO: Load plots from storage and update nextPlotId
+        loadPlots();
+    }
+
+    public void savePlots() {
+        ConfigurationSection plotsSection = plugin.getDataManager().getPlotsConfig().createSection("plots");
+        for (Map.Entry<UUID, Plot> entry : plots.entrySet()) {
+            ConfigurationSection plotSection = plotsSection.createSection(entry.getKey().toString());
+            plotSection.set("corner1", entry.getValue().getCorner1());
+            plotSection.set("corner2", entry.getValue().getCorner2());
+        }
+        plugin.getDataManager().savePlotsConfig();
+    }
+
+    private void loadPlots() {
+        ConfigurationSection plotsSection = plugin.getDataManager().getPlotsConfig().getConfigurationSection("plots");
+        if (plotsSection != null) {
+            for (String uuidString : plotsSection.getKeys(false)) {
+                UUID owner = UUID.fromString(uuidString);
+                Location corner1 = plotsSection.getLocation(uuidString + ".corner1");
+                Location corner2 = plotsSection.getLocation(uuidString + ".corner2");
+                Plot plot = new Plot(owner, corner1, corner2);
+                plots.put(owner, plot);
+            }
+        }
+        nextPlotId = plots.size();
     }
 
     public void addPlot(Player player, Plot plot) {
