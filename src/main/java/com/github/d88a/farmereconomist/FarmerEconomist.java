@@ -7,9 +7,11 @@ import com.github.d88a.farmereconomist.commands.OgorodCommand;
 import com.github.d88a.farmereconomist.config.ConfigManager;
 import com.github.d88a.farmereconomist.data.DataManager;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
+import com.github.d88a.farmereconomist.listeners.OgorodListener;
 import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
 import com.github.d88a.farmereconomist.listeners.ShopListener;
 import com.github.d88a.farmereconomist.npc.NpcManager;
+import com.github.d88a.farmereconomist.plots.OgorodGUI;
 import com.github.d88a.farmereconomist.plots.PlotManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,6 +22,7 @@ public final class FarmerEconomist extends JavaPlugin {
     private PlotManager plotManager;
     private ConfigManager configManager;
     private NpcManager npcManager;
+    private OgorodGUI ogorodGUI;
 
     @Override
     public void onEnable() {
@@ -29,6 +32,7 @@ public final class FarmerEconomist extends JavaPlugin {
         this.economyManager = new EconomyManager(dataManager);
         this.plotManager = new PlotManager(this);
         this.npcManager = new NpcManager(this);
+        this.ogorodGUI = new OgorodGUI();
 
         // Register commands
         getCommand("balance").setExecutor(new BalanceCommand(this));
@@ -39,6 +43,7 @@ public final class FarmerEconomist extends JavaPlugin {
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlotProtectionListener(this), this);
         getServer().getPluginManager().registerEvents(new ShopListener(this), this);
+        getServer().getPluginManager().registerEvents(new OgorodListener(this), this);
 
         getLogger().info("FarmerEconomist has been enabled!");
     }
@@ -65,5 +70,9 @@ public final class FarmerEconomist extends JavaPlugin {
 
     public NpcManager getNpcManager() {
         return npcManager;
+    }
+
+    public OgorodGUI getOgorodGUI() {
+        return ogorodGUI;
     }
 } 

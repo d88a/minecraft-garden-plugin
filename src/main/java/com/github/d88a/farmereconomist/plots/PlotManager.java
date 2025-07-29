@@ -143,4 +143,40 @@ public class PlotManager {
         // Add gate
         world.getBlockAt(minX + (maxX - minX) / 2, y + 1, minZ - 1).setType(gate);
     }
+
+    public void deletePlot(Player player) {
+        Plot plot = plots.remove(player.getUniqueId());
+        if (plot != null) {
+            // Remove from config
+            plugin.getDataManager().getPlotsConfig().set("plots." + player.getUniqueId().toString(), null);
+            plugin.getDataManager().savePlotsConfig();
+            
+            // Clean up the plot area
+            clearPlotArea(plot);
+        }
+    }
+    
+    private void clearPlotArea(Plot plot) {
+        Location corner1 = plot.getCorner1();
+        Location corner2 = plot.getCorner2();
+        World world = corner1.getWorld();
+
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+        int maxZ = Math.max(corner1.getBlockZ(), corner2.getBlockZ());
+        int y = corner1.getBlockY();
+
+        // Remove fence and turn land to stone
+        for (int x = minX - 1; x <= maxX + 1; x++) {
+            for (int z = minZ - 1; z <= maxZ + 1; z++) {
+                // Clear fence level
+                world.getBlockAt(x, y + 1, z).setType(Material.AIR);
+                // Turn plot land to stone
+                if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+                    world.getBlockAt(x, y, z).setType(Material.STONE);
+                }
+            }
+        }
+    }
 } 

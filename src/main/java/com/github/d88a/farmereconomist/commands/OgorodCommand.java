@@ -30,7 +30,7 @@ public class OgorodCommand implements CommandExecutor {
         Player player = (Player) sender;
 
         if (args.length == 0) {
-            player.sendMessage("Использование: /ogorod <get|home|...");
+            plugin.getOgorodGUI().open(player);
             return true;
         }
 
@@ -42,6 +42,9 @@ public class OgorodCommand implements CommandExecutor {
                 break;
             case "home":
                 handleHome(player);
+                break;
+            case "delete":
+                handleDelete(player);
                 break;
             case "set_start":
                 if (player.hasPermission("farmereconomist.admin.ogorod")) {
@@ -56,6 +59,15 @@ public class OgorodCommand implements CommandExecutor {
                 break;
         }
         return true;
+    }
+
+    private void handleDelete(Player player) {
+        if (!plotManager.hasPlot(player)) {
+            player.sendMessage("У вас нет участка для удаления.");
+            return;
+        }
+        plotManager.deletePlot(player);
+        player.sendMessage("Ваш участок был успешно удален.");
     }
 
     private void handleHome(Player player) {
