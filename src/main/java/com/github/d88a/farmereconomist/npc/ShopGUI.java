@@ -20,17 +20,19 @@ public class ShopGUI {
     }
 
     public void open(Player player) {
-        Inventory shop = Bukkit.createInventory(null, 27, "Магазин Старого Мирона");
+        Inventory shop = Bukkit.createInventory(null, 36, "Магазин Старого Мирона");
 
         // --- Items to buy ---
         shop.setItem(10, createBuyItem(ItemManager.createLettuceSeeds(), 10));
         shop.setItem(11, createBuyItem(ItemManager.createTomatoSeeds(), 25));
-        shop.setItem(12, createBuyItem(ItemManager.createWateringCan(), 100));
+        shop.setItem(12, createBuyItem(ItemManager.createGlowshroomSpores(), 50));
+        shop.setItem(13, createBuyItem(ItemManager.createWateringCan(), 100));
 
         // --- Items to sell ---
-        shop.setItem(15, createSellItem(ItemManager.createLettuce(false), 5));
-        shop.setItem(16, createSellItem(ItemManager.createLettuce(true), 15));
-        shop.setItem(17, createSellItem(ItemManager.createTomato(), 20));
+        shop.setItem(19, createSellItem(ItemManager.createLettuce(false), 5));
+        shop.setItem(20, createSellItem(ItemManager.createLettuce(true), 15));
+        shop.setItem(21, createSellItem(ItemManager.createTomato(), 20));
+        shop.setItem(22, createSellItem(ItemManager.createGlowshroomDust(), 45));
         
         // --- Fill empty space ---
         for (int i = 0; i < shop.getSize(); i++) {

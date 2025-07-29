@@ -64,4 +64,5 @@ messages:
 
   # Crops
   crop_plant_fail_not_farmland: "&cСажать можно только на вспаханную землю."
+  crop_plant_fail_not_mycelium: "&cСветящиеся грибы можно сажать только на мицелий или подзол."
   crop_watered: "&bВы полили землю." 

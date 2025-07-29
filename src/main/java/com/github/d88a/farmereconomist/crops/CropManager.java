@@ -38,8 +38,11 @@ public class CropManager {
         CustomCrop crop = crops.remove(location);
         if (crop != null) {
             location.getBlock().setType(Material.AIR);
-            // TODO: Drop loot based on crop type
-            location.getWorld().dropItemNaturally(location, ItemManager.createTomato());
+            if (crop.getType() == CustomCrop.CropType.TOMATO) {
+                location.getWorld().dropItemNaturally(location, ItemManager.createTomato());
+            } else if (crop.getType() == CustomCrop.CropType.GLOWSHROOM) {
+                location.getWorld().dropItemNaturally(location, ItemManager.createGlowshroomDust());
+            }
         }
     }
 
@@ -68,19 +71,31 @@ public class CropManager {
                 crop.setLastGrowthTime(System.currentTimeMillis());
                 updateCropBlock(crop);
             }
+        } else if (crop.getType() == CustomCrop.CropType.GLOWSHROOM) {
+            if (crop.getStage() < 1) { // Glowshroom has 2 stages: 0 (small) and 1 (big)
+                crop.setStage(crop.getStage() + 1);
+                crop.setLastGrowthTime(System.currentTimeMillis());
+                updateCropBlock(crop);
+            }
         }
     }
 
     private void updateCropBlock(CustomCrop crop) {
+        ItemStack head = null;
         if (crop.getType() == CustomCrop.CropType.TOMATO) {
+            head = ItemManager.createTomatoStage(crop.getStage());
+        } else if (crop.getType() == CustomCrop.CropType.GLOWSHROOM) {
+            head = ItemManager.createGlowshroomStage(crop.getStage());
+        }
+
+        if (head != null) {
             // This is a workaround as we can't directly set a textured head's BlockData
             // We set the block to a player head, then get its state and apply the texture
             Block block = crop.getLocation().getBlock();
             block.setType(Material.PLAYER_HEAD);
             if (block.getState() instanceof org.bukkit.block.Skull) {
                 org.bukkit.block.Skull skullState = (org.bukkit.block.Skull) block.getState();
-                ItemStack headItem = ItemManager.createTomatoStage(crop.getStage());
-                skullState.setPlayerProfile(((org.bukkit.inventory.meta.SkullMeta) headItem.getItemMeta()).getPlayerProfile());
+                skullState.setPlayerProfile(((org.bukkit.inventory.meta.SkullMeta) head.getItemMeta()).getPlayerProfile());
                 skullState.update();
             }
         }

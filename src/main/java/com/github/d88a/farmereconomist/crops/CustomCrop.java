@@ -5,7 +5,8 @@ import org.bukkit.Location;
 public class CustomCrop {
 
     public enum CropType {
-        TOMATO
+        TOMATO,
+        GLOWSHROOM
     }
 
     private final Location location;

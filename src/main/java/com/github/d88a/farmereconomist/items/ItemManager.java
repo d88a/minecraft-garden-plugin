@@ -13,6 +13,9 @@ public class ItemManager {
     // --- Texture values for custom heads ---
     private static final String GREEN_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjA5YjU5YjJlNmYxOTBhYjI0MTBkYjNkY2U5MGMxNGU0ZGNlYjVjMmFiN2NhYTc5N2ZlM2U5Y2E2NDQ3ZGEifX19";
     private static final String RED_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmI4YTk5Y2I4ZWU3ZmY4MzBjY2Y4MWMyM2YwY2E3YTM4M2VjYWM3NDUzYjFhMTQ5Y2Y5Y2UyNGY0NDY1YSJ9fX0=";
+    private static final String SMALL_MUSHROOM_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjc1NDgzNjJhMjY3YjYxY2Y5YjY1OTQ0YjY4ZDRmM2Y3OTY0MGI1Y2Q3M2Y1YWE5YTU2NmI4YjliZWMyZGU5In19fQ==";
+    private static final String GLOWSHROOM_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTI4OWQzYjE1YjE1NDk5YjcxY2RjYThmZDE0MmM0YmZmMjE4YjQ5OWQ4Y2IyZGI5YTM0Yzc4ZDM5YjE1YjEifX19";
+
 
     public static ItemStack createWateringCan() {
         ItemStack item = new ItemStack(Material.IRON_HOE); // Используем мотыгу как основу
@@ -43,6 +46,23 @@ public class ItemManager {
         return item;
     }
 
+    public static ItemStack createGlowshroomSpores() {
+        ItemStack item = new ItemStack(Material.RED_MUSHROOM);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("§dСпоры светящегося гриба");
+        meta.setLore(Arrays.asList("Можно посадить на мицелий или подзол."));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public static ItemStack createGlowshroomDust() {
+        ItemStack item = new ItemStack(Material.GLOWSTONE_DUST);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("§dПыльца светящегося гриба");
+        item.setItemMeta(meta);
+        return item;
+    }
+
     public static ItemStack createTomato() {
         ItemStack item = new ItemStack(Material.APPLE);
         ItemMeta meta = item.getItemMeta();
@@ -50,6 +70,25 @@ public class ItemManager {
         meta.setLore(Arrays.asList("Сочный и спелый!"));
         item.setItemMeta(meta);
         return item;
+    }
+
+    public static ItemStack createGlowshroomStage(int stage) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        String texture = (stage == 0) ? SMALL_MUSHROOM_TEXTURE : GLOWSHROOM_TEXTURE;
+        
+        com.mojang.authlib.GameProfile profile = new com.mojang.authlib.GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new com.mojang.authlib.properties.Property("textures", texture));
+        try {
+            java.lang.reflect.Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        
+        head.setItemMeta(meta);
+        return head;
     }
 
     public static ItemStack createTomatoStage(int stage) {

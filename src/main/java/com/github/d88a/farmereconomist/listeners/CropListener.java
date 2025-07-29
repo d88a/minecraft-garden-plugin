@@ -26,15 +26,34 @@ public class CropListener implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.getItemInHand().isSimilar(ItemManager.createTomatoSeeds())) {
-            Block placedOn = event.getBlock().getRelative(0, -1, 0);
-            if (placedOn.getType() == Material.FARMLAND) {
-                event.setCancelled(true);
-                cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.TOMATO);
-                event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
-            } else {
-                plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_farmland");
-                event.setCancelled(true);
-            }
+            handleTomatoPlacement(event);
+        } else if (event.getItemInHand().isSimilar(ItemManager.createGlowshroomSpores())) {
+            handleGlowshroomPlacement(event);
+        }
+    }
+
+    private void handleTomatoPlacement(BlockPlaceEvent event) {
+        Block placedOn = event.getBlock().getRelative(0, -1, 0);
+        if (placedOn.getType() == Material.FARMLAND) {
+            event.setCancelled(true);
+            cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.TOMATO);
+            event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
+        } else {
+            plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_farmland");
+            event.setCancelled(true);
+        }
+    }
+
+    private void handleGlowshroomPlacement(BlockPlaceEvent event) {
+        Block placedOn = event.getBlock().getRelative(0, -1, 0);
+        if (placedOn.getType() == Material.MYCELIUM || placedOn.getType() == Material.PODZOL) {
+            event.setCancelled(true);
+            cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.GLOWSHROOM);
+            event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
+        } else {
+            // TODO: Add new message to config
+            plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_mycelium");
+            event.setCancelled(true);
         }
     }
 
@@ -47,7 +66,12 @@ public class CropListener implements Listener {
 
         CustomCrop crop = cropManager.getCropAt(clickedBlock.getLocation());
         if (crop != null) {
-            if (crop.getStage() >= 1) { // Check if tomato is ripe (red)
+            // Check if the crop is harvestable (final stage)
+            boolean isHarvestable = false;
+            if(crop.getType() == CustomCrop.CropType.TOMATO && crop.getStage() >= 1) isHarvestable = true;
+            if(crop.getType() == CustomCrop.CropType.GLOWSHROOM && crop.getStage() >= 1) isHarvestable = true;
+
+            if (isHarvestable) {
                 cropManager.harvestCrop(clickedBlock.getLocation());
             }
         }
