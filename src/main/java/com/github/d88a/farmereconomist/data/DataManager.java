@@ -14,12 +14,40 @@ public class DataManager {
     private final File dataFolder;
     private FileConfiguration plotsConfig = null;
     private File plotsFile = null;
+    private FileConfiguration cropsConfig = null;
+    private File cropsFile = null;
 
     public DataManager(FarmerEconomist plugin) {
         this.plugin = plugin;
         this.dataFolder = new File(plugin.getDataFolder(), "playerdata");
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
+        }
+    }
+
+    public void reloadCropsConfig() {
+        if (cropsFile == null) {
+            cropsFile = new File(plugin.getDataFolder(), "crops.yml");
+        }
+        cropsConfig = YamlConfiguration.loadConfiguration(cropsFile);
+    }
+
+    public FileConfiguration getCropsConfig() {
+        if (cropsConfig == null) {
+            reloadCropsConfig();
+        }
+        return cropsConfig;
+    }
+
+    public void saveCropsConfig() {
+        if (cropsConfig == null || cropsFile == null) {
+            return;
+        }
+        try {
+            getCropsConfig().save(cropsFile);
+        } catch (IOException ex) {
+            plugin.getLogger().severe("Could not save config to " + cropsFile);
+            ex.printStackTrace();
         }
     }
 

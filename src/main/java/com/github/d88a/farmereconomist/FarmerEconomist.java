@@ -5,8 +5,10 @@ import com.github.d88a.farmereconomist.commands.EcoCommand;
 import com.github.d88a.farmereconomist.commands.FermerCommand;
 import com.github.d88a.farmereconomist.commands.OgorodCommand;
 import com.github.d88a.farmereconomist.config.ConfigManager;
+import com.github.d88a.farmereconomist.crops.CropManager;
 import com.github.d88a.farmereconomist.data.DataManager;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
+import com.github.d88a.farmereconomist.listeners.CropListener;
 import com.github.d88a.farmereconomist.listeners.OgorodListener;
 import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
 import com.github.d88a.farmereconomist.listeners.ShopListener;
@@ -46,12 +48,15 @@ public final class FarmerEconomist extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new OgorodListener(this), this);
 
         getLogger().info("FarmerEconomist has been enabled!");
+        
+        getServer().getPluginManager().registerEvents(new com.github.d88a.farmereconomist.listeners.CropListener(this), this);
     }
 
     @Override
     public void onDisable() {
         // Save all plots to file
         plotManager.savePlots();
+        cropManager.saveCrops();
 
         getLogger().info("FarmerEconomist has been disabled!");
     }

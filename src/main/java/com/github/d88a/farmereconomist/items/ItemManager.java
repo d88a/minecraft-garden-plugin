@@ -3,10 +3,16 @@ package com.github.d88a.farmereconomist.items;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 public class ItemManager {
+
+    // --- Texture values for custom heads ---
+    private static final String GREEN_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjA5YjU5YjJlNmYxOTBhYjI0MTBkYjNkY2U5MGMxNGU0ZGNlYjVjMmFiN2NhYTc5N2ZlM2U5Y2E2NDQ3ZGEifX19";
+    private static final String RED_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmI4YTk5Y2I4ZWU3ZmY4MzBjY2Y4MWMyM2YwY2E3YTM4M2VjYWM3NDUzYjFhMTQ5Y2Y5Y2UyNGY0NDY1YSJ9fX0=";
 
     public static ItemStack createWateringCan() {
         ItemStack item = new ItemStack(Material.IRON_HOE); // Используем мотыгу как основу
@@ -26,6 +32,43 @@ public class ItemManager {
         meta.setCustomModelData(1);
         item.setItemMeta(meta);
         return item;
+    }
+    
+    public static ItemStack createTomatoSeeds() {
+        ItemStack item = new ItemStack(Material.BEETROOT_SEEDS);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("§cСемена Рубинового Томата");
+        meta.setLore(Arrays.asList("Можно посадить на своем участке."));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public static ItemStack createTomato() {
+        ItemStack item = new ItemStack(Material.APPLE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("§cРубиновый Томат");
+        meta.setLore(Arrays.asList("Сочный и спелый!"));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public static ItemStack createTomatoStage(int stage) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        String texture = (stage == 0) ? GREEN_TOMATO_TEXTURE : RED_TOMATO_TEXTURE;
+        
+        com.mojang.authlib.GameProfile profile = new com.mojang.authlib.GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new com.mojang.authlib.properties.Property("textures", texture));
+        try {
+            java.lang.reflect.Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        
+        head.setItemMeta(meta);
+        return head;
     }
 
     public static ItemStack createLettuce(boolean isWatered) {
