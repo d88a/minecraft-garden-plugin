@@ -25,23 +25,13 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rename artifact for release
+        run: mv ./target/minecraft-garden-plugin-1.0-SNAPSHOT.jar ./target/FarmerEconomist.jar
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          release_name: Build ${{ github.run_number }}
-          draft: false
+          name: Build ${{ github.run_number }}
           prerelease: true
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/minecraft-garden-plugin-1.0-SNAPSHOT.jar
-          asset_name: FarmerEconomist.jar
-          asset_content_type: application/java-archive 
+          files: ./target/FarmerEconomist.jar 
