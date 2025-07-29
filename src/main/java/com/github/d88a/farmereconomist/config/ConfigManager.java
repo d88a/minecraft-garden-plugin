@@ -1,9 +1,11 @@
 package com.github.d88a.farmereconomist.config;
 
 import com.github.d88a.farmereconomist.FarmerEconomist;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 public class ConfigManager {
 
@@ -19,6 +21,21 @@ public class ConfigManager {
     public void reloadConfig() {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
+    }
+
+    public String getMessage(String key) {
+        String message = config.getString("messages." + key, "&cСообщение не найдено: " + key);
+        return ChatColor.translateAlternateColorCodes('&', message);
+    }
+    
+    public void sendMessage(Player player, String key, String... replacements) {
+        String message = getMessage(key);
+        for (int i = 0; i < replacements.length; i += 2) {
+            if (i + 1 < replacements.length) {
+                message = message.replace(replacements[i], replacements[i + 1]);
+            }
+        }
+        player.sendMessage(message);
     }
 
     public Location getGridStartLocation() {

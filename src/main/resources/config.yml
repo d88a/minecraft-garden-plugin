@@ -22,11 +22,46 @@ economy:
 # -- Messages --
 # You can use color codes like &a, &b, &c, etc.
 messages:
+  # General
+  only_for_players: "&cЭта команда только для игроков."
+  no_permission: "&cУ вас нет прав для этого действия."
+  unknown_command: "&cНеизвестная команда. Проверьте правильность написания."
+  
+  # Economy
   balance: "&aВаш баланс: &e%balance% %currency%"
+  eco_usage: "&eИспользование: /eco <give|take|set> <игрок> <сумма>"
+  eco_player_not_found: "&cИгрок не найден."
+  eco_amount_must_be_number: "&cСумма должна быть числом."
+  eco_give_sender: "&aВы выдали &e%amount% %currency% &aигроку &b%player%&a."
+  eco_give_receiver: "&aВам выдали &e%amount% %currency%&a."
+  eco_take_sender: "&aВы забрали &e%amount% %currency% &aу игрока &b%player%&a."
+  eco_take_receiver: "&cУ вас забрали &e%amount% %currency%&c."
+  eco_set_sender: "&aВы установили баланс игрока &b%player% &aна &e%amount% %currency%&a."
+  eco_set_receiver: "&aВаш баланс установлен на &e%amount% %currency%&a."
+
+  # Plots
+  plot_menu_usage: "&eИспользуйте /ogorod, чтобы открыть меню управления."
   plot_get_success: "&aПоздравляем! Вы получили новый участок."
   plot_get_fail_has_plot: "&cУ вас уже есть участок."
-  plot_no_permission: "&cУ вас нет прав для этого действия."
+  plot_grid_not_set: "&cСетка огородов еще не настроена администратором."
+  plot_set_start_success: "&aНачальная точка для сетки огородов установлена здесь."
+  plot_home_success: "&aВы телепортированы на свой участок."
+  plot_home_fail_no_plot: "&cУ вас еще нет участка, чтобы телепортироваться."
+  plot_delete_success: "&aВаш участок был успешно удален."
+  plot_delete_fail_no_plot: "&cУ вас нет участка для удаления."
   plot_break_denied: "&cВы не можете ломать блоки на чужом участке."
   plot_place_denied: "&cВы не можете ставить блоки на чужом участке."
-  plot_grid_not_set: "&cСетка огородов еще не настроена администратором."
-  plot_set_start_success: "&aНачальная точка для сетки огородов установлена здесь." 
+
+  # NPC / Shop
+  npc_not_set: "&cNPC 'Старый Мирон' еще не установлен администратором."
+  npc_set_success: "&aПозиция NPC 'Старый Мирон' установлена здесь."
+  npc_teleport_success: "&aВы телепортированы к Старому Мирону."
+  npc_find_fail: "&cНе удалось найти NPC 'Старый Мирон'. Попросите администратора переустановить его."
+  shop_buy_success: "&aВы купили %item_name%&a."
+  shop_buy_fail_no_money: "&cУ вас недостаточно монет."
+  shop_sell_success: "&aВы продали %item_name%&a."
+  shop_sell_fail_no_item: "&cУ вас нет этого предмета для продажи."
+
+  # Crops
+  crop_plant_fail_not_farmland: "&cСажать можно только на вспаханную землю."
+  crop_watered: "&bВы полили землю." 

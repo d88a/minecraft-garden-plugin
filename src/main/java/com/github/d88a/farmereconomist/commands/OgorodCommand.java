@@ -23,7 +23,7 @@ public class OgorodCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Эта команда только для игроков.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("only_for_players"));
             return true;
         }
 
@@ -49,13 +49,13 @@ public class OgorodCommand implements CommandExecutor {
             case "set_start":
                 if (player.hasPermission("farmereconomist.admin.ogorod")) {
                     plugin.getConfigManager().setGridStartLocation(player.getLocation());
-                    player.sendMessage("Начальная точка для сетки огородов установлена здесь."); // TODO: msg from config
+                    plugin.getConfigManager().sendMessage(player, "plot_set_start_success");
                 } else {
-                    player.sendMessage("У вас нет прав."); // TODO: msg from config
+                    plugin.getConfigManager().sendMessage(player, "no_permission");
                 }
                 break;
             default:
-                player.sendMessage("Неизвестная подкоманда.");
+                plugin.getConfigManager().sendMessage(player, "unknown_command");
                 break;
         }
         return true;
@@ -63,41 +63,41 @@ public class OgorodCommand implements CommandExecutor {
 
     private void handleDelete(Player player) {
         if (!plotManager.hasPlot(player)) {
-            player.sendMessage("У вас нет участка для удаления.");
+            plugin.getConfigManager().sendMessage(player, "plot_delete_fail_no_plot");
             return;
         }
         plotManager.deletePlot(player);
-        player.sendMessage("Ваш участок был успешно удален.");
+        plugin.getConfigManager().sendMessage(player, "plot_delete_success");
     }
 
     private void handleHome(Player player) {
         Plot plot = plotManager.getPlot(player);
         if (plot == null) {
-            player.sendMessage("У вас еще нет участка.");
+            plugin.getConfigManager().sendMessage(player, "plot_home_fail_no_plot");
             return;
         }
         player.teleport(plot.getTeleportLocation());
-        player.sendMessage("Вы телепортированы на свой участок.");
+        plugin.getConfigManager().sendMessage(player, "plot_home_success");
     }
 
     private void handleGet(Player player) {
         if (plotManager.hasPlot(player)) {
-            player.sendMessage("У вас уже есть участок."); // TODO: msg from config
+            plugin.getConfigManager().sendMessage(player, "plot_get_fail_has_plot");
             return;
         }
 
         if (plugin.getConfigManager().getGridStartLocation() == null) {
-            player.sendMessage("Сетка огородов еще не настроена администратором."); // TODO: msg from config
+            plugin.getConfigManager().sendMessage(player, "plot_grid_not_set");
             return;
         }
 
         Plot newPlot = plotManager.createNewPlotFor(player);
 
         if (newPlot != null) {
-            player.sendMessage("Поздравляем! Вы получили новый участок."); // TODO: msg from config
+            plugin.getConfigManager().sendMessage(player, "plot_get_success");
         } else {
             // This might happen if start location is suddenly null, or other errors.
-            player.sendMessage("Не удалось создать участок. Обратитесь к администратору.");
+            player.sendMessage("Не удалось создать участок. Обратитесь к администратору."); // Keep this one hardcoded as it's a technical error
         }
     }
 } 

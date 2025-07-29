@@ -26,7 +26,7 @@ public class FermerCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Эта команда только для игроков.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("only_for_players"));
             return true;
         }
 
@@ -43,7 +43,7 @@ public class FermerCommand implements CommandExecutor {
 
     private void handleSetNpc(Player player) {
         if (!player.hasPermission("farmereconomist.admin.set_npc")) {
-            player.sendMessage("У вас нет прав для этого."); // TODO: from config
+            plugin.getConfigManager().sendMessage(player, "no_permission");
             return;
         }
         
@@ -67,23 +67,23 @@ public class FermerCommand implements CommandExecutor {
         npc.setProfession(Villager.Profession.FARMER); // You can customize this
         
         plugin.getNpcManager().setNpcUniqueId(npc.getUniqueId());
-        player.sendMessage("Позиция NPC 'Старый Мирон' установлена здесь."); // TODO: from config
+        plugin.getConfigManager().sendMessage(player, "npc_set_success");
     }
 
     private void handleTeleport(Player player) {
         UUID npcId = plugin.getNpcManager().getNpcUniqueId();
         if (npcId == null) {
-            player.sendMessage("NPC 'Старый Мирон' еще не установлен администратором."); // TODO: from config
+            plugin.getConfigManager().sendMessage(player, "npc_not_set");
             return;
         }
 
         Entity npc = Bukkit.getEntity(npcId);
         if (npc == null) {
-            player.sendMessage("Не удалось найти NPC 'Старый Мирон'. Возможно, он был удален. Попросите администратора переустановить его.");
+            plugin.getConfigManager().sendMessage(player, "npc_find_fail");
             return;
         }
 
         player.teleport(npc.getLocation());
-        player.sendMessage("Вы телепортированы к Старому Мирону."); // TODO: from config
+        plugin.getConfigManager().sendMessage(player, "npc_teleport_success");
     }
 } 

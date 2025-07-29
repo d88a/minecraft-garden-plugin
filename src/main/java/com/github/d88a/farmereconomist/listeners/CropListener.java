@@ -31,6 +31,9 @@ public class CropListener implements Listener {
                 event.setCancelled(true);
                 cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.TOMATO);
                 event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
+            } else {
+                plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_farmland");
+                event.setCancelled(true);
             }
         }
     }

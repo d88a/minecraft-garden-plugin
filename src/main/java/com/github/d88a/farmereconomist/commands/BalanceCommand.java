@@ -18,14 +18,15 @@ public class BalanceCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Эта команда только для игроков.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("only_for_players"));
             return true;
         }
 
         Player player = (Player) sender;
         double balance = plugin.getEconomyManager().getBalance(player);
-        // TODO: Get currency name from config
-        player.sendMessage("Ваш баланс: " + balance + " монет.");
+        plugin.getConfigManager().sendMessage(player, "balance",
+                "%balance%", String.format("%.2f", balance),
+                "%currency%", plugin.getConfigManager().getCurrencyName());
 
         return true;
     }

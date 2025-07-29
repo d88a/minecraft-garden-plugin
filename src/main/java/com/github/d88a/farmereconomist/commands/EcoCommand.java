@@ -20,12 +20,12 @@ public class EcoCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!sender.hasPermission("farmereconomist.admin.eco")) {
-            sender.sendMessage("У вас нет прав для использования этой команды.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("no_permission"));
             return true;
         }
 
         if (args.length < 3) {
-            sender.sendMessage("Использование: /eco <give|take|set> <игрок> <сумма>");
+            sender.sendMessage(plugin.getConfigManager().getMessage("eco_usage"));
             return true;
         }
 
@@ -36,41 +36,57 @@ public class EcoCommand implements CommandExecutor {
         try {
             amount = Double.parseDouble(args[2]);
         } catch (NumberFormatException e) {
-            sender.sendMessage("Сумма должна быть числом.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("eco_amount_must_be_number"));
             return true;
         }
         
         if (target.getPlayer() == null) {
-            sender.sendMessage("Игрок не найден.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("eco_player_not_found"));
             return true;
         }
 
         Player targetPlayer = target.getPlayer();
+        String amountStr = String.format("%.2f", amount);
 
         switch (action.toLowerCase()) {
             case "give":
                 plugin.getEconomyManager().addBalance(targetPlayer, amount);
-                sender.sendMessage("Вы выдали " + amount + " монет игроку " + target.getName());
+                sender.sendMessage(plugin.getConfigManager().getMessage("eco_give_sender")
+                        .replace("%amount%", amountStr)
+                        .replace("%currency%", plugin.getConfigManager().getCurrencyName())
+                        .replace("%player%", target.getName()));
                 if (target.isOnline()) {
-                    targetPlayer.sendMessage("Вам выдали " + amount + " монет.");
+                    ((Player) target).sendMessage(plugin.getConfigManager().getMessage("eco_give_receiver")
+                            .replace("%amount%", amountStr)
+                            .replace("%currency%", plugin.getConfigManager().getCurrencyName()));
                 }
                 break;
             case "take":
                 plugin.getEconomyManager().takeBalance(targetPlayer, amount);
-                sender.sendMessage("Вы забрали " + amount + " монет у игрока " + target.getName());
+                sender.sendMessage(plugin.getConfigManager().getMessage("eco_take_sender")
+                        .replace("%amount%", amountStr)
+                        .replace("%currency%", plugin.getConfigManager().getCurrencyName())
+                        .replace("%player%", target.getName()));
                 if (target.isOnline()) {
-                    targetPlayer.sendMessage("У вас забрали " + amount + " монет.");
+                    ((Player) target).sendMessage(plugin.getConfigManager().getMessage("eco_take_receiver")
+                            .replace("%amount%", amountStr)
+                            .replace("%currency%", plugin.getConfigManager().getCurrencyName()));
                 }
                 break;
             case "set":
                 plugin.getEconomyManager().setBalance(targetPlayer, amount);
-                sender.sendMessage("Вы установили баланс " + amount + " монет игроку " + target.getName());
+                sender.sendMessage(plugin.getConfigManager().getMessage("eco_set_sender")
+                        .replace("%amount%", amountStr)
+                        .replace("%currency%", plugin.getConfigManager().getCurrencyName())
+                        .replace("%player%", target.getName()));
                 if (target.isOnline()) {
-                    targetPlayer.sendMessage("Ваш баланс установлен на " + amount + " монет.");
+                    ((Player) target).sendMessage(plugin.getConfigManager().getMessage("eco_set_receiver")
+                            .replace("%amount%", amountStr)
+                            .replace("%currency%", plugin.getConfigManager().getCurrencyName()));
                 }
                 break;
             default:
-                sender.sendMessage("Неизвестное действие. Используйте give, take или set.");
+                sender.sendMessage(plugin.getConfigManager().getMessage("unknown_command"));
                 break;
         }
 

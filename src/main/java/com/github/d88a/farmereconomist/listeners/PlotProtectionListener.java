@@ -18,9 +18,11 @@ import org.bukkit.inventory.ItemStack;
 
 public class PlotProtectionListener implements Listener {
 
+    private final FarmerEconomist plugin;
     private final PlotManager plotManager;
 
     public PlotProtectionListener(FarmerEconomist plugin) {
+        this.plugin = plugin;
         this.plotManager = plugin.getPlotManager();
     }
 
@@ -33,7 +35,7 @@ public class PlotProtectionListener implements Listener {
 
         if (plot != null && !plot.getOwner().equals(player.getUniqueId())) {
             event.setCancelled(true);
-            player.sendMessage("Вы не можете ломать блоки на чужом участке."); // TODO: message from config
+            plugin.getConfigManager().sendMessage(player, "plot_break_denied");
             return;
         }
 
@@ -60,7 +62,7 @@ public class PlotProtectionListener implements Listener {
 
         if (plot != null && !plot.getOwner().equals(player.getUniqueId())) {
             event.setCancelled(true);
-            player.sendMessage("Вы не можете ставить блоки на чужом участке."); // TODO: message from config
+            plugin.getConfigManager().sendMessage(player, "plot_place_denied");
             return;
         }
         
@@ -73,7 +75,7 @@ public class PlotProtectionListener implements Listener {
                 // For more complex plants, we would cancel the event and set the block manually.
             } else {
                 event.setCancelled(true);
-                player.sendMessage("Сажать можно только на вспаханную землю.");
+                plugin.getConfigManager().sendMessage(player, "crop_plant_fail_not_farmland");
             }
         }
     }
@@ -99,7 +101,7 @@ public class PlotProtectionListener implements Listener {
             org.bukkit.block.data.type.Farmland farmland = (org.bukkit.block.data.type.Farmland) clickedBlock.getBlockData();
             farmland.setMoisture(farmland.getMaximumMoisture());
             clickedBlock.setBlockData(farmland);
-            player.sendMessage("Вы полили землю."); // TODO: from config
+            plugin.getConfigManager().sendMessage(player, "crop_watered");
         }
     }
 } 

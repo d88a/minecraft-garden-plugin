@@ -63,9 +63,9 @@ public class ShopListener implements Listener {
                 ItemStack itemToGive = clickedItem.clone();
                 itemToGive.setLore(null);
                 player.getInventory().addItem(itemToGive);
-                player.sendMessage("Вы купили " + clickedItem.getItemMeta().getDisplayName());
+                plugin.getConfigManager().sendMessage(player, "shop_buy_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
             } else {
-                player.sendMessage("У вас недостаточно монет.");
+                plugin.getConfigManager().sendMessage(player, "shop_buy_fail_no_money");
             }
         }
         // --- Sell logic ---
@@ -80,9 +80,9 @@ public class ShopListener implements Listener {
             if(player.getInventory().containsAtLeast(itemToSell, 1)) {
                 player.getInventory().removeItem(itemToSell);
                 economyManager.addBalance(player, price);
-                player.sendMessage("Вы продали " + clickedItem.getItemMeta().getDisplayName());
+                plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
             } else {
-                player.sendMessage("У вас нет этого предмета для продажи.");
+                plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
             }
         }
     }
