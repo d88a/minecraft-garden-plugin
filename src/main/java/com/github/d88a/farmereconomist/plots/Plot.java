@@ -39,4 +39,14 @@ public class Plot {
 
         return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
     }
+
+    public Location getTeleportLocation() {
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+        int y = corner1.getBlockY();
+
+        // Center of the front edge, just outside the gate
+        return new Location(corner1.getWorld(), minX + (maxX - minX) / 2.0, y + 1.0, minZ - 2.0);
+    }
 } 

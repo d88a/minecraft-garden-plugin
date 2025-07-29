@@ -41,7 +41,7 @@ public class OgorodCommand implements CommandExecutor {
                 handleGet(player);
                 break;
             case "home":
-                player.sendMessage("Эта функция в разработке.");
+                handleHome(player);
                 break;
             case "set_start":
                 if (player.hasPermission("farmereconomist.admin.ogorod")) {
@@ -56,6 +56,16 @@ public class OgorodCommand implements CommandExecutor {
                 break;
         }
         return true;
+    }
+
+    private void handleHome(Player player) {
+        Plot plot = plotManager.getPlot(player);
+        if (plot == null) {
+            player.sendMessage("У вас еще нет участка.");
+            return;
+        }
+        player.teleport(plot.getTeleportLocation());
+        player.sendMessage("Вы телепортированы на свой участок.");
     }
 
     private void handleGet(Player player) {

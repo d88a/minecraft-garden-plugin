@@ -4,6 +4,7 @@ import com.github.d88a.farmereconomist.FarmerEconomist;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import com.github.d88a.farmereconomist.npc.ShopGUI;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -52,7 +53,9 @@ public class ShopListener implements Listener {
 
         // --- Buy logic ---
         if (clickedItem.getItemMeta().getLore().get(1).contains("купить")) {
-            double price = Double.parseDouble(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+            String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+            double price = Double.parseDouble(priceString);
+
             if (economyManager.getBalance(player) >= price) {
                 economyManager.takeBalance(player, price);
                 ItemStack itemToGive = clickedItem.clone();
@@ -65,8 +68,11 @@ public class ShopListener implements Listener {
         }
         // --- Sell logic ---
         else if (clickedItem.getItemMeta().getLore().get(1).contains("продать")) {
-            double price = Double.parseDouble(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+            String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+            double price = Double.parseDouble(priceString);
+            
             ItemStack itemToSell = clickedItem.clone();
+            itemToSell.setAmount(1);
             itemToSell.setLore(null);
             
             if(player.getInventory().containsAtLeast(itemToSell, 1)) {
