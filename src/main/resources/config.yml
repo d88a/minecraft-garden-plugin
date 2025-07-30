@@ -51,12 +51,14 @@ messages:
   plot_delete_fail_no_plot: "&cУ вас нет участка для удаления."
   plot_break_denied: "&cВы не можете ломать блоки на чужом участке."
   plot_place_denied: "&cВы не можете ставить блоки на чужом участке."
+  plot_create_fail: "&cНе удалось создать участок. Попробуйте позже."
 
   # NPC / Shop
   npc_not_set: "&cNPC 'Старый Мирон' еще не установлен администратором."
   npc_set_success: "&aПозиция NPC 'Старый Мирон' установлена здесь."
   npc_teleport_success: "&aВы телепортированы к Старому Мирону."
   npc_find_fail: "&cНе удалось найти NPC 'Старый Мирон'. Попросите администратора переустановить его."
+  npc_teleport_fail_no_safe_spot: "&cНе удалось найти безопасное место для телепортации."
   shop_buy_success: "&aВы купили %item_name%&a."
   shop_buy_fail_no_money: "&cУ вас недостаточно монет."
   shop_sell_success: "&aВы продали %item_name%&a."
@@ -65,7 +67,11 @@ messages:
   # Crops
   crop_plant_fail_not_farmland: "&cСажать можно только на вспаханную землю."
   crop_plant_fail_not_mycelium: "&cСветящиеся грибы можно сажать только на мицелий или подзол."
-  crop_watered: "&bВы полили землю."
+  crop_not_ready: "&eРастение еще не созрело для сбора."
+  crop_watered: "&bВы полили растение."
+  crop_already_watered: "&eРастение уже полито."
+  crop_fertilized: "&aВы удобрили растение."
+  crop_already_fertilized: "&eРастение уже удобрено."
 
 # -- Sound Settings --
 # You can find all available sound names here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
@@ -97,4 +103,9 @@ sounds:
     enabled: true
     sound: ITEM_BUCKET_EMPTY
     volume: 0.8
-    pitch: 1.3 
+    pitch: 1.3
+  fertilize_crop:
+    enabled: true
+    sound: BLOCK_GRASS_BREAK
+    volume: 1.0
+    pitch: 1.5 

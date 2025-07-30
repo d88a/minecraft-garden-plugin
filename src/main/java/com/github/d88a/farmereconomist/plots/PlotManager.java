@@ -153,7 +153,13 @@ public class PlotManager {
         Material fence = plugin.getConfigManager().getFenceMaterial();
         Material gate = plugin.getConfigManager().getGateMaterial();
 
+        // Удаляем блоки сверху забора и очищаем место для таблички
         for (int x = minX - 1; x <= maxX + 1; x++) {
+            // Удаляем блоки сверху забора
+            for (int yClear = y + 2; yClear < y + 10; yClear++) {
+                world.getBlockAt(x, yClear, minZ - 1).setType(Material.AIR);
+                world.getBlockAt(x, yClear, maxZ + 1).setType(Material.AIR);
+            }
             world.getBlockAt(x, y + 1, minZ - 1).setType(fence);
             // Новый код: слой земли под забором
             world.getBlockAt(x, y, minZ - 1).setType(Material.DIRT);
@@ -161,6 +167,11 @@ public class PlotManager {
             world.getBlockAt(x, y, maxZ + 1).setType(Material.DIRT);
         }
         for (int z = minZ; z <= maxZ; z++) {
+            // Удаляем блоки сверху забора
+            for (int yClear = y + 2; yClear < y + 10; yClear++) {
+                world.getBlockAt(minX - 1, yClear, z).setType(Material.AIR);
+                world.getBlockAt(maxX + 1, yClear, z).setType(Material.AIR);
+            }
             world.getBlockAt(minX - 1, y + 1, z).setType(fence);
             world.getBlockAt(minX - 1, y, z).setType(Material.DIRT);
             world.getBlockAt(maxX + 1, y + 1, z).setType(fence);
@@ -169,6 +180,13 @@ public class PlotManager {
 
         // Add gate
         world.getBlockAt(minX + (maxX - minX) / 2, y + 1, minZ - 1).setType(gate);
+        
+        // Очищаем место для таблички
+        int signX = minX + (maxX - minX) / 2;
+        int signZ = minZ - 2;
+        for (int yClear = y + 2; yClear < y + 10; yClear++) {
+            world.getBlockAt(signX, yClear, signZ).setType(Material.AIR);
+        }
     }
 
     public void deletePlot(Player player) {

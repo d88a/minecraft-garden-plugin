@@ -40,7 +40,7 @@ public final class FarmerEconomist extends JavaPlugin {
         this.npcManager = new NpcManager(this);
         this.cropManager = new CropManager(this, dataManager);
         this.soundManager = new SoundManager(this);
-        this.ogorodGUI = new OgorodGUI(plotManager);
+        this.ogorodGUI = new OgorodGUI(plotManager, this);
 
         // Запуск анимации головы NPC
         new NpcAnimator(this, npcManager).start();
