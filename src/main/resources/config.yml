@@ -22,12 +22,12 @@ economy:
 # -- Messages --
 # You can use color codes like &a, &b, &c, etc.
 messages:
-  # General
+  # Общие
   only_for_players: "&cЭта команда только для игроков."
   no_permission: "&cУ вас нет прав для этого действия."
   unknown_command: "&cНеизвестная команда. Проверьте правильность написания."
-  
-  # Economy
+
+  # Экономика
   balance: "&aВаш баланс: &e%balance% %currency%"
   eco_usage: "&eИспользование: /eco <give|take|set> <игрок> <сумма>"
   eco_player_not_found: "&cИгрок не найден."
@@ -39,8 +39,9 @@ messages:
   eco_set_sender: "&aВы установили баланс игрока &b%player% &aна &e%amount% %currency%&a."
   eco_set_receiver: "&aВаш баланс установлен на &e%amount% %currency%&a."
 
-  # Plots
+  # Огород
   plot_menu_usage: "&eИспользуйте /ogorod, чтобы открыть меню управления."
+  plot_create_fail: "&cНе удалось создать участок. Попробуйте позже."
   plot_get_success: "&aПоздравляем! Вы получили новый участок."
   plot_get_fail_has_plot: "&cУ вас уже есть участок."
   plot_grid_not_set: "&cСетка огородов еще не настроена администратором."
@@ -51,9 +52,8 @@ messages:
   plot_delete_fail_no_plot: "&cУ вас нет участка для удаления."
   plot_break_denied: "&cВы не можете ломать блоки на чужом участке."
   plot_place_denied: "&cВы не можете ставить блоки на чужом участке."
-  plot_create_fail: "&cНе удалось создать участок. Попробуйте позже."
 
-  # NPC / Shop
+  # NPC / Магазин
   npc_not_set: "&cNPC 'Старый Мирон' еще не установлен администратором."
   npc_set_success: "&aПозиция NPC 'Старый Мирон' установлена здесь."
   npc_teleport_success: "&aВы телепортированы к Старому Мирону."
@@ -64,7 +64,7 @@ messages:
   shop_sell_success: "&aВы продали %item_name%&a."
   shop_sell_fail_no_item: "&cУ вас нет этого предмета для продажи."
 
-  # Crops
+  # Урожай
   crop_plant_fail_not_farmland: "&cСажать можно только на вспаханную землю."
   crop_plant_fail_not_mycelium: "&cСветящиеся грибы можно сажать только на мицелий или подзол."
   crop_not_ready: "&eРастение еще не созрело для сбора."

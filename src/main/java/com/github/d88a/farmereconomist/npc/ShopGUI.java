@@ -106,75 +106,49 @@ public class ShopGUI {
 
     public void openSell(Player player) {
         Inventory sellInv = Bukkit.createInventory(null, 36, "Продать Мирону");
-        // Показываем только то, что есть у игрока и можно продать
         int slot = 10;
-        if (player.getInventory().containsAtLeast(ItemManager.createLettuce(false), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(false), 5));
+        // Массив: предмет -> [метод создания, цена, название]
+        Object[][] sellables = new Object[][]{
+            {ItemManager.createLettuce(false), 5, "Салат"},
+            {ItemManager.createLettuce(true), 15, "Большой салат"},
+            {ItemManager.createTomato(), 20, "Томат"},
+            {ItemManager.createGlowshroomDust(), 45, "Светящийся грибной порошок"},
+            {ItemManager.createStrawberry(), 25, "Лучезарная Клубника"},
+            {ItemManager.createRadish(), 15, "Хрустящий Редис"},
+            {ItemManager.createWatermelon(), 35, "Пустынный Арбуз"},
+            {ItemManager.createLunarBerry(), 50, "Лунная ягода"},
+            {ItemManager.createRainbowMushroom(), 40, "Радужный гриб"},
+            {ItemManager.createCrystalCactus(), 30, "Кристальный кактус"},
+            {ItemManager.createFlamePepper(), 45, "Пылающий перец"},
+            {ItemManager.createMysticRoot(), 55, "Мистический корень"},
+            {ItemManager.createStarFruit(), 40, "Звёздный плод"},
+            {ItemManager.createPredatorFlower(), 60, "Цветок-хищник"},
+            {ItemManager.createElectroPumpkin(), 70, "Электро-тыква"},
+            {ItemManager.createMandrakeLeaf(), 35, "Листья мандрагоры"},
+            {ItemManager.createFlyingFruit(), 80, "Летающий плод"},
+            {ItemManager.createSnowMint(), 20, "Снежная мята"},
+            {ItemManager.createSunPineapple(), 75, "Солнечный ананас"},
+            {ItemManager.createFogBerry(), 25, "Туманная ягода"},
+            {ItemManager.createSandMelon(), 60, "Песчаный арбуз"},
+            {ItemManager.createWitchMushroom(), 85, "Ведьмин гриб"}
+        };
+        for (Object[] sellable : sellables) {
+            ItemStack template = ((ItemStack) sellable[0]).clone();
+            int price = (int) sellable[1];
+            String name = (String) sellable[2];
+            int count = countItems(player, template);
+            if (count > 0) {
+                ItemStack display = template.clone();
+                ItemMeta meta = display.getItemMeta();
+                meta.setLore(Arrays.asList(
+                    "§fЦена: §e" + price + " " + plugin.getConfigManager().getCurrencyName() + " за 1 шт.",
+                    "§fВ наличии: §a" + count,
+                    "§7ЛКМ — продать 1, Shift+ЛКМ — всё"
+                ));
+                display.setItemMeta(meta);
+                sellInv.setItem(slot++, display);
+            }
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createLettuce(true), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(true), 15));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createTomato(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createTomato(), 20));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createGlowshroomDust(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createGlowshroomDust(), 45));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createStrawberry(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createStrawberry(), 25));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createRadish(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createRadish(), 15));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createWatermelon(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createWatermelon(), 35));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createLunarBerry(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createLunarBerry(), 50));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createRainbowMushroom(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createRainbowMushroom(), 40));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createCrystalCactus(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createCrystalCactus(), 30));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createFlamePepper(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createFlamePepper(), 45));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createMysticRoot(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createMysticRoot(), 55));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createStarFruit(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createStarFruit(), 40));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createPredatorFlower(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createPredatorFlower(), 60));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createElectroPumpkin(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createElectroPumpkin(), 70));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createMandrakeLeaf(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createMandrakeLeaf(), 35));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createFlyingFruit(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createFlyingFruit(), 80));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createSnowMint(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createSnowMint(), 20));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createSunPineapple(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createSunPineapple(), 75));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createFogBerry(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createFogBerry(), 25));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createSandMelon(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createSandMelon(), 60));
-        }
-        if (player.getInventory().containsAtLeast(ItemManager.createWitchMushroom(), 1)) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createWitchMushroom(), 85));
-        }
-        
         // Кнопка "Назад"
         ItemStack backButton = new ItemStack(Material.BARRIER);
         ItemMeta backMeta = backButton.getItemMeta();
@@ -182,7 +156,6 @@ public class ShopGUI {
         backMeta.setLore(Arrays.asList("§7Вернуться в главное меню"));
         backButton.setItemMeta(backMeta);
         sellInv.setItem(31, backButton);
-        
         for (int i = 0; i < sellInv.getSize(); i++) {
             if (sellInv.getItem(i) == null) {
                 sellInv.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
@@ -203,5 +176,23 @@ public class ShopGUI {
         meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getCurrencyName(), "§cКлик, чтобы продать."));
         item.setItemMeta(meta);
         return item;
+    }
+
+    // Подсчёт количества предметов в инвентаре игрока по типу, displayName и customModelData
+    private int countItems(Player player, ItemStack template) {
+        int count = 0;
+        for (ItemStack invItem : player.getInventory().getContents()) {
+            if (invItem == null) continue;
+            if (invItem.getType() != template.getType()) continue;
+            ItemMeta meta1 = invItem.getItemMeta();
+            ItemMeta meta2 = template.getItemMeta();
+            if (meta1 == null || meta2 == null) continue;
+            if (!meta1.hasDisplayName() || !meta2.hasDisplayName()) continue;
+            if (!meta1.getDisplayName().equals(meta2.getDisplayName())) continue;
+            if (meta1.hasCustomModelData() != meta2.hasCustomModelData()) continue;
+            if (meta1.hasCustomModelData() && meta1.getCustomModelData() != meta2.getCustomModelData()) continue;
+            count += invItem.getAmount();
+        }
+        return count;
     }
 } 

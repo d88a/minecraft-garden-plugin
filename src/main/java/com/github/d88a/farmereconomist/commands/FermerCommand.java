@@ -99,27 +99,22 @@ public class FermerCommand implements CommandExecutor {
 
     private Location findSafeTeleportLocation(Location npcLocation) {
         World world = npcLocation.getWorld();
-        double x = npcLocation.getX();
+        double yaw = npcLocation.getYaw();
+        // yaw в градусах, переводим в радианы
+        double rad = Math.toRadians(yaw);
+        // Считаем смещение по X и Z (2 блока вперёд)
+        double dx = -Math.sin(rad) * 2;
+        double dz = Math.cos(rad) * 2;
+        double x = npcLocation.getX() + dx;
         double y = npcLocation.getY();
-        double z = npcLocation.getZ();
-
-        // Проверяем 4 направления вокруг NPC
-        Location[] possibleLocations = {
-                new Location(world, x + 2, y, z), // +X
-                new Location(world, x - 2, y, z), // -X
-                new Location(world, x, y, z + 2), // +Z
-                new Location(world, x, y, z - 2)  // -Z
-        };
-
-        for (Location loc : possibleLocations) {
-            // Проверяем, что блок свободен и над ним тоже свободно
-            if (loc.getBlock().getType().isAir() && loc.clone().add(0, 1, 0).getBlock().getType().isAir()) {
-                // Убедимся, что игрок не телепортируется в лаву/воду и т.д.
-                if (!loc.getBlock().isLiquid() && !loc.clone().add(0, -1, 0).getBlock().getType().isSolid()) {
-                    return loc;
-                }
-            }
+        double z = npcLocation.getZ() + dz;
+        Location target = new Location(world, x, y, z, (float)yaw, 0f);
+        // Проверяем, что место безопасно (воздух и под ногами твёрдый блок)
+        if (target.getBlock().getType().isAir() &&
+            target.clone().add(0, 1, 0).getBlock().getType().isAir() &&
+            target.clone().add(0, -1, 0).getBlock().getType().isSolid()) {
+            return target;
         }
-        return null; // Не найдено безопасного места
+        return null; // Если не безопасно — null
     }
 } 

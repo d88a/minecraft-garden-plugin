@@ -77,7 +77,7 @@ public class CropListener implements Listener {
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.TOMATO);
             event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
         } else {
-            plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_farmland");
+            plugin.getConfigManager().sendMessage(event.getPlayer(), "Томаты можно сажать только на вспаханную землю!");
             event.setCancelled(true);
         }
     }
@@ -89,41 +89,43 @@ public class CropListener implements Listener {
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.GLOWSHROOM);
             event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
         } else {
-            plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_mycelium");
+            plugin.getConfigManager().sendMessage(event.getPlayer(), "Грибы можно сажать только на мицелий или подзол!");
             event.setCancelled(true);
         }
     }
 
     private void handleCropPlacement(BlockPlaceEvent event, CustomCrop.CropType cropType) {
         Block placedOn = event.getBlock().getRelative(0, -1, 0);
-        
-        // Проверяем подходящую почву для разных культур
         boolean validSoil = false;
+        String failMessage = "Это растение можно сажать только на вспаханную землю, землю или траву!";
         switch (cropType) {
             case CRYSTAL_CACTUS:
             case SAND_MELON:
                 validSoil = placedOn.getType() == Material.SAND;
+                failMessage = "Кактус и песчаный арбуз можно сажать только на песок!";
                 break;
             case FLAME_PEPPER:
                 validSoil = placedOn.getType() == Material.NETHERRACK;
+                failMessage = "Пылающий перец можно сажать только на адский камень!";
                 break;
             case WITCH_MUSHROOM:
                 validSoil = placedOn.getType() == Material.NETHERRACK;
+                failMessage = "Ведьмин гриб можно сажать только на адский камень!";
                 break;
             case SNOW_MINT:
                 validSoil = placedOn.getType() == Material.SNOW_BLOCK || placedOn.getType() == Material.ICE;
+                failMessage = "Снежную мяту можно сажать только на снег или лёд!";
                 break;
             default:
                 validSoil = placedOn.getType() == Material.FARMLAND || placedOn.getType() == Material.DIRT || placedOn.getType() == Material.GRASS_BLOCK;
                 break;
         }
-        
         if (validSoil) {
             event.setCancelled(true);
             cropManager.plantCrop(event.getBlock().getLocation(), cropType);
             event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
         } else {
-            plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_farmland");
+            plugin.getConfigManager().sendMessage(event.getPlayer(), failMessage);
             event.setCancelled(true);
         }
     }
@@ -137,7 +139,32 @@ public class CropListener implements Listener {
 
         // Проверяем, есть ли растение на этом блоке
         CustomCrop crop = cropManager.getCropAt(clickedBlock.getLocation());
-        
+
+        // --- Вывод информации о растении при правом клике с пустой рукой ---
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && crop != null) {
+            ItemStack itemInHand = event.getPlayer().getInventory().getItemInMainHand();
+            if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+                StringBuilder info = new StringBuilder();
+                info.append("§eИнформация о растении:\n");
+                info.append("§fТип: §a" + crop.getType().name() + "\n");
+                info.append("§fСтадия: §a" + (crop.getStage() + 1) + "/" + crop.getType().getMaxStages() + "\n");
+                if (crop.isMultiHarvest()) {
+                    info.append("§fОсталось сборов: §a" + crop.getHarvestsLeft() + "\n");
+                }
+                info.append("§fПолито: §a" + (crop.isWatered() ? "Да" : "Нет") + "\n");
+                info.append("§fУдобренo: §a" + (crop.isFertilized() ? "Да" : "Нет") + "\n");
+                if (crop.getStage() < crop.getType().getMaxStages() - 1) {
+                    long now = System.currentTimeMillis();
+                    long next = crop.getLastGrowthTime() + 60 * 1000; // 1 минута по умолчанию
+                    long left = Math.max(0, (next - now) / 1000);
+                    info.append("§fДо следующей стадии: §a" + left + " сек.\n");
+                }
+                plugin.getConfigManager().sendMessage(event.getPlayer(), info.toString());
+                event.setCancelled(true);
+                return;
+            }
+        }
+
         // --- Обработка правой кнопки мыши (использование лейки/удобрения) ---
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack itemInHand = event.getPlayer().getInventory().getItemInMainHand();

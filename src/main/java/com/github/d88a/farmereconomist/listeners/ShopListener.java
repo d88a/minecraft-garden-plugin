@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
 
@@ -107,22 +108,45 @@ public class ShopListener implements Listener {
                 return;
             }
             
-            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().get(1).contains("продать")) {
-                String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
-                double price = Double.parseDouble(priceString);
-                ItemStack itemToSell = clickedItem.clone();
-                itemToSell.setAmount(1);
-                itemToSell.setLore(null);
-                if(player.getInventory().containsAtLeast(itemToSell, 1)) {
-                    player.getInventory().removeItem(itemToSell);
-                    economyManager.addBalance(player, price);
+            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && title.equals("Продать Мирону")) {
+                // Проверяем, что это продаваемый предмет (по лору)
+                if (clickedItem.getItemMeta().getLore().size() >= 2 && clickedItem.getItemMeta().getLore().get(1).contains("В наличии")) {
+                    // Получаем цену за 1
+                    String priceLine = clickedItem.getItemMeta().getLore().get(0);
+                    double price = Double.parseDouble(ChatColor.stripColor(priceLine.replaceAll("[^0-9.]", " ").trim()).split(" ")[0]);
+                    // Считаем сколько есть у игрока
+                    int count = countItems(player, clickedItem);
+                    if (count == 0) {
+                        plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
+                        return;
+                    }
+                    int toSell = 1;
+                    if (event.isShiftClick()) {
+                        toSell = count;
+                    }
+                    int sold = 0;
+                    for (ItemStack invItem : player.getInventory().getContents()) {
+                        if (invItem == null) continue;
+                        if (invItem.getType() != clickedItem.getType()) continue;
+                        ItemMeta meta1 = invItem.getItemMeta();
+                        ItemMeta meta2 = clickedItem.getItemMeta();
+                        if (meta1 == null || meta2 == null) continue;
+                        if (!meta1.hasDisplayName() || !meta2.hasDisplayName()) continue;
+                        if (!meta1.getDisplayName().equals(meta2.getDisplayName())) continue;
+                        if (meta1.hasCustomModelData() != meta2.hasCustomModelData()) continue;
+                        if (meta1.hasCustomModelData() && meta1.getCustomModelData() != meta2.getCustomModelData()) continue;
+                        int remove = Math.min(invItem.getAmount(), toSell - sold);
+                        invItem.setAmount(invItem.getAmount() - remove);
+                        sold += remove;
+                        if (sold >= toSell) break;
+                    }
+                    economyManager.addBalance(player, price * sold);
                     plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
                     plugin.getSoundManager().playSound(player, "sell_item");
                     plugin.getPlotManager().updatePlotSign(player);
-                    // Обновить окно продажи
                     shopGUI.openSell(player);
-                } else {
-                    plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
+                    event.setCancelled(true);
+                    return;
                 }
             }
             return;
@@ -201,5 +225,16 @@ public class ShopListener implements Listener {
                 }
             }
         }
+    }
+
+    private int countItems(Player player, ItemStack item) {
+        int count = 0;
+        for (ItemStack invItem : player.getInventory().getContents()) {
+            if (invItem == null) continue;
+            if (invItem.getType() == item.getType() && invItem.getItemMeta() != null && invItem.getItemMeta().hasDisplayName() && invItem.getItemMeta().getDisplayName().equals(item.getItemMeta().getDisplayName())) {
+                count += invItem.getAmount();
+            }
+        }
+        return count;
     }
 } 

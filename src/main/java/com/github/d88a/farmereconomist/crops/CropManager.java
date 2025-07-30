@@ -276,7 +276,7 @@ public class CropManager {
                 base.getWorld().spawnParticle(org.bukkit.Particle.CRIT, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
                 break;
             case ELECTRO_PUMPKIN:
-                head = ItemManager.createElectroPumpkin();
+                head = ItemManager.createElectroPumpkinStage(Math.min(crop.getStage(), 1));
                 base.getWorld().spawnParticle(org.bukkit.Particle.ELECTRIC_SPARK, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
                 break;
             case MYSTIC_ROOT:
