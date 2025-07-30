@@ -25,9 +25,9 @@ public class CropListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.getItemInHand().isSimilar(ItemManager.createTomatoSeeds())) {
+        if (event.getPlayer().getInventory().getItemInMainHand().isSimilar(ItemManager.createTomatoSeeds())) {
             handleTomatoPlacement(event);
-        } else if (event.getItemInHand().isSimilar(ItemManager.createGlowshroomSpores())) {
+        } else if (event.getPlayer().getInventory().getItemInMainHand().isSimilar(ItemManager.createGlowshroomSpores())) {
             handleGlowshroomPlacement(event);
         }
     }
@@ -37,7 +37,7 @@ public class CropListener implements Listener {
         if (placedOn.getType() == Material.FARMLAND) {
             event.setCancelled(true);
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.TOMATO);
-            event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
+            event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
         } else {
             plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_farmland");
             event.setCancelled(true);
@@ -49,7 +49,7 @@ public class CropListener implements Listener {
         if (placedOn.getType() == Material.MYCELIUM || placedOn.getType() == Material.PODZOL) {
             event.setCancelled(true);
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.GLOWSHROOM);
-            event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
+            event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
         } else {
             plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_mycelium");
             event.setCancelled(true);
@@ -68,7 +68,7 @@ public class CropListener implements Listener {
 
         // --- Обработка правой кнопки мыши (использование лейки/удобрения) ---
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            ItemStack itemInHand = event.getItemInHand();
+            ItemStack itemInHand = event.getPlayer().getInventory().getItemInMainHand();
             if (itemInHand.isSimilar(ItemManager.createWateringCan())) {
                 if (!crop.isWatered()) {
                     crop.setWatered(true);

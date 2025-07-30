@@ -113,7 +113,6 @@ public class PlotManager {
         int y = corner1.getBlockY();
         int signX = minX + (maxX - minX) / 2;
         int signZ = minZ - 2;
-        World world = corner1.getWorld();
         org.bukkit.block.Block signBlock = world.getBlockAt(signX, y + 1, signZ);
         signBlock.setType(org.bukkit.Material.OAK_SIGN);
         if (signBlock.getState() instanceof org.bukkit.block.Sign) {
