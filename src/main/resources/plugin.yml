@@ -29,4 +29,29 @@ commands:
     description: Взаимодействие с NPC-фермером.
     usage: |
       /fermer - Телепортироваться к фермеру.
-      /fermer set_npc - Установить позицию NPC (для администраторов). 
+      /fermer set_npc - Установить позицию NPC (для администраторов).
+  stats:
+    description: Просмотр статистики фермерства.
+    aliases: [statistics, profile]
+    usage: |
+      /stats - Показать свою статистику
+      /stats <игрок> - Показать статистику игрока (для администраторов)
+  event:
+    description: Управление событиями фермерства.
+    aliases: [events]
+    usage: |
+      /event status - Показать текущее событие
+      /event list - Список всех событий
+      /event start <событие> - Запустить событие (для администраторов)
+      /event stop - Остановить текущее событие (для администраторов)
+
+permissions:
+  farmereconomist.admin.eco:
+    description: Доступ к командам управления экономикой
+    default: op
+  farmereconomist.admin.stats:
+    description: Доступ к просмотру статистики других игроков
+    default: op
+  farmereconomist.admin.event:
+    description: Доступ к управлению событиями
+    default: op 

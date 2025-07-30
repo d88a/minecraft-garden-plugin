@@ -4,6 +4,8 @@ import com.github.d88a.farmereconomist.commands.BalanceCommand;
 import com.github.d88a.farmereconomist.commands.EcoCommand;
 import com.github.d88a.farmereconomist.commands.FermerCommand;
 import com.github.d88a.farmereconomist.commands.OgorodCommand;
+import com.github.d88a.farmereconomist.commands.StatsCommand;
+import com.github.d88a.farmereconomist.commands.EventCommand;
 import com.github.d88a.farmereconomist.config.ConfigManager;
 import com.github.d88a.farmereconomist.crops.CropManager;
 import com.github.d88a.farmereconomist.data.DataManager;
@@ -12,11 +14,17 @@ import com.github.d88a.farmereconomist.listeners.CropListener;
 import com.github.d88a.farmereconomist.listeners.OgorodListener;
 import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
 import com.github.d88a.farmereconomist.listeners.ShopListener;
+import com.github.d88a.farmereconomist.listeners.FarmingListener;
 import com.github.d88a.farmereconomist.npc.NpcManager;
 import com.github.d88a.farmereconomist.npc.NpcAnimator;
 import com.github.d88a.farmereconomist.plots.OgorodGUI;
 import com.github.d88a.farmereconomist.plots.PlotManager;
 import com.github.d88a.farmereconomist.sound.SoundManager;
+import com.github.d88a.farmereconomist.achievements.AchievementManager;
+import com.github.d88a.farmereconomist.seasons.SeasonManager;
+import com.github.d88a.farmereconomist.levels.FarmerLevelManager;
+import com.github.d88a.farmereconomist.weather.WeatherManager;
+import com.github.d88a.farmereconomist.events.FarmingEventManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmerEconomist extends JavaPlugin {
@@ -29,6 +37,11 @@ public final class FarmerEconomist extends JavaPlugin {
     private OgorodGUI ogorodGUI;
     private CropManager cropManager;
     private SoundManager soundManager;
+    private AchievementManager achievementManager;
+    private SeasonManager seasonManager;
+    private FarmerLevelManager farmerLevelManager;
+    private WeatherManager weatherManager;
+    private FarmingEventManager farmingEventManager;
 
     @Override
     public void onEnable() {
@@ -41,6 +54,13 @@ public final class FarmerEconomist extends JavaPlugin {
         this.cropManager = new CropManager(this, dataManager);
         this.soundManager = new SoundManager(this);
         this.ogorodGUI = new OgorodGUI(plotManager);
+        
+        // Новые менеджеры
+        this.achievementManager = new AchievementManager(this, dataManager);
+        this.seasonManager = new SeasonManager(this);
+        this.farmerLevelManager = new FarmerLevelManager(this, dataManager);
+        this.weatherManager = new WeatherManager(this);
+        this.farmingEventManager = new FarmingEventManager(this);
 
         // Запуск анимации головы NPC
         new NpcAnimator(this, npcManager).start();
@@ -50,12 +70,15 @@ public final class FarmerEconomist extends JavaPlugin {
         getCommand("eco").setExecutor(new EcoCommand(this));
         getCommand("ogorod").setExecutor(new OgorodCommand(this));
         getCommand("fermer").setExecutor(new FermerCommand(this));
+        getCommand("stats").setExecutor(new StatsCommand(this));
+        getCommand("event").setExecutor(new EventCommand(this));
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlotProtectionListener(this), this);
         getServer().getPluginManager().registerEvents(new ShopListener(this), this);
         getServer().getPluginManager().registerEvents(new OgorodListener(this), this);
         getServer().getPluginManager().registerEvents(new CropListener(this), this);
+        getServer().getPluginManager().registerEvents(new FarmingListener(this), this);
 
         getLogger().info("FarmerEconomist has been enabled!");
         
@@ -66,6 +89,8 @@ public final class FarmerEconomist extends JavaPlugin {
         // Save all plots to file
         plotManager.savePlots();
         cropManager.saveCrops();
+        achievementManager.saveAchievements();
+        farmerLevelManager.saveLevels();
 
         getLogger().info("FarmerEconomist has been disabled!");
     }
@@ -100,5 +125,25 @@ public final class FarmerEconomist extends JavaPlugin {
 
     public SoundManager getSoundManager() {
         return soundManager;
+    }
+
+    public AchievementManager getAchievementManager() {
+        return achievementManager;
+    }
+
+    public SeasonManager getSeasonManager() {
+        return seasonManager;
+    }
+
+    public FarmerLevelManager getFarmerLevelManager() {
+        return farmerLevelManager;
+    }
+
+    public WeatherManager getWeatherManager() {
+        return weatherManager;
+    }
+
+    public FarmingEventManager getFarmingEventManager() {
+        return farmingEventManager;
     }
 } 

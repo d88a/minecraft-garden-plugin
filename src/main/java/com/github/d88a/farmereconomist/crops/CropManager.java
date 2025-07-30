@@ -79,17 +79,41 @@ public class CropManager {
                     drop = ItemManager.createWitchMushroom(); break;
                 default: break;
             }
+            
             // Дроп предмета
             if (drop != null) {
                 int amount = 1;
+                
+                // Базовые бонусы
                 if (crop.isFertilized()) { amount++; } // +1 предмет, если удобрено
                 if (crop.isWatered()) { amount++; } // +1 предмет, если полито
+                
+                // Бонусы от событий
+                double harvestMultiplier = plugin.getFarmingEventManager().getEventMultiplier(
+                    com.github.d88a.farmereconomist.events.EventType.HARVEST_BOOST
+                );
+                amount = (int) (amount * harvestMultiplier);
+                
+                // Бонусы от сезонов для сезонных культур
+                String cropTypeName = crop.getType().name();
+                if (plugin.getSeasonManager().isSeasonalCrop(cropTypeName)) {
+                    amount += 1; // +1 предмет для сезонных культур
+                }
+                
+                // Бонусы от погоды
+                if (plugin.getWeatherManager().getCurrentWeather() == 
+                    com.github.d88a.farmereconomist.weather.WeatherManager.WeatherType.PERFECT) {
+                    amount += 1; // +1 предмет при идеальной погоде
+                }
+                
                 drop.setAmount(amount);
                 location.getWorld().dropItemNaturally(location, drop);
+                
                 // Сбрасываем состояния после сбора урожая
                 crop.setFertilized(false);
                 crop.setWatered(false);
             }
+            
             // Эффекты для некоторых культур
             switch (crop.getType()) {
                 case LUNAR_BERRY:
@@ -137,24 +161,15 @@ public class CropManager {
                     break;
                 case SNOW_MINT:
                     location.getWorld().spawnParticle(org.bukkit.Particle.SNOWFLAKE, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
-                    location.getWorld().playSound(location, org.bukkit.Sound.BLOCK_GLASS_BREAK, 1, 1);
-                    break;
-                case SAND_MELON:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.POOF, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
-                    location.getWorld().playSound(location, org.bukkit.Sound.BLOCK_SAND_BREAK, 1, 1);
                     break;
                 default: break;
             }
-            // Многоразовые культуры: сбрасываем стадию и уменьшаем harvestsLeft
-            if (crop.isMultiHarvest() && crop.getHarvestsLeft() > 1) {
-                crop.decrementHarvests();
-                crop.setStage(0);
-                crop.setLastGrowthTime(System.currentTimeMillis());
-                updateCropBlock(crop);
-            } else {
-                crops.remove(location);
-                clearCropColumn(location, crop.getType().getMaxStages());
-            }
+            
+            // Удаляем растение из списка
+            crops.remove(location);
+            
+            // Очищаем блоки
+            clearCropColumn(location, crop.getType().getMaxStages());
         }
     }
 
@@ -169,18 +184,43 @@ public class CropManager {
                 long currentTime = System.currentTimeMillis();
                 for (CustomCrop crop : crops.values()) {
                     long effectiveGrowthInterval = GROWTH_INTERVAL;
+                    
+                    // Базовые модификаторы
+                    double growthMultiplier = 1.0;
+                    
                     // Ускорение роста от удобрения (например, 20% ускорение на 5 минут)
                     if (crop.isFertilized() && (currentTime - crop.getFertilizerTime() < 5 * 60 * 1000)) {
-                        effectiveGrowthInterval = (long) (effectiveGrowthInterval * 0.8); // Ускоряем на 20%
+                        growthMultiplier *= 0.8; // Ускоряем на 20%
                     } else if (crop.isFertilized()) { // Если время удобрения истекло
                         crop.setFertilized(false);
                     }
+                    
                     // Ускорение роста от полива (например, 20% ускорение на 5 минут)
                     if (crop.isWatered() && (currentTime - crop.getWateredTime() < 5 * 60 * 1000)) {
-                        effectiveGrowthInterval = (long) (effectiveGrowthInterval * 0.8); // Ускоряем на 20%
+                        growthMultiplier *= 0.8; // Ускоряем на 20%
                     } else if (crop.isWatered()) { // Если время полива истекло
                         crop.setWatered(false);
                     }
+                    
+                    // Модификатор сезона
+                    growthMultiplier *= plugin.getSeasonManager().getGrowthMultiplier();
+                    
+                    // Модификатор погоды
+                    growthMultiplier *= plugin.getWeatherManager().getWeatherMultiplier();
+                    
+                    // Модификатор событий
+                    growthMultiplier *= plugin.getFarmingEventManager().getEventMultiplier(
+                        com.github.d88a.farmereconomist.events.EventType.GROWTH_BOOST
+                    );
+                    
+                    // Специальные модификаторы для определенных культур
+                    String cropTypeName = crop.getType().name();
+                    if (plugin.getSeasonManager().isSeasonalCrop(cropTypeName)) {
+                        growthMultiplier *= 1.5; // Сезонные культуры растут быстрее
+                    }
+                    
+                    // Применяем общий модификатор
+                    effectiveGrowthInterval = (long) (effectiveGrowthInterval * growthMultiplier);
 
                     if (currentTime - crop.getLastGrowthTime() > effectiveGrowthInterval) {
                         growCrop(crop);
