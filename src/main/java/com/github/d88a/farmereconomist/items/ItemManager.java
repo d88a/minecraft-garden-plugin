@@ -95,12 +95,7 @@ public class ItemManager {
     }
 
     public static ItemStack createTomato() {
-        ItemStack item = new ItemStack(Material.APPLE);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§cРубиновый Томат");
-        meta.setLore(Arrays.asList("Сочный и спелый!"));
-        item.setItemMeta(meta);
-        return item;
+        return createCustomHead(RED_TOMATO_TEXTURE, "§cРубиновый Томат", "Сочный и спелый!");
     }
 
     public static ItemStack createGlowshroomStage(int stage) {
