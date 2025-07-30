@@ -6,7 +6,6 @@ import com.github.d88a.farmereconomist.crops.CustomCrop;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -51,7 +50,6 @@ public class CropListener implements Listener {
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.GLOWSHROOM);
             event.getItemInHand().setAmount(event.getItemInHand().getAmount() - 1);
         } else {
-            // TODO: Add new message to config
             plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_plant_fail_not_mycelium");
             event.setCancelled(true);
         }
@@ -62,17 +60,17 @@ public class CropListener implements Listener {
         if (event.getAction() != Action.LEFT_CLICK_BLOCK) return;
 
         Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock.getType() != Material.PLAYER_HEAD) return;
+        if (clickedBlock == null || clickedBlock.getType() != Material.PLAYER_HEAD) return;
 
         CustomCrop crop = cropManager.getCropAt(clickedBlock.getLocation());
         if (crop != null) {
-            // Check if the crop is harvestable (final stage)
             boolean isHarvestable = false;
             if(crop.getType() == CustomCrop.CropType.TOMATO && crop.getStage() >= 1) isHarvestable = true;
             if(crop.getType() == CustomCrop.CropType.GLOWSHROOM && crop.getStage() >= 1) isHarvestable = true;
 
             if (isHarvestable) {
                 cropManager.harvestCrop(clickedBlock.getLocation());
+                plugin.getSoundManager().playSound(event.getPlayer(), "harvest_crop");
             }
         }
     }

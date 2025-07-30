@@ -85,5 +85,6 @@ public class FermerCommand implements CommandExecutor {
 
         player.teleport(npc.getLocation());
         plugin.getConfigManager().sendMessage(player, "npc_teleport_success");
+        plugin.getSoundManager().playSound(player, "teleport");
     }
 } 

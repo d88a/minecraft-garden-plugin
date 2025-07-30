@@ -64,6 +64,7 @@ public class ShopListener implements Listener {
                 itemToGive.setLore(null);
                 player.getInventory().addItem(itemToGive);
                 plugin.getConfigManager().sendMessage(player, "shop_buy_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
+                plugin.getSoundManager().playSound(player, "buy_item");
             } else {
                 plugin.getConfigManager().sendMessage(player, "shop_buy_fail_no_money");
             }
@@ -81,6 +82,7 @@ public class ShopListener implements Listener {
                 player.getInventory().removeItem(itemToSell);
                 economyManager.addBalance(player, price);
                 plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
+                plugin.getSoundManager().playSound(player, "sell_item");
             } else {
                 plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
             }

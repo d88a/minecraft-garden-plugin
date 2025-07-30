@@ -102,6 +102,7 @@ public class PlotProtectionListener implements Listener {
             farmland.setMoisture(farmland.getMaximumMoisture());
             clickedBlock.setBlockData(farmland);
             plugin.getConfigManager().sendMessage(player, "crop_watered");
+            plugin.getSoundManager().playSound(player, "water_crop");
         }
     }
 } 

@@ -1,0 +1,32 @@
+name: FarmerEconomist
+version: '1.0-SNAPSHOT'
+main: com.github.d88a.farmereconomist.FarmerEconomist
+api-version: '1.21'
+author: d88a
+description: 'Плагин «Фермер-Экономист» для сервера Minecraft.'
+
+commands:
+  ogorod:
+    description: Управление участками.
+    aliases: [plot]
+    usage: |
+      /ogorod set_start - Установить начальную точку сетки.
+      /ogorod set_config <параметр> <значение> - Настроить параметры участков.
+      /ogorod get - Получить новый участок.
+      /ogorod home - Телепортироваться на свой участок.
+  balance:
+    description: Проверить свой баланс.
+    aliases: [money]
+  eco:
+    description: Управление экономикой (для администраторов).
+    aliases: [economy]
+    permission: farmereconomist.admin.eco
+    usage: |
+      /eco give <игрок> <сумма>
+      /eco take <игрок> <сумма>
+      /eco set <игрок> <сумма>
+  fermer:
+    description: Взаимодействие с NPC-фермером.
+    usage: |
+      /fermer - Телепортироваться к фермеру.
+      /fermer set_npc - Установить позицию NPC (для администраторов). 

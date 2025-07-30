@@ -78,6 +78,7 @@ public class OgorodCommand implements CommandExecutor {
         }
         player.teleport(plot.getTeleportLocation());
         plugin.getConfigManager().sendMessage(player, "plot_home_success");
+        plugin.getSoundManager().playSound(player, "teleport");
     }
 
     private void handleGet(Player player) {

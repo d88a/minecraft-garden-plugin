@@ -1,6 +1,7 @@
 package com.github.d88a.farmereconomist.crops;
 
 import com.github.d88a.farmereconomist.FarmerEconomist;
+import com.github.d88a.farmereconomist.data.DataManager;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,11 +16,13 @@ import org.bukkit.block.Block;
 public class CropManager {
 
     private final FarmerEconomist plugin;
+    private final DataManager dataManager;
     private final Map<Location, CustomCrop> crops = new ConcurrentHashMap<>();
     private static final long GROWTH_INTERVAL = 1 * 60 * 1000; // 1 minute in milliseconds
 
-    public CropManager(FarmerEconomist plugin) {
+    public CropManager(FarmerEconomist plugin, DataManager dataManager) {
         this.plugin = plugin;
+        this.dataManager = dataManager;
         startGrowthTask();
         loadCrops();
     }
@@ -102,7 +105,7 @@ public class CropManager {
     }
     
     public void saveCrops() {
-        ConfigurationSection cropsSection = plugin.getDataManager().getCropsConfig().createSection("crops");
+        ConfigurationSection cropsSection = dataManager.getCropsConfig().createSection("crops");
         int i = 0;
         for (CustomCrop crop : crops.values()) {
             ConfigurationSection cropSection = cropsSection.createSection(String.valueOf(i++));
@@ -111,11 +114,11 @@ public class CropManager {
             cropSection.set("stage", crop.getStage());
             cropSection.set("last-growth", crop.getLastGrowthTime());
         }
-        plugin.getDataManager().saveCropsConfig();
+        dataManager.saveCropsConfig();
     }
 
     private void loadCrops() {
-        ConfigurationSection cropsSection = plugin.getDataManager().getCropsConfig().getConfigurationSection("crops");
+        ConfigurationSection cropsSection = dataManager.getCropsConfig().getConfigurationSection("crops");
         if (cropsSection != null) {
             for (String key : cropsSection.getKeys(false)) {
                 Location loc = cropsSection.getLocation(key + ".location");

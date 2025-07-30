@@ -10,30 +10,33 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import com.github.d88a.farmereconomist.data.DataManager;
 
 public class PlotManager {
 
     private final FarmerEconomist plugin;
+    private final DataManager dataManager;
     private final Map<UUID, Plot> plots = new HashMap<>();
     private int nextPlotId = 0; // Tracks the number of plots to determine the next location
 
-    public PlotManager(FarmerEconomist plugin) {
+    public PlotManager(FarmerEconomist plugin, DataManager dataManager) {
         this.plugin = plugin;
+        this.dataManager = dataManager;
         loadPlots();
     }
 
     public void savePlots() {
-        ConfigurationSection plotsSection = plugin.getDataManager().getPlotsConfig().createSection("plots");
+        ConfigurationSection plotsSection = dataManager.getPlotsConfig().createSection("plots");
         for (Map.Entry<UUID, Plot> entry : plots.entrySet()) {
             ConfigurationSection plotSection = plotsSection.createSection(entry.getKey().toString());
             plotSection.set("corner1", entry.getValue().getCorner1());
             plotSection.set("corner2", entry.getValue().getCorner2());
         }
-        plugin.getDataManager().savePlotsConfig();
+        dataManager.savePlotsConfig();
     }
 
     private void loadPlots() {
-        ConfigurationSection plotsSection = plugin.getDataManager().getPlotsConfig().getConfigurationSection("plots");
+        ConfigurationSection plotsSection = dataManager.getPlotsConfig().getConfigurationSection("plots");
         if (plotsSection != null) {
             for (String uuidString : plotsSection.getKeys(false)) {
                 UUID owner = UUID.fromString(uuidString);
@@ -148,8 +151,8 @@ public class PlotManager {
         Plot plot = plots.remove(player.getUniqueId());
         if (plot != null) {
             // Remove from config
-            plugin.getDataManager().getPlotsConfig().set("plots." + player.getUniqueId().toString(), null);
-            plugin.getDataManager().savePlotsConfig();
+            dataManager.getPlotsConfig().set("plots." + player.getUniqueId().toString(), null);
+            dataManager.savePlotsConfig();
             
             // Clean up the plot area
             clearPlotArea(plot);

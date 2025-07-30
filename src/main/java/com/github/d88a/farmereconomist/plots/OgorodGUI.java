@@ -11,6 +11,12 @@ import java.util.Arrays;
 
 public class OgorodGUI {
 
+    private final PlotManager plotManager;
+
+    public OgorodGUI(PlotManager plotManager) {
+        this.plotManager = plotManager;
+    }
+
     public void open(Player player) {
         Inventory gui = Bukkit.createInventory(null, 27, "§2Управление огородом");
 
