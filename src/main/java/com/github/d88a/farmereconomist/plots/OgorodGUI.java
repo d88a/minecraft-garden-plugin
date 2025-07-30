@@ -31,13 +31,13 @@ public class OgorodGUI {
         // Информация о текущем участке
         if (plotManager.hasPlot(player)) {
             double balance = plugin.getEconomyManager().getBalance(player);
-            gui.setItem(22, createButton(Material.SIGN, "§eИнформация об участке", 
+            gui.setItem(22, createButton(Material.OAK_SIGN, "§eИнформация об участке", 
                 "§fБаланс: §e" + String.format("%.2f", balance) + " " + plugin.getConfigManager().getCurrencyName(),
                 "§fУ вас есть участок",
                 "§7Используйте /balance для проверки баланса"
             ));
         } else {
-            gui.setItem(22, createButton(Material.SIGN, "§eИнформация об участке", 
+            gui.setItem(22, createButton(Material.OAK_SIGN, "§eИнформация об участке", 
                 "§fУ вас нет участка",
                 "§7Получите участок, нажав на травяной блок"
             ));
