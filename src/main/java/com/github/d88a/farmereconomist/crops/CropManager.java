@@ -97,7 +97,7 @@ public class CropManager {
                     location.getWorld().playSound(location, org.bukkit.Sound.BLOCK_BEACON_ACTIVATE, 1, 1);
                     break;
                 case RAINBOW_MUSHROOM:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.CRIT, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 20);
+                    location.getWorld().spawnParticle(org.bukkit.Particle.SPELL, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 20);
                     location.getWorld().playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
                     break;
                 case FLAME_PEPPER:
@@ -120,11 +120,11 @@ public class CropManager {
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_RABBIT_HURT, 1, 1);
                     break;
                 case WATERMELON:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.WATER_DROP, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
+                    location.getWorld().spawnParticle(org.bukkit.Particle.DRIP_WATER, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_PIG_AMBIENT, 1, 1);
                     break;
                 case PREDATOR_FLOWER:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.SMOKE, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
+                    location.getWorld().spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_RAVAGER_ROAR, 1, 1);
                     break;
                 case MANDRAKE_LEAF:
@@ -205,7 +205,7 @@ public class CropManager {
                     crop.getLocation().getWorld().playSound(crop.getLocation(), org.bukkit.Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1, 1);
                     break;
                 case MYSTIC_ROOT:
-                    crop.getLocation().getWorld().playSound(crop.getLocation(), org.bukkit.Sound.BLOCK_PORTAL_AMBIENT, 1, 1);
+                    crop.getLocation().getWorld().playSound(crop.getLocation(), org.bukkit.Sound.BLOCK_SOUL_ESCAPE, 1, 1);
                     break;
                 case CRYSTAL_CACTUS:
                     crop.getLocation().getWorld().playSound(crop.getLocation(), org.bukkit.Sound.BLOCK_GLASS_BREAK, 1, 1);
@@ -273,7 +273,7 @@ public class CropManager {
                 break;
             case WITCH_MUSHROOM:
                 head = ItemManager.createWitchMushroom();
-                base.getWorld().spawnParticle(org.bukkit.Particle.CRIT, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
+                base.getWorld().spawnParticle(org.bukkit.Particle.SPELL, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
                 break;
             case ELECTRO_PUMPKIN:
                 head = ItemManager.createElectroPumpkin();
@@ -293,11 +293,11 @@ public class CropManager {
                 break;
             case WATERMELON:
                 head = ItemManager.createWatermelon();
-                base.getWorld().spawnParticle(org.bukkit.Particle.WATER_DROP, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
+                base.getWorld().spawnParticle(org.bukkit.Particle.DRIP_WATER, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
                 break;
             case PREDATOR_FLOWER:
                 head = ItemManager.createPredatorFlower();
-                base.getWorld().spawnParticle(org.bukkit.Particle.SMOKE, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
+                base.getWorld().spawnParticle(org.bukkit.Particle.SMOKE_NORMAL, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
                 break;
             case MANDRAKE_LEAF:
                 head = ItemManager.createMandrakeLeaf();
