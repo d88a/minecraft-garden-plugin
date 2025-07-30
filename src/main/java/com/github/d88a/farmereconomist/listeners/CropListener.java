@@ -6,6 +6,7 @@ import com.github.d88a.farmereconomist.crops.CustomCrop;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -72,49 +73,52 @@ public class CropListener implements Listener {
 
     private void handleTomatoPlacement(BlockPlaceEvent event) {
         Block placedOn = event.getBlock().getRelative(0, -1, 0);
+        Player player = event.getPlayer();
         if (placedOn.getType() == Material.FARMLAND) {
             event.setCancelled(true);
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.TOMATO);
-            event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
+            player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
         } else {
-            plugin.getConfigManager().sendMessage(event.getPlayer(), "Томаты можно сажать только на вспаханную землю!");
+            player.sendMessage("§cТоматы можно сажать только на вспаханную землю!");
             event.setCancelled(true);
         }
     }
 
     private void handleGlowshroomPlacement(BlockPlaceEvent event) {
         Block placedOn = event.getBlock().getRelative(0, -1, 0);
+        Player player = event.getPlayer();
         if (placedOn.getType() == Material.MYCELIUM || placedOn.getType() == Material.PODZOL) {
             event.setCancelled(true);
             cropManager.plantCrop(event.getBlock().getLocation(), CustomCrop.CropType.GLOWSHROOM);
-            event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
+            player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
         } else {
-            plugin.getConfigManager().sendMessage(event.getPlayer(), "Грибы можно сажать только на мицелий или подзол!");
+            player.sendMessage("§cГрибы можно сажать только на мицелий или подзол!");
             event.setCancelled(true);
         }
     }
 
     private void handleCropPlacement(BlockPlaceEvent event, CustomCrop.CropType cropType) {
         Block placedOn = event.getBlock().getRelative(0, -1, 0);
+        Player player = event.getPlayer();
         boolean validSoil = false;
-        String failMessage = "Это растение можно сажать только на вспаханную землю, землю или траву!";
+        String failMessage = "§cЭто растение можно сажать только на вспаханную землю, землю или траву!";
         switch (cropType) {
             case CRYSTAL_CACTUS:
             case SAND_MELON:
                 validSoil = placedOn.getType() == Material.SAND;
-                failMessage = "Кактус и песчаный арбуз можно сажать только на песок!";
+                failMessage = "§cКактус и песчаный арбуз можно сажать только на песок!";
                 break;
             case FLAME_PEPPER:
                 validSoil = placedOn.getType() == Material.NETHERRACK;
-                failMessage = "Пылающий перец можно сажать только на адский камень!";
+                failMessage = "§cПылающий перец можно сажать только на адский камень!";
                 break;
             case WITCH_MUSHROOM:
                 validSoil = placedOn.getType() == Material.NETHERRACK;
-                failMessage = "Ведьмин гриб можно сажать только на адский камень!";
+                failMessage = "§cВедьмин гриб можно сажать только на адский камень!";
                 break;
             case SNOW_MINT:
                 validSoil = placedOn.getType() == Material.SNOW_BLOCK || placedOn.getType() == Material.ICE;
-                failMessage = "Снежную мяту можно сажать только на снег или лёд!";
+                failMessage = "§cСнежную мяту можно сажать только на снег или лёд!";
                 break;
             default:
                 validSoil = placedOn.getType() == Material.FARMLAND || placedOn.getType() == Material.DIRT || placedOn.getType() == Material.GRASS_BLOCK;
@@ -123,9 +127,9 @@ public class CropListener implements Listener {
         if (validSoil) {
             event.setCancelled(true);
             cropManager.plantCrop(event.getBlock().getLocation(), cropType);
-            event.getPlayer().getInventory().getItemInMainHand().setAmount(event.getPlayer().getInventory().getItemInMainHand().getAmount() - 1);
+            player.getInventory().getItemInMainHand().setAmount(player.getInventory().getItemInMainHand().getAmount() - 1);
         } else {
-            plugin.getConfigManager().sendMessage(event.getPlayer(), failMessage);
+            player.sendMessage(failMessage);
             event.setCancelled(true);
         }
     }
@@ -159,7 +163,7 @@ public class CropListener implements Listener {
                     long left = Math.max(0, (next - now) / 1000);
                     info.append("§fДо следующей стадии: §a" + left + " сек.\n");
                 }
-                plugin.getConfigManager().sendMessage(event.getPlayer(), info.toString());
+                event.getPlayer().sendMessage(info.toString());
                 event.setCancelled(true);
                 return;
             }

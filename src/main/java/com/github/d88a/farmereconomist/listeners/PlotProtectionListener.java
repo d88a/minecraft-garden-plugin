@@ -15,6 +15,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.entity.EntityType;
 
 public class PlotProtectionListener implements Listener {
 
@@ -103,6 +106,17 @@ public class PlotProtectionListener implements Listener {
             clickedBlock.setBlockData(farmland);
             plugin.getConfigManager().sendMessage(player, "crop_watered");
             plugin.getSoundManager().playSound(player, "water_crop");
+        }
+    }
+
+    @EventHandler
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        // Запрещаем спавн враждебных мобов на приватных участках
+        EntityType type = event.getEntityType();
+        if (type == EntityType.ZOMBIE || type == EntityType.SKELETON || type == EntityType.CREEPER || type == EntityType.SPIDER || type == EntityType.ENDERMAN || type == EntityType.WITCH || type == EntityType.SLIME || type == EntityType.HUSK || type == EntityType.DROWNED || type == EntityType.PILLAGER || type == EntityType.VINDICATOR || type == EntityType.EVOKER || type == EntityType.ILLUSIONER || type == EntityType.RAVAGER || type == EntityType.PHANTOM || type == EntityType.BLAZE || type == EntityType.MAGMA_CUBE || type == EntityType.WITHER_SKELETON || type == EntityType.STRAY || type == EntityType.GHAST || type == EntityType.PIGLIN || type == EntityType.PIGLIN_BRUTE || type == EntityType.ZOGLIN || type == EntityType.HOGLIN) {
+            if (plotManager.getPlotAt(event.getLocation()) != null) {
+                event.setCancelled(true);
+            }
         }
     }
 } 
