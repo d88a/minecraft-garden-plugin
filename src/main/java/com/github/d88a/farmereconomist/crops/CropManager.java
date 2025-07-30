@@ -120,7 +120,7 @@ public class CropManager {
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_RABBIT_HURT, 1, 1);
                     break;
                 case WATERMELON:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.WATER_SPLASH, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
+                    location.getWorld().spawnParticle(org.bukkit.Particle.WATER_DROP, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_PIG_AMBIENT, 1, 1);
                     break;
                 case PREDATOR_FLOWER:
@@ -293,7 +293,7 @@ public class CropManager {
                 break;
             case WATERMELON:
                 head = ItemManager.createWatermelon();
-                base.getWorld().spawnParticle(org.bukkit.Particle.WATER_SPLASH, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
+                base.getWorld().spawnParticle(org.bukkit.Particle.WATER_DROP, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
                 break;
             case PREDATOR_FLOWER:
                 head = ItemManager.createPredatorFlower();
