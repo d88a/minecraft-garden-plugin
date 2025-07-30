@@ -97,7 +97,7 @@ public class CropManager {
                     location.getWorld().playSound(location, org.bukkit.Sound.BLOCK_BEACON_ACTIVATE, 1, 1);
                     break;
                 case RAINBOW_MUSHROOM:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.SPELL_WITCH, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 20);
+                    location.getWorld().spawnParticle(org.bukkit.Particle.CRIT, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 20);
                     location.getWorld().playSound(location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
                     break;
                 case FLAME_PEPPER:
@@ -120,7 +120,7 @@ public class CropManager {
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_RABBIT_HURT, 1, 1);
                     break;
                 case WATERMELON:
-                    location.getWorld().spawnParticle(org.bukkit.Particle.WATER_DROP, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
+                    location.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, location.clone().add(0.5, crop.getStage() + 0.5, 0.5), 10);
                     location.getWorld().playSound(location, org.bukkit.Sound.ENTITY_PIG_AMBIENT, 1, 1);
                     break;
                 case PREDATOR_FLOWER:
@@ -273,7 +273,7 @@ public class CropManager {
                 break;
             case WITCH_MUSHROOM:
                 head = ItemManager.createWitchMushroom();
-                base.getWorld().spawnParticle(org.bukkit.Particle.SPELL_WITCH, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
+                base.getWorld().spawnParticle(org.bukkit.Particle.CRIT, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
                 break;
             case ELECTRO_PUMPKIN:
                 head = ItemManager.createElectroPumpkin();
@@ -293,7 +293,7 @@ public class CropManager {
                 break;
             case WATERMELON:
                 head = ItemManager.createWatermelon();
-                base.getWorld().spawnParticle(org.bukkit.Particle.WATER_DROP, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
+                base.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
                 break;
             case PREDATOR_FLOWER:
                 head = ItemManager.createPredatorFlower();
