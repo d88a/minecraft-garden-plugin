@@ -10,7 +10,6 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
-import org.bukkit.profile.ProfileProperty;
 
 public class ItemManager {
 
@@ -82,7 +81,7 @@ public class ItemManager {
         String texture = (stage == 0) ? SMALL_MUSHROOM_TEXTURE : GLOWSHROOM_TEXTURE;
 
         PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        profile.getProperties().add(new ProfileProperty("textures", texture));
+        profile.setProperty("textures", texture, null);
         meta.setPlayerProfile(profile);
 
         head.setItemMeta(meta);
@@ -95,7 +94,7 @@ public class ItemManager {
         String texture = (stage == 0) ? GREEN_TOMATO_TEXTURE : RED_TOMATO_TEXTURE;
 
         PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        profile.getProperties().add(new ProfileProperty("textures", texture));
+        profile.setProperty("textures", texture, null);
         meta.setPlayerProfile(profile);
 
         head.setItemMeta(meta);
