@@ -7,6 +7,10 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
 import java.util.UUID;
+import org.bukkit.Bukkit;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
+import org.bukkit.profile.ProfileProperty;
 
 public class ItemManager {
 
@@ -76,17 +80,11 @@ public class ItemManager {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         String texture = (stage == 0) ? SMALL_MUSHROOM_TEXTURE : GLOWSHROOM_TEXTURE;
-        
-        com.mojang.authlib.GameProfile profile = new com.mojang.authlib.GameProfile(UUID.randomUUID(), null);
-        profile.getProperties().put("textures", new com.mojang.authlib.properties.Property("textures", texture));
-        try {
-            java.lang.reflect.Field profileField = meta.getClass().getDeclaredField("profile");
-            profileField.setAccessible(true);
-            profileField.set(meta, profile);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        
+
+        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+        profile.getProperties().add(new ProfileProperty("textures", texture));
+        meta.setPlayerProfile(profile);
+
         head.setItemMeta(meta);
         return head;
     }
@@ -95,17 +93,11 @@ public class ItemManager {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         String texture = (stage == 0) ? GREEN_TOMATO_TEXTURE : RED_TOMATO_TEXTURE;
-        
-        com.mojang.authlib.GameProfile profile = new com.mojang.authlib.GameProfile(UUID.randomUUID(), null);
-        profile.getProperties().put("textures", new com.mojang.authlib.properties.Property("textures", texture));
-        try {
-            java.lang.reflect.Field profileField = meta.getClass().getDeclaredField("profile");
-            profileField.setAccessible(true);
-            profileField.set(meta, profile);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        
+
+        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+        profile.getProperties().add(new ProfileProperty("textures", texture));
+        meta.setPlayerProfile(profile);
+
         head.setItemMeta(meta);
         return head;
     }
