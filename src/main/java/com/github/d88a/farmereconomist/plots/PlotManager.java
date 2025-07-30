@@ -31,6 +31,8 @@ public class PlotManager {
             ConfigurationSection plotSection = plotsSection.createSection(entry.getKey().toString());
             plotSection.set("corner1", entry.getValue().getCorner1());
             plotSection.set("corner2", entry.getValue().getCorner2());
+            plotSection.set("level", entry.getValue().getLevel());
+            plotSection.set("creationTime", entry.getValue().getCreationTime());
         }
         dataManager.savePlotsConfig();
     }
@@ -42,7 +44,9 @@ public class PlotManager {
                 UUID owner = UUID.fromString(uuidString);
                 Location corner1 = plotsSection.getLocation(uuidString + ".corner1");
                 Location corner2 = plotsSection.getLocation(uuidString + ".corner2");
-                Plot plot = new Plot(owner, corner1, corner2);
+                int level = plotsSection.getInt(uuidString + ".level", 1);
+                long creationTime = plotsSection.getLong(uuidString + ".creationTime", System.currentTimeMillis());
+                Plot plot = new Plot(owner, corner1, corner2, level, creationTime);
                 plots.put(owner, plot);
             }
         }
@@ -77,36 +81,102 @@ public class PlotManager {
             return null; // Grid start not set
         }
 
-        int plotSize = plugin.getConfigManager().getPlotSize();
-        int plotGap = plugin.getConfigManager().getPlotGap();
+        // Используем фиксированный размер для базового участка
+        int plotSize = Plot.getSizeForLevel(1); // 8x8
+        int plotGap = 4; // Отступ между участками для будущего расширения
         int totalSize = plotSize + plotGap;
 
-        // Spiral algorithm to find the next plot location
-        int x = 0, z = 0;
-        int dx = 0, dz = -1;
-        int layer = 0;
-        for (int i = 0; i < nextPlotId; i++) {
-            if (x == layer && z == -layer) {
-                dx = 0; dz = 1;
-                x++;
-                layer++;
-            } else if (x == layer && z == layer) { dx = -1; dz = 0; z--; }
-            else if (x == -layer && z == layer) { dx = 0; dz = -1; x--; }
-            else if (x == -layer && z == -layer) { dx = 1; dz = 0; z++; }
-            else { x += dx; z += dz; }
-        }
+        // Простая сетка: участки размещаются по строкам и столбцам
+        int plotsPerRow = 5; // 5 участков в ряду
+        int row = nextPlotId / plotsPerRow;
+        int col = nextPlotId % plotsPerRow;
 
         World world = startLocation.getWorld();
-        int plotX = startLocation.getBlockX() + x * totalSize;
-        int plotZ = startLocation.getBlockZ() + z * totalSize;
+        int plotX = startLocation.getBlockX() + col * totalSize;
+        int plotZ = startLocation.getBlockZ() + row * totalSize;
         int plotY = startLocation.getBlockY();
 
         Location corner1 = new Location(world, plotX, plotY, plotZ);
         Location corner2 = new Location(world, plotX + plotSize - 1, plotY, plotZ + plotSize - 1);
 
+        // Проверяем, что место свободно
+        if (!isAreaFree(corner1, corner2)) {
+            // Если место занято, ищем следующее свободное
+            return findNextFreePlot(player, startLocation, plotSize, plotGap);
+        }
+
         terraformAndBuild(corner1, corner2);
 
         // Ставим табличку у входа
+        placePlotSign(corner1, corner2, player, 1);
+
+        Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
+        addPlot(player, newPlot);
+        return newPlot;
+    }
+
+    private Plot findNextFreePlot(Player player, Location startLocation, int plotSize, int plotGap) {
+        int totalSize = plotSize + plotGap;
+        int plotsPerRow = 5;
+        
+        // Ищем свободное место, начиная с текущего nextPlotId
+        for (int attempt = 0; attempt < 100; attempt++) { // Максимум 100 попыток
+            int testId = nextPlotId + attempt;
+            int row = testId / plotsPerRow;
+            int col = testId % plotsPerRow;
+            
+            int plotX = startLocation.getBlockX() + col * totalSize;
+            int plotZ = startLocation.getBlockZ() + row * totalSize;
+            int plotY = startLocation.getBlockY();
+            
+            Location corner1 = new Location(startLocation.getWorld(), plotX, plotY, plotZ);
+            Location corner2 = new Location(startLocation.getWorld(), plotX + plotSize - 1, plotY, plotZ + plotSize - 1);
+            
+            if (isAreaFree(corner1, corner2)) {
+                terraformAndBuild(corner1, corner2);
+                placePlotSign(corner1, corner2, player, 1);
+                
+                Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
+                addPlot(player, newPlot);
+                nextPlotId = testId + 1; // Обновляем nextPlotId
+                return newPlot;
+            }
+        }
+        
+        return null; // Не удалось найти свободное место
+    }
+
+    private boolean isAreaFree(Location corner1, Location corner2) {
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+        int maxZ = Math.max(corner1.getBlockZ(), corner2.getBlockZ());
+        
+        // Проверяем, не пересекается ли с существующими участками
+        for (Plot existingPlot : plots.values()) {
+            if (plotsOverlap(corner1, corner2, existingPlot.getCorner1(), existingPlot.getCorner2())) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    private boolean plotsOverlap(Location c1, Location c2, Location existingC1, Location existingC2) {
+        int minX1 = Math.min(c1.getBlockX(), c2.getBlockX());
+        int maxX1 = Math.max(c1.getBlockX(), c2.getBlockX());
+        int minZ1 = Math.min(c1.getBlockZ(), c2.getBlockZ());
+        int maxZ1 = Math.max(c1.getBlockZ(), c2.getBlockZ());
+        
+        int minX2 = Math.min(existingC1.getBlockX(), existingC2.getBlockX());
+        int maxX2 = Math.max(existingC1.getBlockX(), existingC2.getBlockX());
+        int minZ2 = Math.min(existingC1.getBlockZ(), existingC2.getBlockZ());
+        int maxZ2 = Math.max(existingC1.getBlockZ(), existingC2.getBlockZ());
+        
+        return !(maxX1 < minX2 || maxX2 < minX1 || maxZ1 < minZ2 || maxZ2 < minZ1);
+    }
+
+    private void placePlotSign(Location corner1, Location corner2, Player player, int level) {
         int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
         int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
         int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
@@ -122,13 +192,117 @@ public class PlotManager {
             sign.setLine(1, player.getName());
             double balance = plugin.getEconomyManager().getBalance(player);
             sign.setLine(2, "Баланс: " + balance);
-            sign.setLine(3, "");
+            sign.setLine(3, "Уровень: " + level);
             sign.update();
         }
+    }
 
-        Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
-        addPlot(player, newPlot);
-        return newPlot;
+    // Метод для расширения участка
+    public boolean expandPlot(Player player) {
+        Plot plot = getPlot(player);
+        if (plot == null) {
+            plugin.getConfigManager().sendMessage(player, "plot_expand_no_plot");
+            return false;
+        }
+
+        if (!plot.canExpand()) {
+            plugin.getConfigManager().sendMessage(player, "plot_expand_max_level");
+            return false;
+        }
+
+        if (!plot.hasMinimumTime()) {
+            plugin.getConfigManager().sendMessage(player, "plot_expand_time_required");
+            return false;
+        }
+
+        int cost = Plot.getExpansionCost(plot.getLevel());
+        if (plugin.getEconomyManager().getBalance(player) < cost) {
+            plugin.getConfigManager().sendMessage(player, "plot_expand_no_money");
+            return false;
+        }
+
+        // Проверяем, что расширенная область свободна
+        Location oldCorner2 = plot.getCorner2();
+        int newSize = Plot.getSizeForLevel(plot.getLevel() + 1);
+        int currentSize = plot.getSize();
+        int expansion = newSize - currentSize;
+        
+        Location newCorner2 = new Location(oldCorner2.getWorld(), 
+            oldCorner2.getBlockX() + expansion, 
+            oldCorner2.getBlockY(), 
+            oldCorner2.getBlockZ() + expansion);
+
+        if (!isAreaFree(oldCorner2, newCorner2)) {
+            plugin.getConfigManager().sendMessage(player, "plot_expand_area_occupied");
+            return false;
+        }
+
+        // Снимаем деньги
+        plugin.getEconomyManager().takeBalance(player, cost);
+
+        // Расширяем участок
+        plot.expandPlot();
+
+        // Перестраиваем забор и подготавливаем новую землю
+        rebuildPlotFence(plot);
+        prepareExpandedArea(oldCorner2, newCorner2);
+
+        // Обновляем табличку
+        updatePlotSign(player);
+
+        plugin.getConfigManager().sendMessage(player, "plot_expand_success");
+        plugin.getSoundManager().playSound(player, "plot_expand");
+        
+        return true;
+    }
+
+    private void rebuildPlotFence(Plot plot) {
+        Location corner1 = plot.getCorner1();
+        Location corner2 = plot.getCorner2();
+        World world = corner1.getWorld();
+        int y = corner1.getBlockY();
+
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+        int maxZ = Math.max(corner1.getBlockZ(), corner2.getBlockZ());
+
+        Material fence = plugin.getConfigManager().getFenceMaterial();
+        Material gate = plugin.getConfigManager().getGateMaterial();
+
+        // Убираем старый забор и ставим новый
+        for (int x = minX - 1; x <= maxX + 1; x++) {
+            for (int z = minZ - 1; z <= maxZ + 1; z++) {
+                if (x == minX - 1 || x == maxX + 1 || z == minZ - 1 || z == maxZ + 1) {
+                    world.getBlockAt(x, y + 1, z).setType(fence);
+                    world.getBlockAt(x, y, z).setType(Material.DIRT);
+                }
+            }
+        }
+
+        // Добавляем ворота
+        world.getBlockAt(minX + (maxX - minX) / 2, y + 1, minZ - 1).setType(gate);
+    }
+
+    private void prepareExpandedArea(Location oldCorner2, Location newCorner2) {
+        World world = oldCorner2.getWorld();
+        int y = oldCorner2.getBlockY();
+
+        int minX = Math.min(oldCorner2.getBlockX() + 1, newCorner2.getBlockX());
+        int maxX = Math.max(oldCorner2.getBlockX() + 1, newCorner2.getBlockX());
+        int minZ = Math.min(oldCorner2.getBlockZ() + 1, newCorner2.getBlockZ());
+        int maxZ = Math.max(oldCorner2.getBlockZ() + 1, newCorner2.getBlockZ());
+
+        // Подготавливаем новую землю
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                world.getBlockAt(x, y, z).setType(Material.DIRT);
+                // Очищаем пространство сверху
+                for (int yClear = y + 1; yClear < y + 10; yClear++) {
+                    world.getBlockAt(x, yClear, z).setType(Material.AIR);
+                }
+            }
+        }
     }
 
     private void terraformAndBuild(Location corner1, Location corner2) {
@@ -224,7 +398,12 @@ public class PlotManager {
         if (signBlock.getState() instanceof org.bukkit.block.Sign) {
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlock.getState();
             sign.setLine(2, "Баланс: " + plugin.getEconomyManager().getBalance(player));
+            sign.setLine(3, "Уровень: " + plot.getLevel());
             sign.update();
         }
+    }
+
+    public FarmerEconomist getPlugin() {
+        return plugin;
     }
 } 

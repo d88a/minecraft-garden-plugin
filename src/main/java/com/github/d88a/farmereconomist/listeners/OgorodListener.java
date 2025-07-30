@@ -40,6 +40,13 @@ public class OgorodListener implements Listener {
             case BARRIER:
                 player.performCommand("ogorod delete");
                 break;
+            case GOLDEN_SHOVEL:
+                // Расширение участка
+                if (plotManager.expandPlot(player)) {
+                    // Обновляем GUI после успешного расширения
+                    plugin.getOgorodGUI().open(player);
+                }
+                break;
         }
         player.closeInventory();
     }
