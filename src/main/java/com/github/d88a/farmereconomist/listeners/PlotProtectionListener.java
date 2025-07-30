@@ -70,7 +70,7 @@ public class PlotProtectionListener implements Listener {
         }
         
         // Custom seed planting logic
-        ItemStack itemInHand = event.getItemInHand();
+        ItemStack itemInHand = event.getPlayer().getInventory().getItemInMainHand();
         if (plot != null && itemInHand.isSimilar(ItemManager.createLettuceSeeds())) {
             Block block = event.getBlockPlaced();
             if(block.getRelative(0, -1, 0).getType() == Material.FARMLAND) {

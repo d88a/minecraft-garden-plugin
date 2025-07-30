@@ -103,7 +103,7 @@ public class AchievementManager {
                 playerAchs.add(achievementId);
                 
                 // Выдаем награду
-                plugin.getEconomyManager().addMoney(player, achievement.getReward());
+                plugin.getEconomyManager().addBalance(player, achievement.getReward());
                 
                 // Отправляем сообщение
                 player.sendMessage("§a§l🏆 ДОСТИЖЕНИЕ РАЗБЛОКИРОВАНО! §a" + achievement.getName());

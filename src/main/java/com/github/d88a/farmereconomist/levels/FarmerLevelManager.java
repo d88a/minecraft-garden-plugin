@@ -79,7 +79,7 @@ public class FarmerLevelManager {
             player.sendMessage("§6Монеты: +" + reward.getMoneyReward());
             
             // Выдаем награду
-            plugin.getEconomyManager().addMoney(player, reward.getMoneyReward());
+            plugin.getEconomyManager().addBalance(player, reward.getMoneyReward());
         }
         
         // Уведомляем всех игроков о достижении
