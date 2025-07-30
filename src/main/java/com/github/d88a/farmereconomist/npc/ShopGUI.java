@@ -20,28 +20,58 @@ public class ShopGUI {
     }
 
     public void open(Player player) {
-        Inventory shop = Bukkit.createInventory(null, 36, "Магазин Старого Мирона");
+        Inventory mainMenu = Bukkit.createInventory(null, 27, "Магазин Старого Мирона");
+        ItemStack buy = new ItemStack(Material.EMERALD);
+        ItemMeta buyMeta = buy.getItemMeta();
+        buyMeta.setDisplayName("§aКупить");
+        buy.setItemMeta(buyMeta);
+        mainMenu.setItem(11, buy);
 
-        // --- Items to buy ---
-        shop.setItem(10, createBuyItem(ItemManager.createLettuceSeeds(), 10));
-        shop.setItem(11, createBuyItem(ItemManager.createTomatoSeeds(), 25));
-        shop.setItem(12, createBuyItem(ItemManager.createGlowshroomSpores(), 50));
-        shop.setItem(13, createBuyItem(ItemManager.createWateringCan(), 100));
+        ItemStack sell = new ItemStack(Material.GOLD_INGOT);
+        ItemMeta sellMeta = sell.getItemMeta();
+        sellMeta.setDisplayName("§6Продать");
+        sell.setItemMeta(sellMeta);
+        mainMenu.setItem(15, sell);
 
-        // --- Items to sell ---
-        shop.setItem(19, createSellItem(ItemManager.createLettuce(false), 5));
-        shop.setItem(20, createSellItem(ItemManager.createLettuce(true), 15));
-        shop.setItem(21, createSellItem(ItemManager.createTomato(), 20));
-        shop.setItem(22, createSellItem(ItemManager.createGlowshroomDust(), 45));
-        
-        // --- Fill empty space ---
-        for (int i = 0; i < shop.getSize(); i++) {
-            if (shop.getItem(i) == null) {
-                shop.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+        player.openInventory(mainMenu);
+    }
+
+    public void openBuy(Player player) {
+        Inventory buyInv = Bukkit.createInventory(null, 36, "Купить у Мирона");
+        buyInv.setItem(10, createBuyItem(ItemManager.createLettuceSeeds(), 10));
+        buyInv.setItem(11, createBuyItem(ItemManager.createTomatoSeeds(), 25));
+        buyInv.setItem(12, createBuyItem(ItemManager.createGlowshroomSpores(), 50));
+        buyInv.setItem(13, createBuyItem(ItemManager.createWateringCan(), 100));
+        for (int i = 0; i < buyInv.getSize(); i++) {
+            if (buyInv.getItem(i) == null) {
+                buyInv.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
             }
         }
+        player.openInventory(buyInv);
+    }
 
-        player.openInventory(shop);
+    public void openSell(Player player) {
+        Inventory sellInv = Bukkit.createInventory(null, 36, "Продать Мирону");
+        // Показываем только то, что есть у игрока и можно продать
+        int slot = 10;
+        if (player.getInventory().containsAtLeast(ItemManager.createLettuce(false), 1)) {
+            sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(false), 5));
+        }
+        if (player.getInventory().containsAtLeast(ItemManager.createLettuce(true), 1)) {
+            sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(true), 15));
+        }
+        if (player.getInventory().containsAtLeast(ItemManager.createTomato(), 1)) {
+            sellInv.setItem(slot++, createSellItem(ItemManager.createTomato(), 20));
+        }
+        if (player.getInventory().containsAtLeast(ItemManager.createGlowshroomDust(), 1)) {
+            sellInv.setItem(slot++, createSellItem(ItemManager.createGlowshroomDust(), 45));
+        }
+        for (int i = 0; i < sellInv.getSize(); i++) {
+            if (sellInv.getItem(i) == null) {
+                sellInv.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+            }
+        }
+        player.openInventory(sellInv);
     }
 
     private ItemStack createBuyItem(ItemStack item, double price) {

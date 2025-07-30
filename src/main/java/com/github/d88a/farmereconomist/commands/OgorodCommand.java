@@ -97,8 +97,7 @@ public class OgorodCommand implements CommandExecutor {
         if (newPlot != null) {
             plugin.getConfigManager().sendMessage(player, "plot_get_success");
         } else {
-            // This might happen if start location is suddenly null, or other errors.
-            player.sendMessage("Не удалось создать участок. Обратитесь к администратору."); // Keep this one hardcoded as it's a technical error
+            plugin.getConfigManager().sendMessage(player, "plot_create_fail");
         }
     }
 } 

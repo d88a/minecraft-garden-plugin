@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class CropListener implements Listener {
 
@@ -57,21 +58,58 @@ public class CropListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.LEFT_CLICK_BLOCK) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK) return;
 
         Block clickedBlock = event.getClickedBlock();
         if (clickedBlock == null || clickedBlock.getType() != Material.PLAYER_HEAD) return;
 
         CustomCrop crop = cropManager.getCropAt(clickedBlock.getLocation());
-        if (crop != null) {
-            boolean isHarvestable = false;
-            if(crop.getType() == CustomCrop.CropType.TOMATO && crop.getStage() >= 1) isHarvestable = true;
-            if(crop.getType() == CustomCrop.CropType.GLOWSHROOM && crop.getStage() >= 1) isHarvestable = true;
+        if (crop == null) return;
 
+        // --- Обработка правой кнопки мыши (использование лейки/удобрения) ---
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            ItemStack itemInHand = event.getItemInHand();
+            if (itemInHand.isSimilar(ItemManager.createWateringCan())) {
+                if (!crop.isWatered()) {
+                    crop.setWatered(true);
+                    crop.setWateredTime(System.currentTimeMillis());
+                    plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_watered");
+                    plugin.getSoundManager().playSound(event.getPlayer(), "water_crop");
+                    event.setCancelled(true);
+                } else {
+                    plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_already_watered");
+                }
+                return;
+            }
+            if (itemInHand.isSimilar(ItemManager.createFertilizer())) {
+                if (!crop.isFertilized()) {
+                    crop.setFertilized(true);
+                    crop.setFertilizerTime(System.currentTimeMillis());
+                    itemInHand.setAmount(itemInHand.getAmount() - 1);
+                    plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_fertilized");
+                    plugin.getSoundManager().playSound(event.getPlayer(), "fertilize_crop");
+                    event.setCancelled(true);
+                } else {
+                    plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_already_fertilized");
+                }
+                return;
+            }
+        }
+
+        // --- Обработка левой кнопки мыши (сбор урожая) ---
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            boolean isHarvestable = false;
+            // Теперь проверяем, если растение достигло последней стадии
+            if(crop.getStage() == (crop.getType().getMaxStages() - 1)) {
+                isHarvestable = true;
+            }
             if (isHarvestable) {
                 cropManager.harvestCrop(clickedBlock.getLocation());
                 plugin.getSoundManager().playSound(event.getPlayer(), "harvest_crop");
+            } else {
+                plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_not_ready");
             }
+            event.setCancelled(true);
         }
     }
 } 

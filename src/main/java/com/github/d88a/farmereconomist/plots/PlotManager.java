@@ -106,6 +106,26 @@ public class PlotManager {
 
         terraformAndBuild(corner1, corner2);
 
+        // Ставим табличку у входа
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+        int y = corner1.getBlockY();
+        int signX = minX + (maxX - minX) / 2;
+        int signZ = minZ - 2;
+        World world = corner1.getWorld();
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, y + 1, signZ);
+        signBlock.setType(org.bukkit.Material.OAK_SIGN);
+        if (signBlock.getState() instanceof org.bukkit.block.Sign) {
+            org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlock.getState();
+            sign.setLine(0, "§aОгород");
+            sign.setLine(1, player.getName());
+            double balance = plugin.getEconomyManager().getBalance(player);
+            sign.setLine(2, "Баланс: " + balance);
+            sign.setLine(3, "");
+            sign.update();
+        }
+
         Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
         addPlot(player, newPlot);
         return newPlot;
@@ -136,11 +156,16 @@ public class PlotManager {
 
         for (int x = minX - 1; x <= maxX + 1; x++) {
             world.getBlockAt(x, y + 1, minZ - 1).setType(fence);
+            // Новый код: слой земли под забором
+            world.getBlockAt(x, y, minZ - 1).setType(Material.DIRT);
             world.getBlockAt(x, y + 1, maxZ + 1).setType(fence);
+            world.getBlockAt(x, y, maxZ + 1).setType(Material.DIRT);
         }
         for (int z = minZ; z <= maxZ; z++) {
             world.getBlockAt(minX - 1, y + 1, z).setType(fence);
+            world.getBlockAt(minX - 1, y, z).setType(Material.DIRT);
             world.getBlockAt(maxX + 1, y + 1, z).setType(fence);
+            world.getBlockAt(maxX + 1, y, z).setType(Material.DIRT);
         }
 
         // Add gate
@@ -180,6 +205,26 @@ public class PlotManager {
                     world.getBlockAt(x, y, z).setType(Material.STONE);
                 }
             }
+        }
+    }
+
+    public void updatePlotSign(Player player) {
+        Plot plot = getPlot(player);
+        if (plot == null) return;
+        Location corner1 = plot.getCorner1();
+        Location corner2 = plot.getCorner2();
+        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
+        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
+        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
+        int y = corner1.getBlockY();
+        int signX = minX + (maxX - minX) / 2;
+        int signZ = minZ - 2;
+        World world = corner1.getWorld();
+        org.bukkit.block.Block signBlock = world.getBlockAt(signX, y + 1, signZ);
+        if (signBlock.getState() instanceof org.bukkit.block.Sign) {
+            org.bukkit.block.Sign sign = (org.bukkit.block.Sign) signBlock.getState();
+            sign.setLine(2, "Баланс: " + plugin.getEconomyManager().getBalance(player));
+            sign.update();
         }
     }
 } 

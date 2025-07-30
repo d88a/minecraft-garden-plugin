@@ -13,6 +13,7 @@ import com.github.d88a.farmereconomist.listeners.OgorodListener;
 import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
 import com.github.d88a.farmereconomist.listeners.ShopListener;
 import com.github.d88a.farmereconomist.npc.NpcManager;
+import com.github.d88a.farmereconomist.npc.NpcAnimator;
 import com.github.d88a.farmereconomist.plots.OgorodGUI;
 import com.github.d88a.farmereconomist.plots.PlotManager;
 import com.github.d88a.farmereconomist.sound.SoundManager;
@@ -41,6 +42,8 @@ public final class FarmerEconomist extends JavaPlugin {
         this.soundManager = new SoundManager(this);
         this.ogorodGUI = new OgorodGUI(plotManager);
 
+        // Запуск анимации головы NPC
+        new NpcAnimator(this, npcManager).start();
 
         // Register commands
         getCommand("balance").setExecutor(new BalanceCommand(this));

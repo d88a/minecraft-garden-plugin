@@ -14,6 +14,7 @@ import org.bukkit.entity.Villager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
+import org.bukkit.World;
 
 public class FermerCommand implements CommandExecutor {
 
@@ -83,8 +84,42 @@ public class FermerCommand implements CommandExecutor {
             return;
         }
 
-        player.teleport(npc.getLocation());
-        plugin.getConfigManager().sendMessage(player, "npc_teleport_success");
-        plugin.getSoundManager().playSound(player, "teleport");
+        Location npcLocation = npc.getLocation();
+        Location teleportLocation = findSafeTeleportLocation(npcLocation);
+
+        if (teleportLocation != null) {
+            player.teleport(teleportLocation);
+            plugin.getConfigManager().sendMessage(player, "npc_teleport_success");
+            plugin.getSoundManager().playSound(player, "teleport");
+        } else {
+            plugin.getConfigManager().sendMessage(player, "npc_teleport_fail_no_safe_spot");
+            player.teleport(npcLocation.add(0,1,0)); // Fallback to on top of NPC if no safe spot
+        }
+    }
+
+    private Location findSafeTeleportLocation(Location npcLocation) {
+        World world = npcLocation.getWorld();
+        double x = npcLocation.getX();
+        double y = npcLocation.getY();
+        double z = npcLocation.getZ();
+
+        // Проверяем 4 направления вокруг NPC
+        Location[] possibleLocations = {
+                new Location(world, x + 2, y, z), // +X
+                new Location(world, x - 2, y, z), // -X
+                new Location(world, x, y, z + 2), // +Z
+                new Location(world, x, y, z - 2)  // -Z
+        };
+
+        for (Location loc : possibleLocations) {
+            // Проверяем, что блок свободен и над ним тоже свободно
+            if (loc.getBlock().getType().isAir() && loc.clone().add(0, 1, 0).getBlock().getType().isAir()) {
+                // Убедимся, что игрок не телепортируется в лаву/воду и т.д.
+                if (!loc.getBlock().isLiquid() && !loc.clone().add(0, -1, 0).getBlock().getType().isSolid()) {
+                    return loc;
+                }
+            }
+        }
+        return null; // Не найдено безопасного места
     }
 } 
