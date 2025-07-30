@@ -14,7 +14,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
 
@@ -55,29 +54,12 @@ public class ShopListener implements Listener {
                 shopGUI.openBuy(player);
             } else if (clickedItem.getType() == Material.GOLD_INGOT) {
                 shopGUI.openSell(player);
-            } else if (clickedItem.getType() == Material.GOLD_NUGGET) {
-                // Обновляем баланс в меню
-                shopGUI.open(player);
-            } else if (clickedItem.getType() == Material.BOOK) {
-                // Информация - ничего не делаем, просто показываем
-                // Можно добавить звук или эффект
-                plugin.getSoundManager().playSound(player, "teleport");
             }
             return;
         }
-        
         // Окно покупки
         if (title.equals("Купить у Мирона")) {
             event.setCancelled(true);
-            
-            // Обработка кнопки "Назад"
-            if (clickedItem.getType() == Material.BARRIER && 
-                clickedItem.getItemMeta() != null && 
-                clickedItem.getItemMeta().getDisplayName().equals("§cНазад")) {
-                shopGUI.open(player);
-                return;
-            }
-            
             if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().get(1).contains("купить")) {
                 String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
                 double price = Double.parseDouble(priceString);
@@ -95,58 +77,25 @@ public class ShopListener implements Listener {
             }
             return;
         }
-        
         // Окно продажи
         if (title.equals("Продать Мирону")) {
             event.setCancelled(true);
-            
-            // Обработка кнопки "Назад"
-            if (clickedItem.getType() == Material.BARRIER && 
-                clickedItem.getItemMeta() != null && 
-                clickedItem.getItemMeta().getDisplayName().equals("§cНазад")) {
-                shopGUI.open(player);
-                return;
-            }
-            
-            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && title.equals("Продать Мирону")) {
-                // Проверяем, что это продаваемый предмет (по лору)
-                if (clickedItem.getItemMeta().getLore().size() >= 2 && clickedItem.getItemMeta().getLore().get(1).contains("В наличии")) {
-                    // Получаем цену за 1
-                    String priceLine = clickedItem.getItemMeta().getLore().get(0);
-                    double price = Double.parseDouble(ChatColor.stripColor(priceLine.replaceAll("[^0-9.]", " ").trim()).split(" ")[0]);
-                    // Считаем сколько есть у игрока
-                    int count = countItems(player, clickedItem);
-                    if (count == 0) {
-                        plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
-                        return;
-                    }
-                    int toSell = 1;
-                    if (event.isShiftClick()) {
-                        toSell = count;
-                    }
-                    int sold = 0;
-                    for (ItemStack invItem : player.getInventory().getContents()) {
-                        if (invItem == null) continue;
-                        if (invItem.getType() != clickedItem.getType()) continue;
-                        ItemMeta meta1 = invItem.getItemMeta();
-                        ItemMeta meta2 = clickedItem.getItemMeta();
-                        if (meta1 == null || meta2 == null) continue;
-                        if (!meta1.hasDisplayName() || !meta2.hasDisplayName()) continue;
-                        if (!meta1.getDisplayName().equals(meta2.getDisplayName())) continue;
-                        if (meta1.hasCustomModelData() != meta2.hasCustomModelData()) continue;
-                        if (meta1.hasCustomModelData() && meta1.getCustomModelData() != meta2.getCustomModelData()) continue;
-                        int remove = Math.min(invItem.getAmount(), toSell - sold);
-                        invItem.setAmount(invItem.getAmount() - remove);
-                        sold += remove;
-                        if (sold >= toSell) break;
-                    }
-                    economyManager.addBalance(player, price * sold);
+            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().get(1).contains("продать")) {
+                String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
+                double price = Double.parseDouble(priceString);
+                ItemStack itemToSell = clickedItem.clone();
+                itemToSell.setAmount(1);
+                itemToSell.setLore(null);
+                if(player.getInventory().containsAtLeast(itemToSell, 1)) {
+                    player.getInventory().removeItem(itemToSell);
+                    economyManager.addBalance(player, price);
                     plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
                     plugin.getSoundManager().playSound(player, "sell_item");
                     plugin.getPlotManager().updatePlotSign(player);
+                    // Обновить окно продажи
                     shopGUI.openSell(player);
-                    event.setCancelled(true);
-                    return;
+                } else {
+                    plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
                 }
             }
             return;
@@ -175,42 +124,6 @@ public class ShopListener implements Listener {
                         price = 20; itemName = "Томат";
                     } else if (ItemManager.createGlowshroomDust().isSimilar(dragged)) {
                         price = 45; itemName = "Светящийся грибной порошок";
-                    } else if (ItemManager.createStrawberry().isSimilar(dragged)) {
-                        price = 25; itemName = "Лучезарная Клубника";
-                    } else if (ItemManager.createRadish().isSimilar(dragged)) {
-                        price = 15; itemName = "Хрустящий Редис";
-                    } else if (ItemManager.createWatermelon().isSimilar(dragged)) {
-                        price = 35; itemName = "Пустынный Арбуз";
-                    } else if (ItemManager.createLunarBerry().isSimilar(dragged)) {
-                        price = 50; itemName = "Лунная ягода";
-                    } else if (ItemManager.createRainbowMushroom().isSimilar(dragged)) {
-                        price = 40; itemName = "Радужный гриб";
-                    } else if (ItemManager.createCrystalCactus().isSimilar(dragged)) {
-                        price = 30; itemName = "Кристальный кактус";
-                    } else if (ItemManager.createFlamePepper().isSimilar(dragged)) {
-                        price = 45; itemName = "Пылающий перец";
-                    } else if (ItemManager.createMysticRoot().isSimilar(dragged)) {
-                        price = 55; itemName = "Мистический корень";
-                    } else if (ItemManager.createStarFruit().isSimilar(dragged)) {
-                        price = 40; itemName = "Звёздный плод";
-                    } else if (ItemManager.createPredatorFlower().isSimilar(dragged)) {
-                        price = 60; itemName = "Цветок-хищник";
-                    } else if (ItemManager.createElectroPumpkin().isSimilar(dragged)) {
-                        price = 70; itemName = "Электро-тыква";
-                    } else if (ItemManager.createMandrakeLeaf().isSimilar(dragged)) {
-                        price = 35; itemName = "Листья мандрагоры";
-                    } else if (ItemManager.createFlyingFruit().isSimilar(dragged)) {
-                        price = 80; itemName = "Летающий плод";
-                    } else if (ItemManager.createSnowMint().isSimilar(dragged)) {
-                        price = 20; itemName = "Снежная мята";
-                    } else if (ItemManager.createSunPineapple().isSimilar(dragged)) {
-                        price = 75; itemName = "Солнечный ананас";
-                    } else if (ItemManager.createFogBerry().isSimilar(dragged)) {
-                        price = 25; itemName = "Туманная ягода";
-                    } else if (ItemManager.createSandMelon().isSimilar(dragged)) {
-                        price = 60; itemName = "Песчаный арбуз";
-                    } else if (ItemManager.createWitchMushroom().isSimilar(dragged)) {
-                        price = 85; itemName = "Ведьмин гриб";
                     }
                     if (price > 0 && player.getInventory().containsAtLeast(dragged, dragged.getAmount())) {
                         player.getInventory().removeItem(new ItemStack(dragged.getType(), dragged.getAmount()));
@@ -225,16 +138,5 @@ public class ShopListener implements Listener {
                 }
             }
         }
-    }
-
-    private int countItems(Player player, ItemStack item) {
-        int count = 0;
-        for (ItemStack invItem : player.getInventory().getContents()) {
-            if (invItem == null) continue;
-            if (invItem.getType() == item.getType() && invItem.getItemMeta() != null && invItem.getItemMeta().hasDisplayName() && invItem.getItemMeta().getDisplayName().equals(item.getItemMeta().getDisplayName())) {
-                count += invItem.getAmount();
-            }
-        }
-        return count;
     }
 } 

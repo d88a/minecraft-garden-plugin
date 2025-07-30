@@ -28,8 +28,7 @@ public class ItemManager {
     private static final String MYSTIC_ROOT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
     private static final String STAR_FRUIT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
     private static final String PREDATOR_FLOWER_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String ELECTRO_PUMPKIN_STAGE_0_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwYjQwIn19fQ==";
-    private static final String ELECTRO_PUMPKIN_STAGE_1_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
+    private static final String ELECTRO_PUMPKIN_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
     private static final String MANDRAKE_LEAF_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
     private static final String FLYING_FRUIT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
     private static final String SNOW_MINT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
@@ -180,7 +179,7 @@ public class ItemManager {
         return createCustomHead(PREDATOR_FLOWER_TEXTURE, "§4Цветок-хищник", "Похоже, у него есть зубы...");
     }
     public static ItemStack createElectroPumpkin() {
-        return createCustomHead(ELECTRO_PUMPKIN_STAGE_0_TEXTURE, "§9Электро-тыква", "Ещё не дозрела.");
+        return createCustomHead(ELECTRO_PUMPKIN_TEXTURE, "§9Электро-тыква", "Потрескивает от энергии.");
     }
     public static ItemStack createMandrakeLeaf() {
         return createCustomHead(MANDRAKE_LEAF_TEXTURE, "§aЛистья мандрагоры", "Смотрит на тебя.");
@@ -202,13 +201,6 @@ public class ItemManager {
     }
     public static ItemStack createWitchMushroom() {
         return createCustomHead(WITCH_MUSHROOM_TEXTURE, "§5Ведьмин гриб", "Пахнет магией.");
-    }
-
-    public static ItemStack createElectroPumpkinStage(int stage) {
-        String texture = (stage == 0) ? ELECTRO_PUMPKIN_STAGE_0_TEXTURE : ELECTRO_PUMPKIN_STAGE_1_TEXTURE;
-        String name = "§9Электро-тыква";
-        String lore = (stage == 0) ? "Ещё не дозрела." : "Потрескивает от энергии.";
-        return createCustomHead(texture, name, lore);
     }
 
     // Seeds for new crops
