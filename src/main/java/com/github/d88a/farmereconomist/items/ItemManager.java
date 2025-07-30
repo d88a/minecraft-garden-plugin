@@ -8,8 +8,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.Arrays;
 import java.util.UUID;
 import org.bukkit.Bukkit;
-import org.bukkit.profile.PlayerProfile;
-import org.bukkit.profile.PlayerTextures;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 
 public class ItemManager {
 
@@ -80,9 +80,15 @@ public class ItemManager {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         String texture = (stage == 0) ? SMALL_MUSHROOM_TEXTURE : GLOWSHROOM_TEXTURE;
 
-        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        profile.setProperty("textures", texture, null);
-        meta.setPlayerProfile(profile);
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", texture));
+        try {
+            java.lang.reflect.Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         head.setItemMeta(meta);
         return head;
@@ -93,9 +99,15 @@ public class ItemManager {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         String texture = (stage == 0) ? GREEN_TOMATO_TEXTURE : RED_TOMATO_TEXTURE;
 
-        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        profile.setProperty("textures", texture, null);
-        meta.setPlayerProfile(profile);
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", texture));
+        try {
+            java.lang.reflect.Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         head.setItemMeta(meta);
         return head;
