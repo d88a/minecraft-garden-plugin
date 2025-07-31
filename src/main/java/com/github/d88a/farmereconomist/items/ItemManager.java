@@ -13,7 +13,7 @@ import org.bukkit.Bukkit;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.meta.PlayerProfile;
+import java.lang.reflect.Field;
 
 public class ItemManager {
 
@@ -24,10 +24,7 @@ public class ItemManager {
     private static final String RED_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmI4YTk5Y2I4ZWU3ZmY4MzBjY2Y4MWMyM2YwY2E3YTM4M2VjYWM3NDUzYjFhMTQ5Y2Y5Y2UyNGY0NDY1YSJ9fX0=";
 
     // --- Текстуры для стадий роста растений ---
-    private static final String SPROUT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjVlZDRiYjM0ZDRlY2YyYjBlY2MwYmYxY2RkYjYxYjI3OWY0NzYyYjM5YjQ4ZGY0ZGNkY2I0YjYyYjlkY2YxIn19fQ=="; // Общий росток
-    private static final String TOMATO_PLANT_MATURE_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjYyYmM3YjM5Y2E5YzA0NDc0N2QxYjI0Y2I5MDUxODcxYjY4YjY3ZTk0ZGY2Y2E0MGMxZmU5ZDUxM2U2M2UifX19";
-    private static final String PUMPKIN_PLANT_STAGE_0_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmE2MDQ2YjE5YjI3YjQxYTQyODQxNDFhYjQyZDNkY2YxMTk5ZGU3Mjk2YjY0YjE2ZWIzY2YxYjY0Zjc4YjNmIn19fQ==";
-    private static final String PUMPKIN_PLANT_STAGE_1_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2Y5YjE4Y2Y2MTQzNmQ3YjE4YTgwYjA4MjY3ODg2ZDIxYjQ1YjU3YjE1Y2YyYjQ1Y2E0YjYyYjlkY2YxIn19fQ==";
+    private static final String SPROUT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjVlZDRiYjM0ZDRlY2YyYjBlY2MwYmYxY2RkYjYxYjI3OWY0NzYyYjM5YjQ4ZGY0ZGNkY2I0YjYyYjlkY2YxIn19fQ=="; // Общий росток для культур без своей текстуры
 
     // --- Custom heads for unique crops ---
     // Пример текстур: можно заменить на более красивые/подходящие позже
@@ -126,34 +123,23 @@ public class ItemManager {
      * @return ItemStack с кастомной головой
      */
     public static ItemStack getPlantStageHead(com.github.d88a.farmereconomist.crops.CustomCrop.CropType type, int stage) {
-        String texture = SPROUT_TEXTURE; // По умолчанию для стадии 0 используется росток
-        String name = "Росток";
+        String texture = type.getTextureForStage(stage);
+        String name;
 
-        // Для каждой культуры определяем свою текстуру на каждой стадии
-        switch (type) {
-            case TOMATO:
-                name = "Куст томата";
-                if (stage == 1) { // Зрелая стадия для томата
-                    texture = TOMATO_PLANT_MATURE_TEXTURE;
-                }
-                break;
-            case ELECTRO_PUMPKIN:
-                name = "Росток электро-тыквы";
-                if (stage == 0) {
-                    texture = PUMPKIN_PLANT_STAGE_0_TEXTURE;
-                } else if (stage == 1) { // Зрелая стадия
-                    texture = PUMPKIN_PLANT_STAGE_1_TEXTURE;
-                    name = "Электро-тыква";
-                }
-                break;
-            // ДОБАВЬТЕ СЮДА ДРУГИЕ РАСТЕНИЯ
-            // case STRAWBERRY:
-            //     if (stage == 1) texture = STRAWBERRY_MATURE_TEXTURE;
-            //     break;
-            default:
-                // Для всех остальных растений на стадии 0 будет росток
-                if (stage > 0) texture = SPROUT_TEXTURE; // Можно добавить текстуры по умолчанию для других стадий
-                break;
+        // Если для стадии нет текстуры, используем текстуру ростка по умолчанию для нулевой стадии
+        if (texture == null) {
+            if (stage == 0) {
+                texture = SPROUT_TEXTURE;
+            } else {
+                // Для других стадий без текстуры можно вернуть null или ту же текстуру ростка
+                return null;
+            }
+        }
+
+        if (stage < type.getMaxStages() - 1) {
+            name = "Росток " + type.getDisplayName();
+        } else {
+            name = type.getDisplayName();
         }
         return createHeadFromTexture(texture, name);
     }
@@ -422,10 +408,15 @@ public class ItemManager {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-        // Современный и надежный способ установки текстуры
-        PlayerProfile playerProfile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        playerProfile.getProperties().add(new Property("textures", texture));
-        meta.setOwnerProfile(playerProfile);
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", texture));
+        try {
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            e.printStackTrace();
+        }
 
         meta.setDisplayName(name);
         meta.setLore(Arrays.asList(lore));
@@ -438,10 +429,16 @@ public class ItemManager {
     private static ItemStack createHeadFromTexture(String texture, String name) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
-
-        PlayerProfile playerProfile = Bukkit.createPlayerProfile(UUID.randomUUID());
-        playerProfile.getProperties().add(new Property("textures", texture));
-        meta.setOwnerProfile(playerProfile);
+        
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", texture));
+        try {
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            e.printStackTrace();
+        }
         meta.setDisplayName("§a" + name); // Даем имя, чтобы было понятно, что это
         head.setItemMeta(meta);
         return head;
