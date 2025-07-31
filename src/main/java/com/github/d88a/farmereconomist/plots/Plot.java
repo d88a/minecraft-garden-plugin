@@ -84,13 +84,18 @@ public class Plot {
         
         int currentSize = getSize();
         int newSize = getSizeForLevel(level + 1);
-        int expansion = newSize - currentSize;
+        int expansionPerSide = (newSize - currentSize) / 2;
         
-        // Расширяем вправо и вперед
+        // Расширяем в обе стороны от центра, чтобы участок оставался на месте
+        corner1 = new Location(corner1.getWorld(), 
+            corner1.getBlockX() - expansionPerSide, 
+            corner1.getBlockY(), 
+            corner1.getBlockZ() - expansionPerSide);
+            
         corner2 = new Location(corner2.getWorld(), 
-            corner2.getBlockX() + expansion, 
+            corner2.getBlockX() + expansionPerSide, 
             corner2.getBlockY(), 
-            corner2.getBlockZ() + expansion);
+            corner2.getBlockZ() + expansionPerSide);
         
         level++;
     }

@@ -1,6 +1,7 @@
 package com.github.d88a.farmereconomist.items;
 
 import com.github.d88a.farmereconomist.FarmerEconomist;
+import com.github.d88a.farmereconomist.crops.CustomCrop;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,30 +20,6 @@ public class ItemManager {
 
     // Ключ для хранения уникального ID предмета в PersistentDataContainer
     public static NamespacedKey ITEM_ID_KEY;
-
-    // --- Текстуры для плодов ---
-    private static final String RED_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmI4YTk5Y2I4ZWU3ZmY4MzBjY2Y4MWMyM2YwY2E3YTM4M2VjYWM3NDUzYjFhMTQ5Y2Y5Y2UyNGY0NDY1YSJ9fX0=";
-
-    // --- Текстуры для стадий роста растений ---
-    private static final String SPROUT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjVlZDRiYjM0ZDRlY2YyYjBlY2MwYmYxY2RkYjYxYjI3OWY0NzYyYjM5YjQ4ZGY0ZGNkY2I0YjYyYjlkY2YxIn19fQ=="; // Общий росток для культур без своей текстуры
-
-    // --- Custom heads for unique crops ---
-    // Пример текстур: можно заменить на более красивые/подходящие позже
-    private static final String LUNAR_BERRY_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String RAINBOW_MUSHROOM_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String CRYSTAL_CACTUS_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String FLAME_PEPPER_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String MYSTIC_ROOT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String STAR_FRUIT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String PREDATOR_FLOWER_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String ELECTRO_PUMPKIN_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String MANDRAKE_LEAF_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String FLYING_FRUIT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String SNOW_MINT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String SUN_PINEAPPLE_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String FOG_BERRY_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String SAND_MELON_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
-    private static final String WITCH_MUSHROOM_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2YjY2In19fQ==";
 
     // Этот метод нужно вызвать один раз при запуске плагина, например в onEnable()
     public static void init(FarmerEconomist plugin) {
@@ -76,7 +53,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.WHEAT_SEEDS);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§aСемена Скромного Латука");
-        meta.setLore(Arrays.asList("Можно посадить на своем участке."));
+        meta.setLore(Arrays.asList("Можно посадить на вспаханную землю."));
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "LETTUCE_SEEDS");
         meta.setCustomModelData(1);
         item.setItemMeta(meta);
@@ -87,7 +64,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.BEETROOT_SEEDS);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§cСемена Рубинового Томата");
-        meta.setLore(Arrays.asList("Можно посадить на своем участке."));
+        meta.setLore(Arrays.asList("Можно посадить на вспаханную землю."));
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "TOMATO_SEEDS");
         item.setItemMeta(meta);
         return item;
@@ -113,39 +90,29 @@ public class ItemManager {
     }
 
     public static ItemStack createTomato() {
-        return createCustomHead("TOMATO", RED_TOMATO_TEXTURE, "§cРубиновый Томат", "Сочный и спелый!");
+        String texture = CustomCrop.CropType.TOMATO.getTextureForStage(CustomCrop.CropType.TOMATO.getMaxStages() - 1);
+        return createCustomHead("TOMATO", texture, "§cРубиновый Томат", "Сочный и спелый!");
     }
 
     /**
      * Возвращает голову (блок) для определенной стадии роста растения.
-     * @param type Тип растения
-     * @param stage Стадия роста (начиная с 0)
+     * @param crop Растение
      * @return ItemStack с кастомной головой
      */
-    public static ItemStack getPlantStageHead(com.github.d88a.farmereconomist.crops.CustomCrop.CropType type, int stage) {
+    public static ItemStack getPlantStageHead(CustomCrop crop) {
+        CustomCrop.CropType type = crop.getType();
+        int stage = crop.getStage();
         String texture = type.getTextureForStage(stage);
-        String name;
-
-        // Если для стадии нет текстуры, используем текстуру ростка по умолчанию для нулевой стадии
         if (texture == null) {
-            if (stage == 0) {
-                texture = SPROUT_TEXTURE;
-            } else {
-                // Для других стадий без текстуры можно вернуть null или ту же текстуру ростка
-                return null;
-            }
+            return null; // Не удалось найти текстуру для стадии
         }
 
-        if (stage < type.getMaxStages() - 1) {
-            name = "Росток " + type.getDisplayName();
-        } else {
-            name = type.getDisplayName();
-        }
+        String name = (stage < type.getMaxStages() - 1) ? "Росток " + type.getDisplayName() : type.getDisplayName();
         return createHeadFromTexture(texture, name);
     }
 
     public static ItemStack createLettuce(boolean isWatered) {
-        ItemStack item = new ItemStack(Material.POISONOUS_POTATO); // Используем "плохой" картофель как основу
+        ItemStack item = createCustomHead("LETTUCE_ITEM", CustomCrop.CropType.LETTUCE.getTextureForStage(1), "§2Скромный Латук");
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§2Скромный Латук");
         if (isWatered) {
@@ -163,49 +130,49 @@ public class ItemManager {
 
     // --- Методы для генерации ItemStack для каждого растения ---
     public static ItemStack createLunarBerry() {
-        return createCustomHead("LUNAR_BERRY", LUNAR_BERRY_TEXTURE, "§bЛунная ягода", "Светится ночью, редкая.");
+        return createCustomHead("LUNAR_BERRY", CustomCrop.CropType.LUNAR_BERRY.getTextureForStage(2), "§bЛунная ягода", "Светится ночью, редкая.");
     }
     public static ItemStack createRainbowMushroom() {
-        return createCustomHead("RAINBOW_MUSHROOM", RAINBOW_MUSHROOM_TEXTURE, "§dРадужный гриб", "Меняет цвет на разных стадиях.");
+        return createCustomHead("RAINBOW_MUSHROOM", CustomCrop.CropType.RAINBOW_MUSHROOM.getTextureForStage(1), "§dРадужный гриб", "Меняет цвет на разных стадиях.");
     }
     public static ItemStack createCrystalCactus() {
-        return createCustomHead("CRYSTAL_CACTUS", CRYSTAL_CACTUS_TEXTURE, "§3Кристальный кактус", "Очень колючий!");
+        return createCustomHead("CRYSTAL_CACTUS", CustomCrop.CropType.CRYSTAL_CACTUS.getTextureForStage(2), "§3Кристальный кактус", "Очень колючий!");
     }
     public static ItemStack createFlamePepper() {
-        return createCustomHead("FLAME_PEPPER", FLAME_PEPPER_TEXTURE, "§cПылающий перец", "Осторожно, жжётся!");
+        return createCustomHead("FLAME_PEPPER", CustomCrop.CropType.FLAME_PEPPER.getTextureForStage(1), "§cПылающий перец", "Осторожно, жжётся!");
     }
     public static ItemStack createMysticRoot() {
-        return createCustomHead("MYSTIC_ROOT", MYSTIC_ROOT_TEXTURE, "§5Мистический корень", "Покрыт рунами.");
+        return createCustomHead("MYSTIC_ROOT", CustomCrop.CropType.MYSTIC_ROOT.getTextureForStage(2), "§5Мистический корень", "Покрыт рунами.");
     }
     public static ItemStack createStarFruit() {
-        return createCustomHead("STAR_FRUIT", STAR_FRUIT_TEXTURE, "§eЗвёздный плод", "Форма звезды, даёт энергию.");
+        return createCustomHead("STAR_FRUIT", CustomCrop.CropType.STAR_FRUIT.getTextureForStage(1), "§eЗвёздный плод", "Форма звезды, даёт энергию.");
     }
     public static ItemStack createPredatorFlower() {
-        return createCustomHead("PREDATOR_FLOWER", PREDATOR_FLOWER_TEXTURE, "§4Цветок-хищник", "Похоже, у него есть зубы...");
+        return createCustomHead("PREDATOR_FLOWER", CustomCrop.CropType.PREDATOR_FLOWER.getTextureForStage(2), "§4Цветок-хищник", "Похоже, у него есть зубы...");
     }
     public static ItemStack createElectroPumpkin() {
-        return createCustomHead("ELECTRO_PUMPKIN", ELECTRO_PUMPKIN_TEXTURE, "§9Электро-тыква", "Потрескивает от энергии.");
+        return createCustomHead("ELECTRO_PUMPKIN", CustomCrop.CropType.ELECTRO_PUMPKIN.getTextureForStage(1), "§9Электро-тыква", "Потрескивает от энергии.");
     }
     public static ItemStack createMandrakeLeaf() {
-        return createCustomHead("MANDRAKE_LEAF", MANDRAKE_LEAF_TEXTURE, "§aЛистья мандрагоры", "Смотрит на тебя.");
+        return createCustomHead("MANDRAKE_LEAF", CustomCrop.CropType.MANDRAKE_LEAF.getTextureForStage(1), "§aЛистья мандрагоры", "Смотрит на тебя.");
     }
     public static ItemStack createFlyingFruit() {
-        return createCustomHead("FLYING_FRUIT", FLYING_FRUIT_TEXTURE, "§fЛетающий плод", "Плод с крыльями.");
+        return createCustomHead("FLYING_FRUIT", CustomCrop.CropType.FLYING_FRUIT.getTextureForStage(1), "§fЛетающий плод", "Плод с крыльями.");
     }
     public static ItemStack createSnowMint() {
-        return createCustomHead("SNOW_MINT", SNOW_MINT_TEXTURE, "§bСнежная мята", "Покрыта инеем.");
+        return createCustomHead("SNOW_MINT", CustomCrop.CropType.SNOW_MINT.getTextureForStage(1), "§bСнежная мята", "Покрыта инеем.");
     }
     public static ItemStack createSunPineapple() {
-        return createCustomHead("SUN_PINEAPPLE", SUN_PINEAPPLE_TEXTURE, "§6Солнечный ананас", "Светится на солнце.");
+        return createCustomHead("SUN_PINEAPPLE", CustomCrop.CropType.SUN_PINEAPPLE.getTextureForStage(2), "§6Солнечный ананас", "Светится на солнце.");
     }
     public static ItemStack createFogBerry() {
-        return createCustomHead("FOG_BERRY", FOG_BERRY_TEXTURE, "§7Туманная ягода", "Окутана дымкой.");
+        return createCustomHead("FOG_BERRY", CustomCrop.CropType.FOG_BERRY.getTextureForStage(1), "§7Туманная ягода", "Окутана дымкой.");
     }
     public static ItemStack createSandMelon() {
-        return createCustomHead("SAND_MELON", SAND_MELON_TEXTURE, "§eПесчаный арбуз", "Растёт в пустыне.");
+        return createCustomHead("SAND_MELON", CustomCrop.CropType.SAND_MELON.getTextureForStage(1), "§eПесчаный арбуз", "Растёт в пустыне.");
     }
     public static ItemStack createWitchMushroom() {
-        return createCustomHead("WITCH_MUSHROOM", WITCH_MUSHROOM_TEXTURE, "§5Ведьмин гриб", "Пахнет магией.");
+        return createCustomHead("WITCH_MUSHROOM", CustomCrop.CropType.WITCH_MUSHROOM.getTextureForStage(1), "§5Ведьмин гриб", "Пахнет магией.");
     }
 
     // Seeds for new crops
@@ -213,7 +180,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.SWEET_BERRIES); // Используем сладкие ягоды как семена
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§dСемена Лучезарной Клубники");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "STRAWBERRY_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.STRAWBERRY.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на своем участке. Плодоносит несколько раз."));
         item.setItemMeta(meta);
         return item;
@@ -223,7 +190,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.CARROT); // Используем морковь как семена
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§fСемена Хрустящего Редиса");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "RADISH_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.RADISH.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на своем участке."));
         item.setItemMeta(meta);
         return item;
@@ -233,7 +200,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.MELON_SEEDS);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§aСемена Пустынного Арбуза");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "WATERMELON_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.WATERMELON.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на своем участке. Очень большой!"));
         item.setItemMeta(meta);
         return item;
@@ -241,15 +208,15 @@ public class ItemManager {
 
     // Harvested items for new crops
     public static ItemStack createStrawberry() {
-        return createCustomHead("STRAWBERRY", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjJmNGM2ODQwOTdlZGRkZDhkNDJhYTU0NDg3Yzk0MjljYjkzYjkzMzU4YTdhNzg4OTUxY2Y2MDkxNzliMmQzZiJ9fX0=", "§dЛучезарная Клубника", "Сочная и ароматная.");
+        return createCustomHead("STRAWBERRY", CustomCrop.CropType.STRAWBERRY.getTextureForStage(1), "§dЛучезарная Клубника", "Сочная и ароматная.");
     }
 
     public static ItemStack createRadish() {
-        return createCustomHead("RADISH", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTgzNjk1NDExYjY3MTU1ZjQ2NTI2Y2RkNWJhODhlZmIzMGU0ZjQ0NjY3OGNmYTYzMmNiNGE5ZTIyZTM0OTFjIn19fQ==", "§fХрустящий Редис", "Прямо с грядки!");
+        return createCustomHead("RADISH", CustomCrop.CropType.RADISH.getTextureForStage(1), "§fХрустящий Редис", "Прямо с грядки!");
     }
 
     public static ItemStack createWatermelon() {
-        return createCustomHead("WATERMELON", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzk1ZGU1NzY4Y2M3NGEwZDY1NjFlNjVkMjI0ODc1MzMxZTg2OWQ4OWQyYmU0Mjg2YzYyYTg5NGEyYjY1NyJ9fX0=", "§aПустынный Арбуз", "Огромный и сладкий!");
+        return createCustomHead("WATERMELON", CustomCrop.CropType.WATERMELON.getTextureForStage(1), "§aПустынный Арбуз", "Огромный и сладкий!");
     }
 
     // Seeds for existing crops to ensure consistency
@@ -257,7 +224,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.MANGROVE_PROPAGULE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§bСемена Лунной Ягоды");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "LUNAR_BERRY_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.LUNAR_BERRY.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на своем участке. Светится ночью."));
         item.setItemMeta(meta);
         return item;
@@ -267,7 +234,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.BROWN_MUSHROOM);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§dСпоры Радужного Гриба");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "RAINBOW_MUSHROOM_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.RAINBOW_MUSHROOM.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на мицелий или подзол."));
         item.setItemMeta(meta);
         return item;
@@ -277,7 +244,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.CACTUS);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§3Семена Кристального Кактуса");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "CRYSTAL_CACTUS_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.CRYSTAL_CACTUS.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на песок. Очень колючий!"));
         item.setItemMeta(meta);
         return item;
@@ -287,7 +254,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.MAGMA_CREAM);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§cСемена Пылающего Перца");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "FLAME_PEPPER_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.FLAME_PEPPER.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на адский камень. Жжётся!"));
         item.setItemMeta(meta);
         return item;
@@ -297,7 +264,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.VINE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§5Семена Мистического Корня");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "MYSTIC_ROOT_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.MYSTIC_ROOT.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Покрыт рунами."));
         item.setItemMeta(meta);
         return item;
@@ -307,7 +274,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.GLOW_BERRIES);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§eСемена Звёздного Плода");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "STAR_FRUIT_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.STAR_FRUIT.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Светится."));
         item.setItemMeta(meta);
         return item;
@@ -317,7 +284,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.WITHER_ROSE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§4Семена Цветка-Хищника");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "PREDATOR_FLOWER_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.PREDATOR_FLOWER.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Осторожно, кусается!"));
         item.setItemMeta(meta);
         return item;
@@ -327,7 +294,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.CARVED_PUMPKIN);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§9Семена Электро-тыквы");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "ELECTRO_PUMPKIN_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.ELECTRO_PUMPKIN.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Потрескивает."));
         item.setItemMeta(meta);
         return item;
@@ -337,7 +304,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.FERN);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§aСемена Листьев Мандрагоры");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "MANDRAKE_LEAF_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.MANDRAKE_LEAF.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Издает странные звуки."));
         item.setItemMeta(meta);
         return item;
@@ -347,7 +314,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.CHORUS_FRUIT);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§fСемена Летающего Плода");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "FLYING_FRUIT_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.FLYING_FRUIT.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Иногда исчезает."));
         item.setItemMeta(meta);
         return item;
@@ -357,7 +324,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.SNOWBALL);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§bСемена Снежной Мяты");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "SNOW_MINT_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.SNOW_MINT.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на снег. Освежает!"));
         item.setItemMeta(meta);
         return item;
@@ -367,7 +334,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.GOLDEN_APPLE);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§6Семена Солнечного Ананаса");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "SUN_PINEAPPLE_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.SUN_PINEAPPLE.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Светится на солнце."));
         item.setItemMeta(meta);
         return item;
@@ -377,7 +344,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.WEEPING_VINES);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§7Семена Туманной Ягоды");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "FOG_BERRY_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.FOG_BERRY.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на землю. Окутана дымкой."));
         item.setItemMeta(meta);
         return item;
@@ -387,7 +354,7 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.BONE_MEAL);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§eСемена Песчаного Арбуза");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "SAND_MELON_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.SAND_MELON.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на песок. Очень жаростойкий."));
         item.setItemMeta(meta);
         return item;
@@ -397,13 +364,17 @@ public class ItemManager {
         ItemStack item = new ItemStack(Material.CRIMSON_FUNGUS);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§5Споры Ведьмина Гриба");
-        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, "WITCH_MUSHROOM_SEEDS");
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.WITCH_MUSHROOM.getSeedItemId());
         meta.setLore(Arrays.asList("Можно посадить на незерак. Пахнет магией."));
         item.setItemMeta(meta);
         return item;
     }
 
     // Универсальный метод для создания головы с текстурой
+    private static ItemStack createCustomHead(String itemId, String texture, String name, String... lore) {
+        ItemStack head = createCustomHead(itemId, texture, name, Arrays.asList(lore));
+        return head;
+    }
     private static ItemStack createCustomHead(String itemId, String texture, String name, String lore) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -419,7 +390,29 @@ public class ItemManager {
         }
 
         meta.setDisplayName(name);
-        meta.setLore(Arrays.asList(lore));
+        if (lore != null && !lore.isEmpty()) {
+            meta.setLore(Arrays.asList(lore));
+        }
+        meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, itemId);
+        head.setItemMeta(meta);
+        return head;
+    }
+    private static ItemStack createCustomHead(String itemId, String texture, String name, java.util.List<String> lore) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", texture));
+        try {
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            e.printStackTrace();
+        }
+
+        meta.setDisplayName(name);
+        meta.setLore(lore);
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, itemId);
         head.setItemMeta(meta);
         return head;

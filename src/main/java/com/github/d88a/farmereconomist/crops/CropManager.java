@@ -2,7 +2,6 @@ package com.github.d88a.farmereconomist.crops;
 
 import com.github.d88a.farmereconomist.FarmerEconomist;
 import com.github.d88a.farmereconomist.data.DataManager;
-import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Skull;
@@ -44,45 +43,8 @@ public class CropManager {
     public void harvestCrop(Location location) {
         CustomCrop crop = crops.get(location);
         if (crop != null) {
-            // Определяем предмет для дропа
-            ItemStack drop = null;
-            switch (crop.getType()) {
-                case TOMATO:
-                    drop = ItemManager.createTomato(); break;
-                case GLOWSHROOM:
-                    drop = ItemManager.createGlowshroomDust(); break;
-                case LUNAR_BERRY:
-                    drop = ItemManager.createLunarBerry(); break;
-                case RAINBOW_MUSHROOM:
-                    drop = ItemManager.createRainbowMushroom(); break;
-                case CRYSTAL_CACTUS:
-                    drop = ItemManager.createCrystalCactus(); break;
-                case FLAME_PEPPER:
-                    drop = ItemManager.createFlamePepper(); break;
-                case MYSTIC_ROOT:
-                    drop = ItemManager.createMysticRoot(); break;
-                case STAR_FRUIT:
-                    drop = ItemManager.createStarFruit(); break;
-                case PREDATOR_FLOWER:
-                    drop = ItemManager.createPredatorFlower(); break;
-                case ELECTRO_PUMPKIN:
-                    drop = ItemManager.createElectroPumpkin(); break;
-                case MANDRAKE_LEAF:
-                    drop = ItemManager.createMandrakeLeaf(); break;
-                case FLYING_FRUIT:
-                    drop = ItemManager.createFlyingFruit(); break;
-                case SNOW_MINT:
-                    drop = ItemManager.createSnowMint(); break;
-                case SUN_PINEAPPLE:
-                    drop = ItemManager.createSunPineapple(); break;
-                case FOG_BERRY:
-                    drop = ItemManager.createFogBerry(); break;
-                case SAND_MELON:
-                    drop = ItemManager.createSandMelon(); break;
-                case WITCH_MUSHROOM:
-                    drop = ItemManager.createWitchMushroom(); break;
-                default: break;
-            }
+            // Получаем дроп из CropType
+            ItemStack drop = crop.getType().getDrop().get();
             
             // Дроп предмета
             if (drop != null) {
@@ -297,11 +259,14 @@ public class CropManager {
         Location loc = crop.getLocation();
         Block block = loc.getBlock();
 
-        // Получаем голову для текущей стадии
-        ItemStack head = ItemManager.getPlantStageHead(crop.getType(), crop.getStage());
+        // --- НОВАЯ ЛОГИКА: ОДИНОЧНЫЙ БЛОК-ГОЛОВА ---
+        // Вместо постройки стебля из нескольких блоков, мы теперь используем
+        // один-единственный блок (голову игрока) для каждой стадии роста.
+        // У каждой стадии своя уникальная текстура.
+        ItemStack head = com.github.d88a.farmereconomist.items.ItemManager.getPlantStageHead(crop);
 
         if (head != null) {
-            block.setType(Material.PLAYER_HEAD, false); // Устанавливаем блок головы
+            block.setType(Material.PLAYER_HEAD, false); // Устанавливаем блок-голову в мире
             if (block.getState() instanceof Skull) {
                 Skull skullState = (Skull) block.getState();
                 SkullMeta headMeta = (SkullMeta) head.getItemMeta();
@@ -321,13 +286,12 @@ public class CropManager {
             }
         }
 
-        // Сюда можно добавить партиклы для определенных стадий/растений
-        // Например: loc.getWorld().spawnParticle(...)
     }
 
-    // Очищает столб растения (стебель + голову)
+    // Очищает блок растения
     private void clearCropColumn(Location base, int height) {
-        // Теперь мы просто очищаем один блок
+        // Так как теперь растение - это один блок,
+        // мы просто очищаем этот блок, а не целый столб.
         base.getBlock().setType(Material.AIR);
     }
     

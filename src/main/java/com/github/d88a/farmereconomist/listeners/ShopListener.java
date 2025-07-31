@@ -83,56 +83,53 @@ public class ShopListener implements Listener {
         String title = event.getView().getTitle();
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null || clickedItem.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+        if (clickedItem == null || clickedItem.getType() == Material.GRAY_STAINED_GLASS_PANE || clickedItem.getType() == Material.BLACK_STAINED_GLASS_PANE) {
+            event.setCancelled(true);
+            return;
+        }
 
         // Главное меню магазина
         if (title.equals("Магазин Старого Мирона")) {
             event.setCancelled(true);
             if (clickedItem.getType() == Material.EMERALD) {
                 shopGUI.openBuy(player);
-            } else if (clickedItem.getType() == Material.GOLD_INGOT) {
+            } else if (clickedItem.getType() == Material.GOLD_INGOT) { // <-- Проблема была связана с обработкой этой кнопки
                 shopGUI.openSell(player);
             } else if (clickedItem.getType() == Material.BOOK) {
                 shopGUI.openPlantGuide(player);
             } else if (clickedItem.getType() == Material.BEACON) {
                 shopGUI.openEventGuide(player);
             }
-            return;
-        }
-        // Окно покупки
-        if (title.equals("Купить у Мирона")) {
+        } else if (title.equals("Купить у Мирона")) { // Окно покупки
             event.setCancelled(true);
-            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().get(1).contains("купить")) {
+            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().size() > 1 && clickedItem.getItemMeta().getLore().get(1).contains("купить")) {
                 String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
-                double price = Double.parseDouble(priceString);
-                if (economyManager.getBalance(player) >= price) {
-                    economyManager.takeBalance(player, price);
-                    ItemStack itemToGive = clickedItem.clone();
-                    itemToGive.setLore(new ArrayList<>());
-                    player.getInventory().addItem(itemToGive);
-                    plugin.getConfigManager().sendMessage(player, "shop_buy_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
-                    plugin.getSoundManager().playSound(player, "buy_item");
-                    plugin.getPlotManager().updatePlotSign(player);
-                } else {
-                    plugin.getConfigManager().sendMessage(player, "shop_buy_fail_no_money");
+                try {
+                    double price = Double.parseDouble(priceString);
+                    if (economyManager.getBalance(player) >= price) {
+                        economyManager.takeBalance(player, price);
+                        ItemStack itemToGive = clickedItem.clone();
+                        itemToGive.setLore(new ArrayList<>());
+                        player.getInventory().addItem(itemToGive);
+                        plugin.getConfigManager().sendMessage(player, "shop_buy_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
+                        plugin.getSoundManager().playSound(player, "buy_item");
+                        plugin.getPlotManager().updatePlotSign(player);
+                    } else {
+                        plugin.getConfigManager().sendMessage(player, "shop_buy_fail_no_money");
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Игнорируем, если цена не является числом
                 }
             }
-            return;
-        }
-        // Окно продажи
-        if (title.equals("Продать Мирону")) {
+        } else if (title.equals("Продать Мирону")) { // Окно продажи
             event.setCancelled(true);
             // Логика для продажи по клику в инвентаре игрока
             if (event.getClickedInventory() == player.getInventory()) {
                 sellItem(player, clickedItem, clickedItem.getAmount());
                 shopGUI.openSell(player); // Обновляем GUI
             }
-        }
-
-        // Справочник событий
-        if (title.equals("§dСправочник событий")) {
+        } else if (title.equals("§dСправочник событий") || title.equals("§aСправочник растений")) {
             event.setCancelled(true);
-            return;
         }
     }
 

@@ -58,7 +58,7 @@ public class ShopGUI {
         // Заполняем пустые слоты
         for (int i = 0; i < mainMenu.getSize(); i++) {
             if (mainMenu.getItem(i) == null) {
-                mainMenu.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+                mainMenu.setItem(i, createFiller());
             }
         }
 
@@ -108,7 +108,7 @@ public class ShopGUI {
         // Заполняем пустые слоты
         for (int i = 0; i < buyInv.getSize(); i++) {
             if (buyInv.getItem(i) == null) {
-                buyInv.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+                buyInv.setItem(i, createFiller());
             }
         }
         player.openInventory(buyInv);
@@ -200,7 +200,7 @@ public class ShopGUI {
         // Заполняем пустые слоты
         for (int i = 0; i < sellInv.getSize(); i++) {
             if (sellInv.getItem(i) == null) {
-                sellInv.setItem(i, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+                sellInv.setItem(i, createFiller());
             }
         }
         player.openInventory(sellInv);
@@ -341,6 +341,88 @@ public class ShopGUI {
             "§7Особенности: §fПахнет магией"
         ));
         
+        // Третья строка
+        guideInv.setItem(28, createGuideItem(ItemManager.createRadishSeeds(),
+            "§fХрустящий Редис",
+            "§7Цена покупки: §e30 монет",
+            "§7Цена продажи: §e25 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fВспаханная земля",
+            "§7Особенности: §fБыстро растет"
+        ));
+
+        guideInv.setItem(29, createGuideItem(ItemManager.createWatermelonSeeds(),
+            "§aПустынный Арбуз",
+            "§7Цена покупки: §e100 монет",
+            "§7Цена продажи: §e80 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fВспаханная земля",
+            "§7Особенности: §fОчень большой!"
+        ));
+
+        guideInv.setItem(30, createGuideItem(ItemManager.createMandrakeLeafSeeds(),
+            "§aЛистья Мандрагоры",
+            "§7Цена покупки: §e110 монет",
+            "§7Цена продажи: §e90 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fЗемля",
+            "§7Особенности: §fИздает странные звуки"
+        ));
+
+        guideInv.setItem(31, createGuideItem(ItemManager.createFlyingFruitSeeds(),
+            "§fЛетающий Плод",
+            "§7Цена покупки: §e140 монет",
+            "§7Цена продажи: §e115 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fЗемля",
+            "§7Особенности: §fИногда исчезает"
+        ));
+
+        // Четвертая строка
+        guideInv.setItem(32, createGuideItem(ItemManager.createSnowMintSeeds(),
+            "§bСнежная Мята",
+            "§7Цена покупки: §e95 монет",
+            "§7Цена продажи: §e80 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fСнежный блок",
+            "§7Особенности: §fОсвежает!"
+        ));
+
+        guideInv.setItem(33, createGuideItem(ItemManager.createSunPineappleSeeds(),
+            "§6Солнечный Ананас",
+            "§7Цена покупки: §e220 монет",
+            "§7Цена продажи: §e180 монет",
+            "§7Стадии: §b3",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fЗемля",
+            "§7Особенности: §fСветится на солнце"
+        ));
+
+        guideInv.setItem(34, createGuideItem(ItemManager.createFogBerrySeeds(),
+            "§7Туманная Ягода",
+            "§7Цена покупки: §e85 монет",
+            "§7Цена продажи: §e70 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fЗемля",
+            "§7Особенности: §fМногоразовый, окутана дымкой"
+        ));
+
+        guideInv.setItem(35, createGuideItem(ItemManager.createSandMelonSeeds(),
+            "§eПесчаный Арбуз",
+            "§7Цена покупки: §e130 монет",
+            "§7Цена продажи: §e105 монет",
+            "§7Стадии: §b2",
+            "§7Время роста: §b1 мин/стадия",
+            "§7Посадка: §fПесок",
+            "§7Особенности: §fОчень жаростойкий"
+        ));
+
         // Информационная панель
         guideInv.setItem(49, createInfoItem(Material.EMERALD, 
             "§aИнформация", 
@@ -353,7 +435,7 @@ public class ShopGUI {
         // Заполняем пустые слоты
         for (int i = 0; i < guideInv.getSize(); i++) {
             if (guideInv.getItem(i) == null) {
-                guideInv.setItem(i, new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+                guideInv.setItem(i, createFiller(Material.BLACK_STAINED_GLASS_PANE));
             }
         }
         
@@ -394,11 +476,7 @@ public class ShopGUI {
         // Fill empty slots
         for (int i = 0; i < guideInv.getSize(); i++) {
             if (guideInv.getItem(i) == null) {
-                ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-                ItemMeta meta = filler.getItemMeta();
-                meta.setDisplayName(" ");
-                filler.setItemMeta(meta);
-                guideInv.setItem(i, filler);
+                guideInv.setItem(i, createFiller(Material.BLACK_STAINED_GLASS_PANE));
             }
         }
         player.openInventory(guideInv);
@@ -434,5 +512,17 @@ public class ShopGUI {
         meta.setLore(Arrays.asList(lore));
         item.setItemMeta(meta);
         return item;
+    }
+
+    private ItemStack createFiller() {
+        return createFiller(Material.GRAY_STAINED_GLASS_PANE);
+    }
+
+    private ItemStack createFiller(Material material) {
+        ItemStack filler = new ItemStack(material);
+        ItemMeta meta = filler.getItemMeta();
+        meta.setDisplayName(" ");
+        filler.setItemMeta(meta);
+        return filler;
     }
 } 

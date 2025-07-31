@@ -162,15 +162,7 @@ public class CropListener implements Listener {
 
     // Связывает ID семян с типом растения
     private CropType getCropTypeForSeed(String seedId) {
-        for (CropType type : CropType.values()) {
-            // Простое сопоставление: TOMATO_SEEDS -> TOMATO
-            String expectedSeedId = type.name() + "_SEEDS";
-            String expectedSporeId = type.name() + "_SPORES";
-            if (expectedSeedId.equals(seedId) || expectedSporeId.equals(seedId)) {
-                return type;
-            }
-        }
-        return null;
+        return CropType.fromSeedId(seedId);
     }
 
     // Определяет, на какой блок можно сажать

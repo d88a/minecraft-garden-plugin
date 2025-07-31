@@ -17,7 +17,6 @@ public class PlotManager {
     private final FarmerEconomist plugin;
     private final DataManager dataManager;
     private final Map<UUID, Plot> plots = new HashMap<>();
-    private int nextPlotId = 0; // Tracks the number of plots to determine the next location
 
     public PlotManager(FarmerEconomist plugin, DataManager dataManager) {
         this.plugin = plugin;
@@ -50,12 +49,10 @@ public class PlotManager {
                 plots.put(owner, plot);
             }
         }
-        nextPlotId = plots.size();
     }
 
     public void addPlot(Player player, Plot plot) {
         plots.put(player.getUniqueId(), plot);
-        nextPlotId++;
     }
 
     public Plot getPlot(Player player) {
@@ -81,69 +78,36 @@ public class PlotManager {
             return null; // Grid start not set
         }
 
-        // Используем фиксированный размер для базового участка
-        int plotSize = Plot.getSizeForLevel(1); // 8x8
-        int plotGap = 4; // Отступ между участками для будущего расширения
-        int totalSize = plotSize + plotGap;
-
-        // Простая сетка: участки размещаются по строкам и столбцам
-        int plotsPerRow = 5; // 5 участков в ряду
-        int row = nextPlotId / plotsPerRow;
-        int col = nextPlotId % plotsPerRow;
-
-        World world = startLocation.getWorld();
-        int plotX = startLocation.getBlockX() + col * totalSize;
-        int plotZ = startLocation.getBlockZ() + row * totalSize;
-        int plotY = startLocation.getBlockY();
-
-        Location corner1 = new Location(world, plotX, plotY, plotZ);
-        Location corner2 = new Location(world, plotX + plotSize - 1, plotY, plotZ + plotSize - 1);
-
-        // Проверяем, что место свободно
-        if (!isAreaFree(corner1, corner2)) {
-            // Если место занято, ищем следующее свободное
-            return findNextFreePlot(player, startLocation, plotSize, plotGap);
-        }
-
-        terraformAndBuild(corner1, corner2);
-
-        // Ставим табличку у входа
-        placePlotSign(corner1, corner2, player, 1);
-
-        Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
-        addPlot(player, newPlot);
-        return newPlot;
-    }
-
-    private Plot findNextFreePlot(Player player, Location startLocation, int plotSize, int plotGap) {
-        int totalSize = plotSize + plotGap;
-        int plotsPerRow = 5;
+        int plotSize = Plot.getSizeForLevel(1);
+        // Максимальный размер участка 20x20.
+        // Расширение от 8x8 до 20x20 происходит на (20-8)/2 = 6 блоков в каждую сторону.
+        // Чтобы два соседних участка не столкнулись, нужно место для расширения каждого: 6 + 6 = 12 блоков.
+        // Плюс дорожка в 3 блока и 2 блока на заборы: 12 + 3 + 2 = 17.
+        // Таким образом, зазор между участками должен быть 17 блоков.
+        int plotGap = 17;
         
-        // Ищем свободное место, начиная с текущего nextPlotId
-        for (int attempt = 0; attempt < 100; attempt++) { // Максимум 100 попыток
-            int testId = nextPlotId + attempt;
-            int row = testId / plotsPerRow;
-            int col = testId % plotsPerRow;
-            
-            int plotX = startLocation.getBlockX() + col * totalSize;
-            int plotZ = startLocation.getBlockZ() + row * totalSize;
-            int plotY = startLocation.getBlockY();
-            
-            Location corner1 = new Location(startLocation.getWorld(), plotX, plotY, plotZ);
-            Location corner2 = new Location(startLocation.getWorld(), plotX + plotSize - 1, plotY, plotZ + plotSize - 1);
-            
+        // Ищем первый свободный ID для участка
+        int newPlotId = -1;
+        for (int id = 0; id < 1000; id++) { // Ограничение, чтобы избежать вечного цикла
+            Location[] corners = calculatePlotCorners(id, startLocation, plotSize, plotGap);
+            Location corner1 = corners[0];
+            Location corner2 = corners[1];
             if (isAreaFree(corner1, corner2)) {
-                terraformAndBuild(corner1, corner2);
-                placePlotSign(corner1, corner2, player, 1);
-                
-                Plot newPlot = new Plot(player.getUniqueId(), corner1, corner2);
-                addPlot(player, newPlot);
-                nextPlotId = testId + 1; // Обновляем nextPlotId
-                return newPlot;
+                newPlotId = id;
+                break;
             }
         }
-        
-        return null; // Не удалось найти свободное место
+
+        if (newPlotId == -1) {
+            return null; // Не удалось найти свободное место
+        }
+
+        Location[] corners = calculatePlotCorners(newPlotId, startLocation, plotSize, plotGap);
+        terraformAndBuild(corners[0], corners[1]);
+        placePlotSign(corners[0], corners[1], player, 1);
+        Plot newPlot = new Plot(player.getUniqueId(), corners[0], corners[1]);
+        addPlot(player, newPlot);
+        return newPlot;
     }
 
     private boolean isAreaFree(Location corner1, Location corner2) {
@@ -197,6 +161,19 @@ public class PlotManager {
         }
     }
 
+    private boolean isExpansionAreaFree(Location corner1, Location corner2, UUID expandingPlayerId) {
+        for (Plot existingPlot : plots.values()) {
+            // Не проверять наложение с самим собой
+            if (existingPlot.getOwner().equals(expandingPlayerId)) {
+                continue;
+            }
+            if (plotsOverlap(corner1, corner2, existingPlot.getCorner1(), existingPlot.getCorner2())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // Метод для расширения участка
     public boolean expandPlot(Player player) {
         Plot plot = getPlot(player);
@@ -222,17 +199,16 @@ public class PlotManager {
         }
 
         // Проверяем, что расширенная область свободна
-        Location oldCorner2 = plot.getCorner2();
-        int newSize = Plot.getSizeForLevel(plot.getLevel() + 1);
-        int currentSize = plot.getSize();
-        int expansion = newSize - currentSize;
-        
-        Location newCorner2 = new Location(oldCorner2.getWorld(), 
-            oldCorner2.getBlockX() + expansion, 
-            oldCorner2.getBlockY(), 
-            oldCorner2.getBlockZ() + expansion);
+        Location oldCorner1 = plot.getCorner1().clone(); // Важно клонировать!
+        Location oldCorner2 = plot.getCorner2().clone();
 
-        if (!isAreaFree(oldCorner2, newCorner2)) {
+        // Создаем временный "призрачный" участок, чтобы проверить, куда он расширится
+        Plot ghostPlot = new Plot(plot.getOwner(), oldCorner1, oldCorner2, plot.getLevel(), plot.getCreationTime());
+        ghostPlot.expandPlot();
+        Location newCorner1 = ghostPlot.getCorner1();
+        Location newCorner2 = ghostPlot.getCorner2();
+
+        if (!isExpansionAreaFree(newCorner1, newCorner2, player.getUniqueId())) {
             plugin.getConfigManager().sendMessage(player, "plot_expand_area_occupied");
             return false;
         }
@@ -240,71 +216,91 @@ public class PlotManager {
         // Снимаем деньги
         plugin.getEconomyManager().takeBalance(player, cost);
 
-        // Расширяем участок
+        // Расширяем участок (теперь уже по-настоящему)
         plot.expandPlot();
 
-        // Перестраиваем забор и подготавливаем новую землю
-        rebuildPlotFence(plot);
-        prepareExpandedArea(oldCorner2, newCorner2);
+        // Перестраиваем участок: убираем старый забор, готовим землю, строим новый забор
+        remodelPlot(plot, oldCorner1, oldCorner2);
 
         // Обновляем табличку
         updatePlotSign(player);
 
         plugin.getConfigManager().sendMessage(player, "plot_expand_success");
         plugin.getSoundManager().playSound(player, "plot_expand");
-        
+
         return true;
     }
 
-    private void rebuildPlotFence(Plot plot) {
-        Location corner1 = plot.getCorner1();
-        Location corner2 = plot.getCorner2();
-        World world = corner1.getWorld();
-        int y = corner1.getBlockY();
+    private void remodelPlot(Plot plot, Location oldCorner1, Location oldCorner2) {
+        Location newCorner1 = plot.getCorner1();
+        Location newCorner2 = plot.getCorner2();
+        World world = newCorner1.getWorld();
+        int y = newCorner1.getBlockY();
 
-        int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
-        int maxX = Math.max(corner1.getBlockX(), corner2.getBlockX());
-        int minZ = Math.min(corner1.getBlockZ(), corner2.getBlockZ());
-        int maxZ = Math.max(corner1.getBlockZ(), corner2.getBlockZ());
+        int oldMinX = Math.min(oldCorner1.getBlockX(), oldCorner2.getBlockX());
+        int oldMaxX = Math.max(oldCorner1.getBlockX(), oldCorner2.getBlockX());
+        int oldMinZ = Math.min(oldCorner1.getBlockZ(), oldCorner2.getBlockZ());
+        int oldMaxZ = Math.max(oldCorner1.getBlockZ(), oldCorner2.getBlockZ());
 
+        int newMinX = Math.min(newCorner1.getBlockX(), newCorner2.getBlockX());
+        int newMaxX = Math.max(newCorner1.getBlockX(), newCorner2.getBlockX());
+        int newMinZ = Math.min(newCorner1.getBlockZ(), newCorner2.getBlockZ());
+        int newMaxZ = Math.max(newCorner1.getBlockZ(), newCorner2.getBlockZ());
+
+        // 1. Очищаем старый забор и землю под ним
+        for (int x = oldMinX - 1; x <= oldMaxX + 1; x++) {
+            for (int z = oldMinZ - 1; z <= oldMaxZ + 1; z++) {
+                if (x == oldMinX - 1 || x == oldMaxX + 1 || z == oldMinZ - 1 || z == oldMaxZ + 1) {
+                    // Убираем все до уровня y-1
+                    for (int yClear = y; yClear < y + 10; yClear++) {
+                        world.getBlockAt(x, yClear, z).setType(Material.AIR);
+                    }
+                }
+            }
+        }
+
+        // 2. Терраформируем новую область (не трогая старую, чтобы сохранить посадки)
+        for (int x = newMinX; x <= newMaxX; x++) {
+            for (int z = newMinZ; z <= newMaxZ; z++) {
+                boolean isOldPlot = (x >= oldMinX && x <= oldMaxX && z >= oldMinZ && z <= oldMaxZ);
+                if (!isOldPlot) {
+                    world.getBlockAt(x, y, z).setType(Material.DIRT);
+                    for (int yClear = y + 1; yClear < y + 10; yClear++) {
+                        world.getBlockAt(x, yClear, z).setType(Material.AIR);
+                    }
+                }
+            }
+        }
+
+        // 3. Строим новый забор и ворота
         Material fence = plugin.getConfigManager().getFenceMaterial();
         Material gate = plugin.getConfigManager().getGateMaterial();
 
-        // Убираем старый забор и ставим новый
-        for (int x = minX - 1; x <= maxX + 1; x++) {
-            for (int z = minZ - 1; z <= maxZ + 1; z++) {
-                if (x == minX - 1 || x == maxX + 1 || z == minZ - 1 || z == maxZ + 1) {
-                    world.getBlockAt(x, y + 1, z).setType(fence);
-                    world.getBlockAt(x, y, z).setType(Material.DIRT);
+        for (int x = newMinX - 1; x <= newMaxX + 1; x++) {
+            for (int z = newMinZ - 1; z <= newMaxZ + 1; z++) {
+                if (x == newMinX - 1 || x == newMaxX + 1 || z == newMinZ - 1 || z == newMaxZ + 1) {
+                    boolean isCorner = (x == newMinX - 1 || x == newMaxX + 1) && (z == newMinZ - 1 || z == newMaxZ + 1);
+
+                    world.getBlockAt(x, y, z).setType(Material.DIRT); // Земля под забором
+                    world.getBlockAt(x, y + 1, z).setType(fence); // Забор или опора
+
+                    int startClearY;
+                    if (isCorner) {
+                        world.getBlockAt(x, y + 2, z).setType(Material.LANTERN);
+                        startClearY = y + 3;
+                    } else {
+                        startClearY = y + 2;
+                    }
+                    // Очищаем воздух выше
+                    for (int yClear = startClearY; yClear < y + 10; yClear++) {
+                        world.getBlockAt(x, yClear, z).setType(Material.AIR);
+                    }
                 }
             }
         }
 
-        // Добавляем ворота
-        world.getBlockAt(minX + (maxX - minX) / 2, y + 1, minZ - 1).setType(gate);
+        world.getBlockAt(newMinX + (newMaxX - newMinX) / 2, y + 1, newMinZ - 1).setType(gate);
     }
-
-    private void prepareExpandedArea(Location oldCorner2, Location newCorner2) {
-        World world = oldCorner2.getWorld();
-        int y = oldCorner2.getBlockY();
-
-        int minX = Math.min(oldCorner2.getBlockX() + 1, newCorner2.getBlockX());
-        int maxX = Math.max(oldCorner2.getBlockX() + 1, newCorner2.getBlockX());
-        int minZ = Math.min(oldCorner2.getBlockZ() + 1, newCorner2.getBlockZ());
-        int maxZ = Math.max(oldCorner2.getBlockZ() + 1, newCorner2.getBlockZ());
-
-        // Подготавливаем новую землю
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                world.getBlockAt(x, y, z).setType(Material.DIRT);
-                // Очищаем пространство сверху
-                for (int yClear = y + 1; yClear < y + 10; yClear++) {
-                    world.getBlockAt(x, yClear, z).setType(Material.AIR);
-                }
-            }
-        }
-    }
-
     private void terraformAndBuild(Location corner1, Location corner2) {
         World world = corner1.getWorld();
         int minX = Math.min(corner1.getBlockX(), corner2.getBlockX());
@@ -313,36 +309,47 @@ public class PlotManager {
         int maxZ = Math.max(corner1.getBlockZ(), corner2.getBlockZ());
         int y = corner1.getBlockY();
 
-        // Terraforming
+        // 1. Подготовка земли на самом участке
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 world.getBlockAt(x, y, z).setType(Material.DIRT);
-                // Clear space above
+                // Очистка воздуха над участком
                 for (int yClear = y + 1; yClear < y + 10; yClear++) {
                     world.getBlockAt(x, yClear, z).setType(Material.AIR);
                 }
             }
         }
 
-        // Build fence
+        // 2. Строительство забора и очистка воздуха над ним
         Material fence = plugin.getConfigManager().getFenceMaterial();
         Material gate = plugin.getConfigManager().getGateMaterial();
 
+        // Более чистый цикл для всего периметра забора
         for (int x = minX - 1; x <= maxX + 1; x++) {
-            world.getBlockAt(x, y + 1, minZ - 1).setType(fence);
-            // Новый код: слой земли под забором
-            world.getBlockAt(x, y, minZ - 1).setType(Material.DIRT);
-            world.getBlockAt(x, y + 1, maxZ + 1).setType(fence);
-            world.getBlockAt(x, y, maxZ + 1).setType(Material.DIRT);
-        }
-        for (int z = minZ; z <= maxZ; z++) {
-            world.getBlockAt(minX - 1, y + 1, z).setType(fence);
-            world.getBlockAt(minX - 1, y, z).setType(Material.DIRT);
-            world.getBlockAt(maxX + 1, y + 1, z).setType(fence);
-            world.getBlockAt(maxX + 1, y, z).setType(Material.DIRT);
+            for (int z = minZ - 1; z <= maxZ + 1; z++) {
+                // Строим только по внешнему краю
+                if (x == minX - 1 || x == maxX + 1 || z == minZ - 1 || z == maxZ + 1) {
+                    boolean isCorner = (x == minX - 1 || x == maxX + 1) && (z == minZ - 1 || z == maxZ + 1);
+
+                    world.getBlockAt(x, y, z).setType(Material.DIRT); // Земля под забором
+                    world.getBlockAt(x, y + 1, z).setType(fence); // Забор или опора
+
+                    int startClearY;
+                    if (isCorner) {
+                        world.getBlockAt(x, y + 2, z).setType(Material.LANTERN);
+                        startClearY = y + 3;
+                    } else {
+                        startClearY = y + 2;
+                    }
+                    // Очищаем воздух выше
+                    for (int yClear = startClearY; yClear < y + 10; yClear++) {
+                        world.getBlockAt(x, yClear, z).setType(Material.AIR);
+                    }
+                }
+            }
         }
 
-        // Add gate
+        // 3. Установка ворот
         world.getBlockAt(minX + (maxX - minX) / 2, y + 1, minZ - 1).setType(gate);
     }
 
@@ -374,6 +381,8 @@ public class PlotManager {
             for (int z = minZ - 1; z <= maxZ + 1; z++) {
                 // Clear fence level
                 world.getBlockAt(x, y + 1, z).setType(Material.AIR);
+                // Clear lantern level
+                world.getBlockAt(x, y + 2, z).setType(Material.AIR);
                 // Turn plot land to stone
                 if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                     world.getBlockAt(x, y, z).setType(Material.STONE);
@@ -405,5 +414,23 @@ public class PlotManager {
 
     public FarmerEconomist getPlugin() {
         return plugin;
+    }
+
+    private Location[] calculatePlotCorners(int plotId, Location startLocation, int plotSize, int plotGap) {
+        int totalSize = plotSize + plotGap;
+        int plotsPerRow = 5; // Consider making this a configurable constant
+
+        int row = plotId / plotsPerRow;
+        int col = plotId % plotsPerRow;
+
+        World world = startLocation.getWorld();
+        int plotX = startLocation.getBlockX() + col * totalSize;
+        int plotZ = startLocation.getBlockZ() + row * totalSize;
+        int plotY = startLocation.getBlockY();
+
+        Location corner1 = new Location(world, plotX, plotY, plotZ);
+        Location corner2 = new Location(world, plotX + plotSize - 1, plotY, plotZ + plotSize - 1);
+
+        return new Location[]{corner1, corner2};
     }
 } 
