@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.PlayerProfile;
 public class ItemManager {
 
     // Ключ для хранения уникального ID предмета в PersistentDataContainer
-    private static NamespacedKey ITEM_ID_KEY;
+    public static NamespacedKey ITEM_ID_KEY;
 
     // --- Текстуры для плодов ---
     private static final String RED_TOMATO_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmI4YTk5Y2I4ZWU3ZmY4MzBjY2Y4MWMyM2YwY2E3YTM4M2VjYWM3NDUzYjFhMTQ5Y2Y5Y2UyNGY0NDY1YSJ9fX0=";
