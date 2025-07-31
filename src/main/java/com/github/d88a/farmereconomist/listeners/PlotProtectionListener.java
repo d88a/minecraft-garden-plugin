@@ -5,19 +5,12 @@ import com.github.d88a.farmereconomist.items.ItemManager;
 import com.github.d88a.farmereconomist.plots.Plot;
 import com.github.d88a.farmereconomist.plots.PlotManager;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.entity.EntityType;
 
 public class PlotProtectionListener implements Listener {
 
@@ -36,24 +29,10 @@ public class PlotProtectionListener implements Listener {
         Location location = block.getLocation();
         Plot plot = plotManager.getPlotAt(location);
 
-        if (plot != null && !plot.getOwner().equals(player.getUniqueId())) {
+        // Запрещаем ломать блоки на чужом участке, если нет прав на обход
+        if (plot != null && !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission("farmereconomist.admin.bypass")) {
             event.setCancelled(true);
             plugin.getConfigManager().sendMessage(player, "plot_break_denied");
-            return;
-        }
-
-        // Custom crop logic
-        if (plot != null && block.getType() == Material.WHEAT) {
-            Ageable ageable = (Ageable) block.getBlockData();
-            if (ageable.getAge() == ageable.getMaximumAge()) {
-                event.setCancelled(true); // We handle the drop ourselves
-                block.setType(Material.AIR);
-
-                boolean isWatered = block.getLocation().subtract(0, 1, 0).getBlock().getType() == Material.FARMLAND &&
-                                  ((org.bukkit.block.data.type.Farmland) block.getLocation().subtract(0, 1, 0).getBlock().getBlockData()).getMoisture() > 0;
-
-                block.getWorld().dropItemNaturally(location, ItemManager.createLettuce(isWatered));
-            }
         }
     }
 
@@ -63,60 +42,10 @@ public class PlotProtectionListener implements Listener {
         Location location = event.getBlock().getLocation();
         Plot plot = plotManager.getPlotAt(location);
 
-        if (plot != null && !plot.getOwner().equals(player.getUniqueId())) {
+        // Запрещаем ставить блоки на чужом участке, если нет прав на обход
+        if (plot != null && !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission("farmereconomist.admin.bypass")) {
             event.setCancelled(true);
             plugin.getConfigManager().sendMessage(player, "plot_place_denied");
-            return;
-        }
-        
-        // Custom seed planting logic
-        ItemStack itemInHand = event.getPlayer().getInventory().getItemInMainHand();
-        if (plot != null && itemInHand.isSimilar(ItemManager.createLettuceSeeds())) {
-            Block block = event.getBlockPlaced();
-            if(block.getRelative(0, -1, 0).getType() == Material.FARMLAND) {
-                // This is a valid planting, but we let default behavior place the seeds.
-                // For more complex plants, we would cancel the event and set the block manually.
-            } else {
-                event.setCancelled(true);
-                plugin.getConfigManager().sendMessage(player, "crop_plant_fail_not_farmland");
-            }
         }
     }
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (!event.getAction().isRightClick()) return;
-
-        Block clickedBlock = event.getClickedBlock();
-        Player player = event.getPlayer();
-        ItemStack itemInHand = player.getInventory().getItemInMainHand();
-
-        if (clickedBlock == null || itemInHand.getType() != Material.IRON_HOE || !itemInHand.hasItemMeta() || itemInHand.getItemMeta().getCustomModelData() != 1) {
-            return; // Not our watering can
-        }
-        
-        Plot plot = plotManager.getPlotAt(clickedBlock.getLocation());
-        if (plot == null || !plot.getOwner().equals(player.getUniqueId())) {
-            return; // Not on their plot
-        }
-
-        if (clickedBlock.getType() == Material.FARMLAND) {
-            org.bukkit.block.data.type.Farmland farmland = (org.bukkit.block.data.type.Farmland) clickedBlock.getBlockData();
-            farmland.setMoisture(farmland.getMaximumMoisture());
-            clickedBlock.setBlockData(farmland);
-            plugin.getConfigManager().sendMessage(player, "crop_watered");
-            plugin.getSoundManager().playSound(player, "water_crop");
-        }
-    }
-
-    @EventHandler
-    public void onCreatureSpawn(CreatureSpawnEvent event) {
-        // Запрещаем спавн враждебных мобов на приватных участках
-        EntityType type = event.getEntityType();
-        if (type == EntityType.ZOMBIE || type == EntityType.SKELETON || type == EntityType.CREEPER || type == EntityType.SPIDER || type == EntityType.ENDERMAN || type == EntityType.WITCH || type == EntityType.SLIME || type == EntityType.HUSK || type == EntityType.DROWNED || type == EntityType.PILLAGER || type == EntityType.VINDICATOR || type == EntityType.EVOKER || type == EntityType.ILLUSIONER || type == EntityType.RAVAGER || type == EntityType.PHANTOM || type == EntityType.BLAZE || type == EntityType.MAGMA_CUBE || type == EntityType.WITHER_SKELETON || type == EntityType.STRAY || type == EntityType.GHAST || type == EntityType.PIGLIN || type == EntityType.PIGLIN_BRUTE || type == EntityType.ZOGLIN || type == EntityType.HOGLIN) {
-            if (plotManager.getPlotAt(event.getLocation()) != null) {
-                event.setCancelled(true);
-            }
-        }
-    }
-} 
+}

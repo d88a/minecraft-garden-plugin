@@ -78,7 +78,7 @@ public class FarmingListener implements Listener {
 
     private boolean isSeedItem(ItemStack item) {
         String itemName = item.getItemMeta().getDisplayName();
-        return itemName != null && itemName.contains("Семена");
+        return itemName != null && (itemName.contains("Семена") || itemName.contains("Споры"));
     }
 
     private boolean isExoticCrop(CustomCrop.CropType type) {

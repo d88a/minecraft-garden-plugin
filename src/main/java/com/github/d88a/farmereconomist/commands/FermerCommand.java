@@ -115,7 +115,7 @@ public class FermerCommand implements CommandExecutor {
             // Проверяем, что блок свободен и над ним тоже свободно
             if (loc.getBlock().getType().isAir() && loc.clone().add(0, 1, 0).getBlock().getType().isAir()) {
                 // Убедимся, что игрок не телепортируется в лаву/воду и т.д.
-                if (!loc.getBlock().isLiquid() && !loc.clone().add(0, -1, 0).getBlock().getType().isSolid()) {
+                if (!loc.getBlock().isLiquid() && loc.clone().add(0, -1, 0).getBlock().getType().isSolid()) {
                     return loc;
                 }
             }
