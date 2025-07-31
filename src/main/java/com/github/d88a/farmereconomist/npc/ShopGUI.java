@@ -44,6 +44,17 @@ public class ShopGUI {
         guide.setItemMeta(guideMeta);
         mainMenu.setItem(14, guide);
 
+        // Кнопка справочника событий
+        ItemStack events = new ItemStack(Material.BEACON);
+        ItemMeta eventsMeta = events.getItemMeta();
+        eventsMeta.setDisplayName("§dИгровые события");
+        eventsMeta.setLore(Arrays.asList(
+            "§7Узнайте о временных бонусах,",
+            "§7которые действуют на сервере."
+        ));
+        events.setItemMeta(eventsMeta);
+        mainMenu.setItem(16, events);
+
         // Заполняем пустые слоты
         for (int i = 0; i < mainMenu.getSize(); i++) {
             if (mainMenu.getItem(i) == null) {
@@ -346,6 +357,50 @@ public class ShopGUI {
             }
         }
         
+        player.openInventory(guideInv);
+    }
+
+    public void openEventGuide(Player player) {
+        Inventory guideInv = Bukkit.createInventory(null, 27, "§dСправочник событий");
+
+        guideInv.setItem(10, createInfoItem(Material.WHEAT,
+            "§aУскоренный рост (Growth Boost)",
+            "§7Все растения на сервере растут",
+            "§7значительно быстрее.",
+            "§7Идеальное время для посадки новых культур!"
+        ));
+
+        guideInv.setItem(12, createInfoItem(Material.DIAMOND,
+            "§bБогатый урожай (Harvest Boost)",
+            "§7При сборе урожая вы получаете",
+            "§7гораздо больше плодов.",
+            "§7Время собирать созревшие растения!"
+        ));
+
+        guideInv.setItem(14, createInfoItem(Material.GOLD_NUGGET,
+            "§eМонетный дождь (Coin Rain)",
+            "§7Каждые несколько минут все игроки",
+            "§7онлайн получают небольшую сумму денег.",
+            "§7Просто будьте на сервере, чтобы разбогатеть!"
+        ));
+
+        guideInv.setItem(16, createInfoItem(Material.EXPERIENCE_BOTTLE,
+            "§dДвойной опыт (XP Boost)",
+            "§7За сбор урожая и другие фермерские",
+            "§7действия вы получаете в два раза",
+            "§7больше опыта для уровня фермера."
+        ));
+
+        // Fill empty slots
+        for (int i = 0; i < guideInv.getSize(); i++) {
+            if (guideInv.getItem(i) == null) {
+                ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+                ItemMeta meta = filler.getItemMeta();
+                meta.setDisplayName(" ");
+                filler.setItemMeta(meta);
+                guideInv.setItem(i, filler);
+            }
+        }
         player.openInventory(guideInv);
     }
 

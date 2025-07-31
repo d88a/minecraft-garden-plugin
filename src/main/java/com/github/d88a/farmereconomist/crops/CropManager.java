@@ -167,11 +167,21 @@ public class CropManager {
                 default: break;
             }
             
-            // Удаляем растение из списка
-            crops.remove(location);
-            
-            // Очищаем блоки
-            clearCropColumn(location, crop.getType().getMaxStages());
+            // Логика для многоразового сбора урожая
+            if (crop.isMultiHarvest() && crop.getHarvestsLeft() > 1) {
+                crop.decrementHarvests();
+                // Возвращаем растение на предпоследнюю стадию роста
+                int resetStage = crop.getType().getMaxStages() - 2;
+                if (resetStage < 0) resetStage = 0;
+                crop.setStage(resetStage);
+                crop.setLastGrowthTime(System.currentTimeMillis()); // Сбрасываем таймер роста
+                updateCropBlock(crop); // Обновляем блок в мире
+            } else {
+                // Удаляем растение из списка, если оно одноразовое или это последний сбор
+                crops.remove(location);
+                // Очищаем блоки
+                clearCropColumn(location, crop.getType().getMaxStages());
+            }
         }
     }
 

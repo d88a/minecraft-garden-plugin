@@ -94,6 +94,8 @@ public class ShopListener implements Listener {
                 shopGUI.openSell(player);
             } else if (clickedItem.getType() == Material.BOOK) {
                 shopGUI.openPlantGuide(player);
+            } else if (clickedItem.getType() == Material.BEACON) {
+                shopGUI.openEventGuide(player);
             }
             return;
         }
@@ -125,6 +127,12 @@ public class ShopListener implements Listener {
                 sellItem(player, clickedItem, clickedItem.getAmount());
                 shopGUI.openSell(player); // Обновляем GUI
             }
+        }
+
+        // Справочник событий
+        if (title.equals("§dСправочник событий")) {
+            event.setCancelled(true);
+            return;
         }
     }
 
