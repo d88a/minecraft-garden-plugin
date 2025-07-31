@@ -18,7 +18,7 @@ public class AdminCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("farmereconomist.admin")) {
-            plugin.getConfigManager().sendMessage(sender, "no_permission");
+            sender.sendMessage(plugin.getConfigManager().getMessage("no_permission"));
             return true;
         }
 
@@ -45,15 +45,15 @@ public class AdminCommand implements CommandExecutor {
                     npcName = ChatColor.translateAlternateColorCodes('&', sb.toString().trim());
                 }
                 plugin.getNpcManager().createNpc(player.getLocation(), npcName);
-                plugin.getConfigManager().sendMessage(sender, "npc_created_success");
+                sender.sendMessage(plugin.getConfigManager().getMessage("npc_created_success"));
                 break;
 
             case "removenpc":
                 boolean success = plugin.getNpcManager().removeNpc();
                 if (success) {
-                    plugin.getConfigManager().sendMessage(sender, "npc_removed_success");
+                    sender.sendMessage(plugin.getConfigManager().getMessage("npc_removed_success"));
                 } else {
-                    plugin.getConfigManager().sendMessage(sender, "npc_remove_fail_no_npc");
+                    sender.sendMessage(plugin.getConfigManager().getMessage("npc_remove_fail_no_npc"));
                 }
                 break;
 
