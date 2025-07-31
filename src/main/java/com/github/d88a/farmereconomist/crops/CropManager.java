@@ -5,6 +5,7 @@ import com.github.d88a.farmereconomist.data.DataManager;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Skull;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.block.Block;
+import org.bukkit.inventory.meta.SkullMeta;
 
 public class CropManager {
 
@@ -280,113 +282,33 @@ public class CropManager {
     }
 
     private void updateCropBlock(CustomCrop crop) {
-        // Очищаем предыдущий столб
-        clearCropColumn(crop.getLocation(), crop.getType().getMaxStages());
-        int stemHeight = crop.getStage();
-        Location base = crop.getLocation();
-        org.bukkit.Material stemMat = crop.getType().getStemMaterial();
-        for (int i = 0; i < stemHeight; i++) {
-            base.clone().add(0, i, 0).getBlock().setType(stemMat);
-        }
-        // Ставим голову на верхушку
-        ItemStack head = null;
-        switch (crop.getType()) {
-            case TOMATO:
-                head = ItemManager.createTomatoStage(Math.min(crop.getStage(), 1)); break;
-            case GLOWSHROOM:
-                head = ItemManager.createGlowshroomStage(Math.min(crop.getStage(), 1)); break;
-            case LUNAR_BERRY:
-                head = ItemManager.createLunarBerry();
-                base.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, base.clone().add(0.5, stemHeight + 0.5, 0.5), 20);
-                break;
-            case CRYSTAL_CACTUS:
-                head = ItemManager.createCrystalCactus();
-                base.getWorld().spawnParticle(org.bukkit.Particle.CRIT, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
-                break;
-            case SUN_PINEAPPLE:
-                head = ItemManager.createSunPineapple();
-                base.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
-                break;
-            case FOG_BERRY:
-                head = ItemManager.createFogBerry();
-                base.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
-                break;
-            case WITCH_MUSHROOM:
-                head = ItemManager.createWitchMushroom();
-                base.getWorld().spawnParticle(org.bukkit.Particle.WITCH, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
-                break;
-            case ELECTRO_PUMPKIN:
-                head = ItemManager.createElectroPumpkin();
-                base.getWorld().spawnParticle(org.bukkit.Particle.ELECTRIC_SPARK, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
-                break;
-            case MYSTIC_ROOT:
-                head = ItemManager.createMysticRoot();
-                base.getWorld().spawnParticle(org.bukkit.Particle.SOUL, base.clone().add(0.5, stemHeight + 0.5, 0.5), 10);
-                break;
-            case STRAWBERRY:
-                head = ItemManager.createStrawberry();
-                base.getWorld().spawnParticle(org.bukkit.Particle.HEART, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case RADISH:
-                head = ItemManager.createRadish();
-                base.getWorld().spawnParticle(org.bukkit.Particle.CRIT, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case WATERMELON:
-                head = ItemManager.createWatermelon();
-                base.getWorld().spawnParticle(org.bukkit.Particle.ITEM_SLIME, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case PREDATOR_FLOWER:
-                head = ItemManager.createPredatorFlower();
-                base.getWorld().spawnParticle(org.bukkit.Particle.ANGRY_VILLAGER, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case MANDRAKE_LEAF:
-                head = ItemManager.createMandrakeLeaf();
-                base.getWorld().spawnParticle(org.bukkit.Particle.NOTE, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case FLYING_FRUIT:
-                head = ItemManager.createFlyingFruit();
-                base.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case SNOW_MINT:
-                head = ItemManager.createSnowMint();
-                base.getWorld().spawnParticle(org.bukkit.Particle.SNOWFLAKE, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case SAND_MELON:
-                head = ItemManager.createSandMelon();
-                base.getWorld().spawnParticle(org.bukkit.Particle.POOF, base.clone().add(0.5, stemHeight + 0.5, 0.5), 5);
-                break;
-            case RAINBOW_MUSHROOM:
-                head = ItemManager.createRainbowMushroom();
-                // Rainbow mushroom может иметь особый эффект, если нужна анимация текстур
-                break;
-            default:
-                // Остальные культуры без спецэффектов
-                head = getHeadForCropType(crop);
-                break;
-        }
+        Location loc = crop.getLocation();
+        Block block = loc.getBlock();
+
+        // Получаем голову для текущей стадии
+        ItemStack head = ItemManager.getPlantStageHead(crop.getType(), crop.getStage());
+
         if (head != null) {
-            Location top = base.clone().add(0, stemHeight, 0);
-            top.getBlock().setType(Material.PLAYER_HEAD);
-            if (top.getBlock().getState() instanceof org.bukkit.block.Skull) {
-                org.bukkit.block.Skull skullState = (org.bukkit.block.Skull) top.getBlock().getState();
-                skullState.setPlayerProfile(((org.bukkit.inventory.meta.SkullMeta) head.getItemMeta()).getPlayerProfile());
+            block.setType(Material.PLAYER_HEAD, false); // Устанавливаем блок головы
+            if (block.getState() instanceof Skull) {
+                Skull skullState = (Skull) block.getState();
+                SkullMeta headMeta = (SkullMeta) head.getItemMeta();
+                if (headMeta != null && headMeta.hasOwnerProfile()) {
+                    // Применяем профиль (текстуру) к блоку в мире
+                    skullState.setPlayerProfile(headMeta.getPlayerProfile());
+                }
                 skullState.update();
             }
         }
-    }
 
-    // Вспомогательный метод для остальных культур
-    private ItemStack getHeadForCropType(CustomCrop crop) {
-        // Этот метод больше не нужен, все культуры обрабатываются в updateCropBlock
-        return null;
+        // Сюда можно добавить партиклы для определенных стадий/растений
+        // Например: loc.getWorld().spawnParticle(...)
     }
 
     // Очищает столб растения (стебель + голову)
     private void clearCropColumn(Location base, int height) {
-        for (int i = 0; i < height; i++) {
-            Location loc = base.clone().add(0, i, 0);
-            loc.getBlock().setType(Material.AIR);
-        }
+        // Теперь мы просто очищаем один блок
+        base.getBlock().setType(Material.AIR);
     }
     
     public void saveCrops() {

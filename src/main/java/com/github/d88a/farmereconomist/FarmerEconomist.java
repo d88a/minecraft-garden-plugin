@@ -9,6 +9,7 @@ import com.github.d88a.farmereconomist.commands.EventCommand;
 import com.github.d88a.farmereconomist.config.ConfigManager;
 import com.github.d88a.farmereconomist.crops.CropManager;
 import com.github.d88a.farmereconomist.data.DataManager;
+import com.github.d88a.farmereconomist.items.ItemManager;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
 import com.github.d88a.farmereconomist.listeners.CropListener;
 import com.github.d88a.farmereconomist.listeners.OgorodListener;
@@ -46,6 +47,7 @@ public final class FarmerEconomist extends JavaPlugin {
     @Override
     public void onEnable() {
         // Initialize managers
+        ItemManager.init(this);
         this.configManager = new ConfigManager(this);
         this.dataManager = new DataManager(this);
         this.economyManager = new EconomyManager(dataManager);

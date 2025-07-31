@@ -8,28 +8,65 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import org.bukkit.NamespacedKey;
 
 public class ShopListener implements Listener {
 
     private final FarmerEconomist plugin;
     private final ShopGUI shopGUI;
     private final EconomyManager economyManager;
+    private final NamespacedKey itemIdKey;
+
+    // В идеале, это должно загружаться из конфига
+    private final Map<String, Double> sellPrices = new HashMap<>();
 
     public ShopListener(FarmerEconomist plugin) {
         this.plugin = plugin;
         this.shopGUI = new ShopGUI(plugin);
         this.economyManager = plugin.getEconomyManager();
+        this.itemIdKey = new NamespacedKey(plugin, "item_id");
+        loadPrices();
     }
 
+    // В идеале, это должно загружаться из конфига
+    private void loadPrices() {
+        sellPrices.put("LETTUCE_NORMAL", 5.0);
+        sellPrices.put("LETTUCE_EXCELLENT", 15.0);
+        sellPrices.put("TOMATO", 20.0);
+        sellPrices.put("GLOWSHROOM_DUST", 45.0);
+        sellPrices.put("STRAWBERRY", 60.0);
+        sellPrices.put("RADISH", 25.0);
+        sellPrices.put("WATERMELON", 80.0);
+        sellPrices.put("LUNAR_BERRY", 120.0);
+        sellPrices.put("RAINBOW_MUSHROOM", 65.0);
+        sellPrices.put("CRYSTAL_CACTUS", 100.0);
+        sellPrices.put("FLAME_PEPPER", 75.0);
+        sellPrices.put("MYSTIC_ROOT", 160.0);
+        sellPrices.put("STAR_FRUIT", 145.0);
+        sellPrices.put("PREDATOR_FLOWER", 200.0);
+        sellPrices.put("ELECTRO_PUMPKIN", 130.0);
+        sellPrices.put("MANDRAKE_LEAF", 90.0);
+        sellPrices.put("FLYING_FRUIT", 115.0);
+        sellPrices.put("SNOW_MINT", 80.0);
+        sellPrices.put("SUN_PINEAPPLE", 180.0);
+        sellPrices.put("FOG_BERRY", 70.0);
+        sellPrices.put("SAND_MELON", 105.0);
+        sellPrices.put("WITCH_MUSHROOM", 140.0);
+    }
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         if (event.getRightClicked().getType() == EntityType.VILLAGER) {
@@ -83,161 +120,49 @@ public class ShopListener implements Listener {
         // Окно продажи
         if (title.equals("Продать Мирону")) {
             event.setCancelled(true);
-            if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().get(1).contains("продать")) {
-                String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
-                double price = Double.parseDouble(priceString);
-                
-                // Создаем предмет для продажи на основе displayName
-                ItemStack itemToSell = null;
-                String displayName = clickedItem.getItemMeta().getDisplayName();
-                
-                if (displayName.contains("Скромный Латук")) {
-                    if (displayName.contains("Отличное")) {
-                        itemToSell = ItemManager.createLettuce(true);
-                    } else {
-                        itemToSell = ItemManager.createLettuce(false);
-                    }
-                } else if (displayName.contains("Рубиновый Томат")) {
-                    itemToSell = ItemManager.createTomato();
-                } else if (displayName.contains("Пыльца светящегося гриба")) {
-                    itemToSell = ItemManager.createGlowshroomDust();
-                } else if (displayName.contains("Лучезарная Клубника")) {
-                    itemToSell = ItemManager.createStrawberry();
-                } else if (displayName.contains("Хрустящий Редис")) {
-                    itemToSell = ItemManager.createRadish();
-                } else if (displayName.contains("Пустынный Арбуз")) {
-                    itemToSell = ItemManager.createWatermelon();
-                } else if (displayName.contains("Лунная ягода")) {
-                    itemToSell = ItemManager.createLunarBerry();
-                } else if (displayName.contains("Радужный гриб")) {
-                    itemToSell = ItemManager.createRainbowMushroom();
-                } else if (displayName.contains("Кристальный кактус")) {
-                    itemToSell = ItemManager.createCrystalCactus();
-                } else if (displayName.contains("Пылающий перец")) {
-                    itemToSell = ItemManager.createFlamePepper();
-                } else if (displayName.contains("Мистический корень")) {
-                    itemToSell = ItemManager.createMysticRoot();
-                } else if (displayName.contains("Звёздный плод")) {
-                    itemToSell = ItemManager.createStarFruit();
-                } else if (displayName.contains("Цветок-хищник")) {
-                    itemToSell = ItemManager.createPredatorFlower();
-                } else if (displayName.contains("Электро-тыква")) {
-                    itemToSell = ItemManager.createElectroPumpkin();
-                } else if (displayName.contains("Листья мандрагоры")) {
-                    itemToSell = ItemManager.createMandrakeLeaf();
-                } else if (displayName.contains("Летающий плод")) {
-                    itemToSell = ItemManager.createFlyingFruit();
-                } else if (displayName.contains("Снежная мята")) {
-                    itemToSell = ItemManager.createSnowMint();
-                } else if (displayName.contains("Солнечный ананас")) {
-                    itemToSell = ItemManager.createSunPineapple();
-                } else if (displayName.contains("Туманная ягода")) {
-                    itemToSell = ItemManager.createFogBerry();
-                } else if (displayName.contains("Песчаный арбуз")) {
-                    itemToSell = ItemManager.createSandMelon();
-                } else if (displayName.contains("Ведьмин гриб")) {
-                    itemToSell = ItemManager.createWitchMushroom();
-                }
-                
-                if (itemToSell != null && player.getInventory().containsAtLeast(itemToSell, 1)) {
-                    player.getInventory().removeItem(itemToSell);
-                    economyManager.addBalance(player, price);
-                    plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
-                    plugin.getSoundManager().playSound(player, "sell_item");
-                    plugin.getPlotManager().updatePlotSign(player);
-                    // Обновить окно продажи
-                    shopGUI.openSell(player);
-                } else {
-                    plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
-                }
+            // Логика для продажи по клику в инвентаре игрока
+            if (event.getClickedInventory() == player.getInventory()) {
+                sellItem(player, clickedItem, clickedItem.getAmount());
+                shopGUI.openSell(player); // Обновляем GUI
             }
-            return;
         }
     }
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         String title = event.getView().getTitle();
-        Player player = (Player) event.getWhoClicked();
         if (title.equals("Продать Мирону")) {
-            // Проверяем, что предмет перетаскивается в окно продажи
-            for (int slot : event.getRawSlots()) {
-                if (slot < event.getView().getTopInventory().getSize()) {
-                    // Получаем предмет, который игрок пытается продать
-                    ItemStack dragged = event.getOldCursor();
-                    if (dragged == null || dragged.getType() == Material.AIR) continue;
-                    
-                    // Проверяем, можно ли продать этот предмет
-                    double price = 0;
-                    String itemName = null;
-                    
-                    // Улучшенная проверка предметов по displayName
-                    String displayName = "";
-                    if (dragged.getItemMeta() != null && dragged.getItemMeta().getDisplayName() != null) {
-                        displayName = dragged.getItemMeta().getDisplayName();
-                    }
-                    
-                    // Проверяем по displayName для более надежного сравнения
-                    if (displayName.contains("Скромный Латук")) {
-                        if (displayName.contains("Отличное")) {
-                            price = 15; itemName = "Большой салат";
-                        } else {
-                        price = 5; itemName = "Салат";
-                        }
-                    } else if (displayName.contains("Рубиновый Томат")) {
-                        price = 20; itemName = "Томат";
-                    } else if (displayName.contains("Пыльца светящегося гриба")) {
-                        price = 45; itemName = "Светящийся грибной порошок";
-                    } else if (displayName.contains("Лучезарная Клубника")) {
-                        price = 60; itemName = "Лучезарная Клубника";
-                    } else if (displayName.contains("Хрустящий Редис")) {
-                        price = 25; itemName = "Хрустящий Редис";
-                    } else if (displayName.contains("Пустынный Арбуз")) {
-                        price = 80; itemName = "Пустынный Арбуз";
-                    } else if (displayName.contains("Лунная ягода")) {
-                        price = 120; itemName = "Лунная Ягода";
-                    } else if (displayName.contains("Радужный гриб")) {
-                        price = 65; itemName = "Радужный Гриб";
-                    } else if (displayName.contains("Кристальный кактус")) {
-                        price = 100; itemName = "Кристальный Кактус";
-                    } else if (displayName.contains("Пылающий перец")) {
-                        price = 75; itemName = "Пылающий Перец";
-                    } else if (displayName.contains("Мистический корень")) {
-                        price = 160; itemName = "Мистический Корень";
-                    } else if (displayName.contains("Звёздный плод")) {
-                        price = 145; itemName = "Звёздный Плод";
-                    } else if (displayName.contains("Цветок-хищник")) {
-                        price = 200; itemName = "Цветок-Хищник";
-                    } else if (displayName.contains("Электро-тыква")) {
-                        price = 130; itemName = "Электро-Тыква";
-                    } else if (displayName.contains("Листья мандрагоры")) {
-                        price = 90; itemName = "Листья Мандрагоры";
-                    } else if (displayName.contains("Летающий плод")) {
-                        price = 115; itemName = "Летающий Плод";
-                    } else if (displayName.contains("Снежная мята")) {
-                        price = 80; itemName = "Снежная Мята";
-                    } else if (displayName.contains("Солнечный ананас")) {
-                        price = 180; itemName = "Солнечный Ананас";
-                    } else if (displayName.contains("Туманная ягода")) {
-                        price = 70; itemName = "Туманная Ягода";
-                    } else if (displayName.contains("Песчаный арбуз")) {
-                        price = 105; itemName = "Песчаный Арбуз";
-                    } else if (displayName.contains("Ведьмин гриб")) {
-                        price = 140; itemName = "Ведьмин Гриб";
-                    }
-                    
-                    if (price > 0 && player.getInventory().containsAtLeast(dragged, dragged.getAmount())) {
-                        player.getInventory().removeItem(new ItemStack(dragged.getType(), dragged.getAmount()));
-                        plugin.getEconomyManager().addBalance(player, price * dragged.getAmount());
-                        plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", itemName);
-                        plugin.getSoundManager().playSound(player, "sell_item");
-                        plugin.getPlotManager().updatePlotSign(player);
-                        shopGUI.openSell(player);
-                        event.setCancelled(true);
-                        return;
-                    }
-                }
-            }
+            event.setCancelled(true);
+        }
+    }
+
+    private void sellItem(Player player, ItemStack item, int amount) {
+        if (item == null || item.getType() == Material.AIR) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        String itemId = meta.getPersistentDataContainer().get(itemIdKey, PersistentDataType.STRING);
+        if (itemId == null || !sellPrices.containsKey(itemId)) {
+            // Этот предмет не продается
+            return;
+        }
+
+        double pricePerItem = sellPrices.get(itemId);
+        double totalPrice = pricePerItem * amount;
+
+        // Проверяем, есть ли у игрока достаточно предметов
+        if (player.getInventory().containsAtLeast(item, amount)) {
+            ItemStack toRemove = item.clone();
+            toRemove.setAmount(amount);
+            player.getInventory().removeItem(toRemove);
+
+            economyManager.addBalance(player, totalPrice);
+            plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", meta.getDisplayName());
+            plugin.getSoundManager().playSound(player, "sell_item");
+            plugin.getPlotManager().updatePlotSign(player);
+        } else {
+            plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
         }
     }
 } 
