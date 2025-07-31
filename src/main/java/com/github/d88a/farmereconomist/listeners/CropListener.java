@@ -10,11 +10,13 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -50,33 +52,41 @@ public class CropListener implements Listener {
             handlePlanting(event, itemInHand, clickedBlock);
             return;
         }
+    }
 
-        // --- Обработка левой кнопки мыши (сбор урожая) ---
-        if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            Block clickedBlock = event.getClickedBlock();
-            if (clickedBlock == null || clickedBlock.getType() != Material.PLAYER_HEAD) return;
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+        if (block.getType() != Material.PLAYER_HEAD) {
+            return;
+        }
 
-            CustomCrop crop = cropManager.getCropAt(clickedBlock.getLocation());
-            if (crop == null) return;
+        CustomCrop crop = cropManager.getCropAt(block.getLocation());
+        if (crop == null) {
+            return; // Это не наше растение
+        }
 
-            Player player = event.getPlayer();
-            Plot plot = plugin.getPlotManager().getPlotAt(clickedBlock.getLocation());
+        Player player = event.getPlayer();
+        Plot plot = plugin.getPlotManager().getPlotAt(block.getLocation());
 
-            // Запрещаем взаимодействовать с чужим участком
-            if (plot != null && !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission("farmereconomist.admin.bypass")) {
-                plugin.getConfigManager().sendMessage(player, "plot_interact_denied");
-                event.setCancelled(true);
-                return;
-            }
+        // Проверка прав на участок
+        if (plot != null && !plot.getOwner().equals(player.getUniqueId()) && !player.hasPermission("farmereconomist.admin.bypass")) {
+            plugin.getConfigManager().sendMessage(player, "plot_interact_denied");
+            event.setCancelled(true);
+            return;
+        }
 
-            boolean isHarvestable = (crop.getStage() == (crop.getType().getMaxStages() - 1));
+        boolean isHarvestable = (crop.getStage() == (crop.getType().getMaxStages() - 1));
 
-            if (isHarvestable) {
-                cropManager.harvestCrop(clickedBlock.getLocation());
-                plugin.getSoundManager().playSound(event.getPlayer(), "harvest_crop");
-            } else {
-                plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_not_ready");
-            }
+        if (isHarvestable) {
+            // Растение созрело. Собираем урожай.
+            // Отменяем выпадение стандартного дропа (головы)
+            event.setDropItems(false);
+            cropManager.harvestCrop(block.getLocation());
+            plugin.getSoundManager().playSound(player, "harvest_crop");
+        } else {
+            // Растение не созрело. Запрещаем ломать.
+            plugin.getConfigManager().sendMessage(player, "crop_not_ready");
             event.setCancelled(true);
         }
     }
@@ -157,6 +167,9 @@ public class CropListener implements Listener {
         } else {
             plugin.getConfigManager().sendMessage(player, "crop_plant_fail_wrong_soil");
         }
+        // Более надежно отменяем стандартное поведение посадки семян
+        event.setUseItemInHand(Event.Result.DENY);
+        event.setUseInteractedBlock(Event.Result.DENY);
         event.setCancelled(true);
     }
 

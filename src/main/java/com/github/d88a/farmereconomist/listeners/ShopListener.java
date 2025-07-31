@@ -123,10 +123,40 @@ public class ShopListener implements Listener {
             }
         } else if (title.equals("Продать Мирону")) { // Окно продажи
             event.setCancelled(true);
-            // Логика для продажи по клику в инвентаре игрока
-            if (event.getClickedInventory() == player.getInventory()) {
-                sellItem(player, clickedItem, clickedItem.getAmount());
-                shopGUI.openSell(player); // Обновляем GUI
+            // Игнорируем клики по стеклянным панелям-заполнителям
+            if (clickedItem == null || clickedItem.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+                return;
+            }
+
+            // Нас интересуют только клики в верхнем инвентаре (GUI магазина)
+            if (event.getClickedInventory() != player.getOpenInventory().getTopInventory()) {
+                return;
+            }
+
+            ItemMeta meta = clickedItem.getItemMeta();
+            if (meta == null) return;
+
+            String itemId = meta.getPersistentDataContainer().get(itemIdKey, PersistentDataType.STRING);
+            if (itemId == null || !sellPrices.containsKey(itemId)) {
+                return; // Это не предмет, который можно продать через наше GUI
+            }
+
+            // Ищем все предметы этого типа в инвентаре игрока и продаем их все
+            int amountToSell = 0;
+            ItemStack itemToSell = null;
+            for (ItemStack inventoryItem : player.getInventory().getStorageContents()) { // getStorageContents, чтобы не трогать броню
+                if (inventoryItem != null && !inventoryItem.getType().isAir()) {
+                    ItemMeta invItemMeta = inventoryItem.getItemMeta();
+                    if (invItemMeta != null && itemId.equals(invItemMeta.getPersistentDataContainer().get(itemIdKey, PersistentDataType.STRING))) {
+                        if (itemToSell == null) itemToSell = inventoryItem;
+                        amountToSell += inventoryItem.getAmount();
+                    }
+                }
+            }
+
+            if (amountToSell > 0 && itemToSell != null) {
+                sellItem(player, itemToSell, amountToSell);
+                shopGUI.openSell(player); // Обновляем GUI после продажи
             }
         } else if (title.equals("§dСправочник событий") || title.equals("§aСправочник растений")) {
             event.setCancelled(true);
