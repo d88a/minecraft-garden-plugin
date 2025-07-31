@@ -6,9 +6,11 @@ import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Skull;
+import com.mojang.authlib.GameProfile;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.inventory.ItemStack;
@@ -303,9 +305,17 @@ public class CropManager {
             if (block.getState() instanceof Skull) {
                 Skull skullState = (Skull) block.getState();
                 SkullMeta headMeta = (SkullMeta) head.getItemMeta();
-                if (headMeta != null && headMeta.hasOwnerProfile()) {
-                    // Применяем профиль (текстуру) к блоку в мире
-                    skullState.setPlayerProfile(headMeta.getPlayerProfile());
+                if (headMeta != null) {
+                    try {
+                        Field profileField = headMeta.getClass().getDeclaredField("profile");
+                        profileField.setAccessible(true);
+                        GameProfile profile = (GameProfile) profileField.get(headMeta);
+                        Field blockProfileField = skullState.getClass().getDeclaredField("profile");
+                        blockProfileField.setAccessible(true);
+                        blockProfileField.set(skullState, profile);
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
                 }
                 skullState.update();
             }
