@@ -45,7 +45,7 @@ public class AdminCommand implements CommandExecutor {
                     npcName = ChatColor.translateAlternateColorCodes('&', sb.toString().trim());
                 }
                 plugin.getNpcManager().createNpc(player.getLocation(), npcName);
-                plugin.getConfigManager().sendMessage(player, "npc_created_success");
+                plugin.getConfigManager().sendMessage(sender, "npc_created_success");
                 break;
 
             case "removenpc":

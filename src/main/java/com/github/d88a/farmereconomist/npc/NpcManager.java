@@ -1,24 +1,36 @@
 package com.github.d88a.farmereconomist.npc;
 
 import com.github.d88a.farmereconomist.FarmerEconomist;
-import com.github.d88a.farmereconomist.data.DataManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Villager;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
 
 public class NpcManager {
 
     private final FarmerEconomist plugin;
-    private final DataManager dataManager;
+    private final File npcFile;
+    private FileConfiguration npcConfig;
     private UUID npcUniqueId;
 
-    public NpcManager(FarmerEconomist plugin, DataManager dataManager) {
+    public NpcManager(FarmerEconomist plugin) {
         this.plugin = plugin;
-        this.dataManager = dataManager;
+        this.npcFile = new File(plugin.getDataFolder(), "npc.yml");
+        if (!npcFile.exists()) {
+            try {
+                npcFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        this.npcConfig = YamlConfiguration.loadConfiguration(npcFile);
         loadNpc();
     }
 
@@ -53,8 +65,12 @@ public class NpcManager {
 
         this.npcUniqueId = null;
         // Очищаем данные из конфига
-        dataManager.getNpcConfig().set("npc", null);
-        dataManager.saveNpcConfig();
+        npcConfig.set("npc.uuid", null);
+        try {
+            npcConfig.save(npcFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
@@ -64,13 +80,17 @@ public class NpcManager {
 
     private void saveNpc() {
         if (npcUniqueId != null) {
-            dataManager.getNpcConfig().set("npc.uuid", npcUniqueId.toString());
-            dataManager.saveNpcConfig();
+            npcConfig.set("npc.uuid", npcUniqueId.toString());
+            try {
+                npcConfig.save(npcFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void loadNpc() {
-        String uuidString = dataManager.getNpcConfig().getString("npc.uuid");
+        String uuidString = npcConfig.getString("npc.uuid");
         if (uuidString != null) {
             try {
                 this.npcUniqueId = UUID.fromString(uuidString);
@@ -83,4 +103,4 @@ public class NpcManager {
             }
         }
     }
-} 
+}

@@ -44,8 +44,15 @@ commands:
       /event list - Список всех событий
       /event start <событие> - Запустить событие (для администраторов)
       /event stop - Остановить текущее событие (для администраторов)
+  feadmin:
+    description: Admin commands for FarmerEconomist.
+    usage: /<command> <subcommand>
+    permission: farmereconomist.admin
 
 permissions:
+  farmereconomist.admin:
+    description: Общий доступ к административным командам плагина
+    default: op
   farmereconomist.admin.eco:
     description: Доступ к командам управления экономикой
     default: op

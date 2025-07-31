@@ -1,6 +1,7 @@
 package com.github.d88a.farmereconomist;
 
 import com.github.d88a.farmereconomist.commands.BalanceCommand;
+import com.github.d88a.farmereconomist.commands.AdminCommand;
 import com.github.d88a.farmereconomist.commands.EcoCommand;
 import com.github.d88a.farmereconomist.commands.FermerCommand;
 import com.github.d88a.farmereconomist.commands.OgorodCommand;
@@ -16,7 +17,7 @@ import com.github.d88a.farmereconomist.listeners.OgorodListener;
 import com.github.d88a.farmereconomist.listeners.PlotProtectionListener;
 import com.github.d88a.farmereconomist.listeners.ShopListener;
 import com.github.d88a.farmereconomist.listeners.FarmingListener;
-import com.github.d88a.farmereconomist.npc.NpcManager;
+import com.github.d88a.farmereconomist.npc.NpcManager; // Already correct, but ensuring it's the new one
 import com.github.d88a.farmereconomist.npc.NpcAnimator;
 import com.github.d88a.farmereconomist.plots.OgorodGUI;
 import com.github.d88a.farmereconomist.plots.PlotManager;
@@ -74,6 +75,7 @@ public final class FarmerEconomist extends JavaPlugin {
         getCommand("fermer").setExecutor(new FermerCommand(this));
         getCommand("stats").setExecutor(new StatsCommand(this));
         getCommand("event").setExecutor(new EventCommand(this));
+        getCommand("feadmin").setExecutor(new AdminCommand(this));
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlotProtectionListener(this), this);
