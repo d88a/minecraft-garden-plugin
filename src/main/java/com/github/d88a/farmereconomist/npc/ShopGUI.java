@@ -4,22 +4,31 @@ import com.github.d88a.farmereconomist.FarmerEconomist;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 
 import java.util.Arrays;
-import org.bukkit.NamespacedKey;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 public class ShopGUI {
 
     private final FarmerEconomist plugin;
+    private final NamespacedKey itemPriceKey;
+    private final Map<String, Supplier<ItemStack>> itemSuppliers = new HashMap<>();
 
     public ShopGUI(FarmerEconomist plugin) {
         this.plugin = plugin;
+        this.itemPriceKey = new NamespacedKey(plugin, "item_price");
+        registerItemSuppliers();
     }
 
     public void open(Player player) {
@@ -70,20 +79,23 @@ public class ShopGUI {
 
     public void openBuy(Player player) {
         Inventory buyInv = Bukkit.createInventory(null, 54, "Купить у Мирона");
+        ConfigurationSection buyLayout = plugin.getConfig().getConfigurationSection("shop-layout.buy");
 
-        // Загружаем предметы с ценами из конфига
-        addItemToBuyMenu(buyInv, 10, ItemManager.createLettuceSeeds());
-        addItemToBuyMenu(buyInv, 11, ItemManager.createTomatoSeeds());
-        addItemToBuyMenu(buyInv, 12, ItemManager.createGlowshroomSpores());
-        addItemToBuyMenu(buyInv, 13, ItemManager.createStrawberrySeeds());
-        addItemToBuyMenu(buyInv, 14, ItemManager.createRadishSeeds());
-        addItemToBuyMenu(buyInv, 15, ItemManager.createWatermelonSeeds());
-        addItemToBuyMenu(buyInv, 16, ItemManager.createLunarBerrySeeds());
-        // ... и так далее для всех предметов ...
+        if (buyLayout != null) {
+            for (String key : buyLayout.getKeys(false)) {
+                int slot = buyLayout.getInt(key + ".slot", -1);
+                String itemId = buyLayout.getString(key + ".item-id");
 
-        // Инструменты
-        addItemToBuyMenu(buyInv, 37, ItemManager.createWateringCan());
-        addItemToBuyMenu(buyInv, 38, ItemManager.createFertilizer());
+                if (slot != -1 && itemId != null) {
+                    Supplier<ItemStack> supplier = itemSuppliers.get(itemId);
+                    if (supplier != null) {
+                        addItemToBuyMenu(buyInv, slot, supplier.get());
+                    } else {
+                        plugin.getLogger().warning("Unknown item ID in shop-layout.buy: " + itemId);
+                    }
+                }
+            }
+        }
 
         // Заполняем пустые слоты
         for (int i = 0; i < buyInv.getSize(); i++) {
@@ -126,87 +138,24 @@ public class ShopGUI {
 
     public void openSell(Player player) {
         Inventory sellInv = Bukkit.createInventory(null, 54, "Продать Мирону");
-        
-        int slot = 10;
-        
-        // Базовые растения
-        if (playerHasItem(player, "LETTUCE_NORMAL")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(false), 5));
+        int slot = 10; // Начальный слот
+
+        ConfigurationSection sellLayout = plugin.getConfig().getConfigurationSection("shop-layout.sell");
+        if (sellLayout != null) {
+            // Предполагается, что ключи в конфиге (item1, item2...) определяют порядок
+            for (String key : sellLayout.getKeys(false)) {
+                String itemId = sellLayout.getString(key + ".item-id");
+                if (itemId != null) {
+                    Supplier<ItemStack> supplier = itemSuppliers.get(itemId);
+                    if (supplier != null) {
+                        slot = addSellableItem(sellInv, player, slot, itemId, supplier);
+                    } else {
+                        plugin.getLogger().warning("Unknown item ID in shop-layout.sell: " + itemId);
+                    }
+                }
+            }
         }
-        if (playerHasItem(player, "LETTUCE_EXCELLENT")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(true), 15));
-        }
-        if (playerHasItem(player, "TOMATO")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createTomato(), 20));
-        }
-        if (playerHasItem(player, "GLOWSHROOM_DUST")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createGlowshroomDust(), 45));
-        }
-        
-        // Новые растения - первая строка
-        if (playerHasItem(player, "STRAWBERRY")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createStrawberry(), 60));
-        }
-        if (playerHasItem(player, "RADISH")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createRadish(), 25));
-        }
-        if (playerHasItem(player, "WATERMELON")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createWatermelon(), 80));
-        }
-        if (playerHasItem(player, "LUNAR_BERRY")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createLunarBerry(), 120));
-        }
-        
-        // Вторая строка
-        if (playerHasItem(player, "RAINBOW_MUSHROOM")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createRainbowMushroom(), 65));
-        }
-        if (playerHasItem(player, "CRYSTAL_CACTUS")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createCrystalCactus(), 100));
-        }
-        if (playerHasItem(player, "FLAME_PEPPER")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createFlamePepper(), 75));
-        }
-        if (playerHasItem(player, "MYSTIC_ROOT")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createMysticRoot(), 160));
-        }
-        
-        // Третья строка
-        if (playerHasItem(player, "STAR_FRUIT")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createStarFruit(), 145));
-        }
-        if (playerHasItem(player, "PREDATOR_FLOWER")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createPredatorFlower(), 200));
-        }
-        if (playerHasItem(player, "ELECTRO_PUMPKIN")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createElectroPumpkin(), 130));
-        }
-        if (playerHasItem(player, "MANDRAKE_LEAF")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createMandrakeLeaf(), 90));
-        }
-        
-        // Четвертая строка
-        if (playerHasItem(player, "FLYING_FRUIT")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createFlyingFruit(), 115));
-        }
-        if (playerHasItem(player, "SNOW_MINT")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createSnowMint(), 80));
-        }
-        if (playerHasItem(player, "SUN_PINEAPPLE")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createSunPineapple(), 180));
-        }
-        if (playerHasItem(player, "FOG_BERRY")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createFogBerry(), 70));
-        }
-        
-        // Пятая строка
-        if (playerHasItem(player, "SAND_MELON")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createSandMelon(), 105));
-        }
-        if (playerHasItem(player, "WITCH_MUSHROOM")) {
-            sellInv.setItem(slot++, createSellItem(ItemManager.createWitchMushroom(), 140));
-        }
-        
+
         // Заполняем пустые слоты
         for (int i = 0; i < sellInv.getSize(); i++) {
             if (sellInv.getItem(i) == null) {
@@ -216,222 +165,38 @@ public class ShopGUI {
         player.openInventory(sellInv);
     }
 
+    private int addSellableItem(Inventory inv, Player player, int currentSlot, String itemId, Supplier<ItemStack> itemSupplier) {
+        if (playerHasItem(player, itemId)) {
+            double price = plugin.getConfig().getDouble("shop-prices.sell." + itemId, 0.0);
+            if (price > 0) {
+                inv.setItem(currentSlot, createSellItem(itemSupplier.get(), price));
+                return currentSlot + 1;
+            }
+        }
+        return currentSlot;
+    }
+
     public void openPlantGuide(Player player) {
         Inventory guideInv = Bukkit.createInventory(null, 54, "§aСправочник растений");
-        
-        // Первая страница - базовые растения
-        guideInv.setItem(10, createGuideItem(ItemManager.createLettuceSeeds(), 
-            "§aСкромный Латук", 
-            "§7Цена покупки: §e10 монет",
-            "§7Цена продажи: §e5-15 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fВспаханная земля",
-            "§7Особенности: §fКачество зависит от полива"
-        ));
-        
-        guideInv.setItem(11, createGuideItem(ItemManager.createTomatoSeeds(), 
-            "§cРубиновый Томат", 
-            "§7Цена покупки: §e25 монет",
-            "§7Цена продажи: §e20 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fВспаханная земля",
-            "§7Особенности: §fОдноразовый сбор"
-        ));
-        
-        guideInv.setItem(12, createGuideItem(ItemManager.createGlowshroomSpores(), 
-            "§dСветящийся Гриб", 
-            "§7Цена покупки: §e50 монет",
-            "§7Цена продажи: §e45 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fМицелий/Подзол",
-            "§7Особенности: §fДропает пыльцу"
-        ));
-        
-        guideInv.setItem(13, createGuideItem(ItemManager.createStrawberrySeeds(), 
-            "§dЛучезарная Клубника", 
-            "§7Цена покупки: §e75 монет",
-            "§7Цена продажи: §e60 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fВспаханная земля",
-            "§7Особенности: §fМногоразовый сбор (3 раза)"
-        ));
-        
-        guideInv.setItem(14, createGuideItem(ItemManager.createLunarBerrySeeds(), 
-            "§bЛунная Ягода", 
-            "§7Цена покупки: §e150 монет",
-            "§7Цена продажи: §e120 монет",
-            "§7Стадии: §b3",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fВспаханная земля",
-            "§7Особенности: §fСветится ночью, многоразовый"
-        ));
-        
-        guideInv.setItem(15, createGuideItem(ItemManager.createRainbowMushroomSeeds(), 
-            "§dРадужный Гриб", 
-            "§7Цена покупки: §e80 монет",
-            "§7Цена продажи: §e65 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fМицелий/Подзол",
-            "§7Особенности: §fМеняет цвет"
-        ));
-        
-        guideInv.setItem(16, createGuideItem(ItemManager.createCrystalCactusSeeds(), 
-            "§3Кристальный Кактус", 
-            "§7Цена покупки: §e120 монет",
-            "§7Цена продажи: §e100 монет",
-            "§7Стадии: §b3",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fПесок",
-            "§7Особенности: §fМногоразовый сбор"
-        ));
-        
-        // Вторая строка
-        guideInv.setItem(19, createGuideItem(ItemManager.createFlamePepperSeeds(), 
-            "§cПылающий Перец", 
-            "§7Цена покупки: §e90 монет",
-            "§7Цена продажи: §e75 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fАдский камень",
-            "§7Особенности: §fЭффект огня"
-        ));
-        
-        guideInv.setItem(20, createGuideItem(ItemManager.createMysticRootSeeds(), 
-            "§5Мистический Корень", 
-            "§7Цена покупки: §e200 монет",
-            "§7Цена продажи: §e160 монет",
-            "§7Стадии: §b3",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fПокрыт рунами, многоразовый"
-        ));
-        
-        guideInv.setItem(21, createGuideItem(ItemManager.createStarFruitSeeds(), 
-            "§eЗвёздный Плод", 
-            "§7Цена покупки: §e180 монет",
-            "§7Цена продажи: §e145 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fФорма звезды, многоразовый"
-        ));
-        
-        guideInv.setItem(22, createGuideItem(ItemManager.createPredatorFlowerSeeds(), 
-            "§4Цветок-Хищник", 
-            "§7Цена покупки: §e250 монет",
-            "§7Цена продажи: §e200 монет",
-            "§7Стадии: §b3",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fОсторожно, кусается!"
-        ));
-        
-        guideInv.setItem(23, createGuideItem(ItemManager.createElectroPumpkinSeeds(), 
-            "§9Электро-Тыква", 
-            "§7Цена покупки: §e160 монет",
-            "§7Цена продажи: §e130 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fПотрескивает, многоразовый"
-        ));
-        
-        guideInv.setItem(24, createGuideItem(ItemManager.createWitchMushroomSeeds(), 
-            "§5Ведьмин Гриб", 
-            "§7Цена покупки: §e175 монет",
-            "§7Цена продажи: §e140 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fНезерак",
-            "§7Особенности: §fПахнет магией"
-        ));
-        
-        // Третья строка
-        guideInv.setItem(28, createGuideItem(ItemManager.createRadishSeeds(),
-            "§fХрустящий Редис",
-            "§7Цена покупки: §e30 монет",
-            "§7Цена продажи: §e25 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fВспаханная земля",
-            "§7Особенности: §fБыстро растет"
-        ));
+        ConfigurationSection guideLayout = plugin.getConfig().getConfigurationSection("plant-guide");
+        if (guideLayout != null) {
+            for (String key : guideLayout.getKeys(false)) {
+                ConfigurationSection itemSection = guideLayout.getConfigurationSection(key);
+                if (itemSection == null) continue;
 
-        guideInv.setItem(29, createGuideItem(ItemManager.createWatermelonSeeds(),
-            "§aПустынный Арбуз",
-            "§7Цена покупки: §e100 монет",
-            "§7Цена продажи: §e80 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fВспаханная земля",
-            "§7Особенности: §fОчень большой!"
-        ));
+                int slot = itemSection.getInt("slot", -1);
+                String seedItemId = itemSection.getString("seed-item-id");
+                String title = itemSection.getString("title");
+                List<String> lore = itemSection.getStringList("lore");
 
-        guideInv.setItem(30, createGuideItem(ItemManager.createMandrakeLeafSeeds(),
-            "§aЛистья Мандрагоры",
-            "§7Цена покупки: §e110 монет",
-            "§7Цена продажи: §e90 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fИздает странные звуки"
-        ));
-
-        guideInv.setItem(31, createGuideItem(ItemManager.createFlyingFruitSeeds(),
-            "§fЛетающий Плод",
-            "§7Цена покупки: §e140 монет",
-            "§7Цена продажи: §e115 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fИногда исчезает"
-        ));
-
-        // Четвертая строка
-        guideInv.setItem(32, createGuideItem(ItemManager.createSnowMintSeeds(),
-            "§bСнежная Мята",
-            "§7Цена покупки: §e95 монет",
-            "§7Цена продажи: §e80 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fСнежный блок",
-            "§7Особенности: §fОсвежает!"
-        ));
-
-        guideInv.setItem(33, createGuideItem(ItemManager.createSunPineappleSeeds(),
-            "§6Солнечный Ананас",
-            "§7Цена покупки: §e220 монет",
-            "§7Цена продажи: §e180 монет",
-            "§7Стадии: §b3",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fСветится на солнце"
-        ));
-
-        guideInv.setItem(34, createGuideItem(ItemManager.createFogBerrySeeds(),
-            "§7Туманная Ягода",
-            "§7Цена покупки: §e85 монет",
-            "§7Цена продажи: §e70 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fЗемля",
-            "§7Особенности: §fМногоразовый, окутана дымкой"
-        ));
-
-        guideInv.setItem(35, createGuideItem(ItemManager.createSandMelonSeeds(),
-            "§eПесчаный Арбуз",
-            "§7Цена покупки: §e130 монет",
-            "§7Цена продажи: §e105 монет",
-            "§7Стадии: §b2",
-            "§7Время роста: §b1 мин/стадия",
-            "§7Посадка: §fПесок",
-            "§7Особенности: §fОчень жаростойкий"
-        ));
+                if (slot != -1 && seedItemId != null && title != null) {
+                    Supplier<ItemStack> supplier = itemSuppliers.get(seedItemId);
+                    if (supplier != null) {
+                        guideInv.setItem(slot, createGuideItem(supplier.get(), title, lore));
+                    }
+                }
+            }
+        }
 
         // Информационная панель
         guideInv.setItem(49, createInfoItem(Material.EMERALD, 
@@ -495,11 +260,9 @@ public class ShopGUI {
     private ItemStack createBuyItem(ItemStack item, double price) {
         ItemMeta meta = item.getItemMeta();
         meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getCurrencyName(), "§aКлик, чтобы купить."));
-        // Сохраняем цену в метаданных предмета для надежного получения в листенере
-        // В идеале, ключ должен быть статическим полем где-нибудь в ItemManager или ShopGUI
-        NamespacedKey priceKey = new NamespacedKey(plugin, "item_price");
+        // Используем ключ, созданный в конструкторе, для сохранения цены в метаданных
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        container.set(priceKey, PersistentDataType.DOUBLE, price);
+        container.set(this.itemPriceKey, PersistentDataType.DOUBLE, price);
         item.setItemMeta(meta);
         return item;
     }
@@ -511,11 +274,11 @@ public class ShopGUI {
         return item;
     }
 
-    private ItemStack createGuideItem(ItemStack seed, String name, String... lore) {
+    private ItemStack createGuideItem(ItemStack seed, String name, List<String> lore) {
         ItemStack item = seed.clone();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
-        meta.setLore(Arrays.asList(lore));
+        meta.setLore(lore);
         item.setItemMeta(meta);
         return item;
     }
@@ -539,5 +302,58 @@ public class ShopGUI {
         meta.setDisplayName(" ");
         filler.setItemMeta(meta);
         return filler;
+    }
+
+    private void registerItemSuppliers() {
+        // Seeds
+        itemSuppliers.put("LETTUCE_SEEDS", ItemManager::createLettuceSeeds);
+        itemSuppliers.put("TOMATO_SEEDS", ItemManager::createTomatoSeeds);
+        itemSuppliers.put("GLOWSHROOM_SPORES", ItemManager::createGlowshroomSpores);
+        itemSuppliers.put("STRAWBERRY_SEEDS", ItemManager::createStrawberrySeeds);
+        itemSuppliers.put("RADISH_SEEDS", ItemManager::createRadishSeeds);
+        itemSuppliers.put("WATERMELON_SEEDS", ItemManager::createWatermelonSeeds);
+        itemSuppliers.put("LUNAR_BERRY_SEEDS", ItemManager::createLunarBerrySeeds);
+        itemSuppliers.put("RAINBOW_MUSHROOM_SEEDS", ItemManager::createRainbowMushroomSeeds);
+        itemSuppliers.put("CRYSTAL_CACTUS_SEEDS", ItemManager::createCrystalCactusSeeds);
+        itemSuppliers.put("FLAME_PEPPER_SEEDS", ItemManager::createFlamePepperSeeds);
+        itemSuppliers.put("MYSTIC_ROOT_SEEDS", ItemManager::createMysticRootSeeds);
+        itemSuppliers.put("STAR_FRUIT_SEEDS", ItemManager::createStarFruitSeeds);
+        itemSuppliers.put("PREDATOR_FLOWER_SEEDS", ItemManager::createPredatorFlowerSeeds);
+        itemSuppliers.put("ELECTRO_PUMPKIN_SEEDS", ItemManager::createElectroPumpkinSeeds);
+        itemSuppliers.put("MANDRAKE_LEAF_SEEDS", ItemManager::createMandrakeLeafSeeds);
+        itemSuppliers.put("FLYING_FRUIT_SEEDS", ItemManager::createFlyingFruitSeeds);
+        itemSuppliers.put("SNOW_MINT_SEEDS", ItemManager::createSnowMintSeeds);
+        itemSuppliers.put("SUN_PINEAPPLE_SEEDS", ItemManager::createSunPineappleSeeds);
+        itemSuppliers.put("FOG_BERRY_SEEDS", ItemManager::createFogBerrySeeds);
+        itemSuppliers.put("SAND_MELON_SEEDS", ItemManager::createSandMelonSeeds);
+        itemSuppliers.put("WITCH_MUSHROOM_SEEDS", ItemManager::createWitchMushroomSeeds);
+
+        // Tools
+        itemSuppliers.put("WATERING_CAN", ItemManager::createWateringCan);
+        itemSuppliers.put("FERTILIZER", ItemManager::createFertilizer);
+
+        // Products
+        itemSuppliers.put("LETTUCE_NORMAL", () -> ItemManager.createLettuce(false));
+        itemSuppliers.put("LETTUCE_EXCELLENT", () -> ItemManager.createLettuce(true));
+        itemSuppliers.put("TOMATO", ItemManager::createTomato);
+        itemSuppliers.put("GLOWSHROOM_DUST", ItemManager::createGlowshroomDust);
+        itemSuppliers.put("STRAWBERRY", ItemManager::createStrawberry);
+        itemSuppliers.put("RADISH", ItemManager::createRadish);
+        itemSuppliers.put("WATERMELON", ItemManager::createWatermelon);
+        itemSuppliers.put("LUNAR_BERRY", ItemManager::createLunarBerry);
+        itemSuppliers.put("RAINBOW_MUSHROOM", ItemManager::createRainbowMushroom);
+        itemSuppliers.put("CRYSTAL_CACTUS", ItemManager::createCrystalCactus);
+        itemSuppliers.put("FLAME_PEPPER", ItemManager::createFlamePepper);
+        itemSuppliers.put("MYSTIC_ROOT", ItemManager::createMysticRoot);
+        itemSuppliers.put("STAR_FRUIT", ItemManager::createStarFruit);
+        itemSuppliers.put("PREDATOR_FLOWER", ItemManager::createPredatorFlower);
+        itemSuppliers.put("ELECTRO_PUMPKIN", ItemManager::createElectroPumpkin);
+        itemSuppliers.put("MANDRAKE_LEAF", ItemManager::createMandrakeLeaf);
+        itemSuppliers.put("FLYING_FRUIT", ItemManager::createFlyingFruit);
+        itemSuppliers.put("SNOW_MINT", ItemManager::createSnowMint);
+        itemSuppliers.put("SUN_PINEAPPLE", ItemManager::createSunPineapple);
+        itemSuppliers.put("FOG_BERRY", ItemManager::createFogBerry);
+        itemSuppliers.put("SAND_MELON", ItemManager::createSandMelon);
+        itemSuppliers.put("WITCH_MUSHROOM", ItemManager::createWitchMushroom);
     }
 } 
