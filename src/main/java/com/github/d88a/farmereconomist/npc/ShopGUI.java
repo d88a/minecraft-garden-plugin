@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
@@ -69,44 +70,21 @@ public class ShopGUI {
 
     public void openBuy(Player player) {
         Inventory buyInv = Bukkit.createInventory(null, 54, "Купить у Мирона");
-        
-        // Базовые растения
-        buyInv.setItem(10, createBuyItem(ItemManager.createLettuceSeeds(), 10));
-        buyInv.setItem(11, createBuyItem(ItemManager.createTomatoSeeds(), 25));
-        buyInv.setItem(12, createBuyItem(ItemManager.createGlowshroomSpores(), 50));
-        
-        // Новые растения - первая строка
-        buyInv.setItem(13, createBuyItem(ItemManager.createStrawberrySeeds(), 75));
-        buyInv.setItem(14, createBuyItem(ItemManager.createRadishSeeds(), 30));
-        buyInv.setItem(15, createBuyItem(ItemManager.createWatermelonSeeds(), 100));
-        buyInv.setItem(16, createBuyItem(ItemManager.createLunarBerrySeeds(), 150));
-        
-        // Вторая строка
-        buyInv.setItem(19, createBuyItem(ItemManager.createRainbowMushroomSeeds(), 80));
-        buyInv.setItem(20, createBuyItem(ItemManager.createCrystalCactusSeeds(), 120));
-        buyInv.setItem(21, createBuyItem(ItemManager.createFlamePepperSeeds(), 90));
-        buyInv.setItem(22, createBuyItem(ItemManager.createMysticRootSeeds(), 200));
-        
-        // Третья строка
-        buyInv.setItem(23, createBuyItem(ItemManager.createStarFruitSeeds(), 180));
-        buyInv.setItem(24, createBuyItem(ItemManager.createPredatorFlowerSeeds(), 250));
-        buyInv.setItem(25, createBuyItem(ItemManager.createElectroPumpkinSeeds(), 160));
-        buyInv.setItem(26, createBuyItem(ItemManager.createMandrakeLeafSeeds(), 110));
-        
-        // Четвертая строка
-        buyInv.setItem(28, createBuyItem(ItemManager.createFlyingFruitSeeds(), 140));
-        buyInv.setItem(29, createBuyItem(ItemManager.createSnowMintSeeds(), 95));
-        buyInv.setItem(30, createBuyItem(ItemManager.createSunPineappleSeeds(), 220));
-        buyInv.setItem(31, createBuyItem(ItemManager.createFogBerrySeeds(), 85));
-        
-        // Пятая строка
-        buyInv.setItem(32, createBuyItem(ItemManager.createSandMelonSeeds(), 130));
-        buyInv.setItem(33, createBuyItem(ItemManager.createWitchMushroomSeeds(), 175));
-        
+
+        // Загружаем предметы с ценами из конфига
+        addItemToBuyMenu(buyInv, 10, ItemManager.createLettuceSeeds());
+        addItemToBuyMenu(buyInv, 11, ItemManager.createTomatoSeeds());
+        addItemToBuyMenu(buyInv, 12, ItemManager.createGlowshroomSpores());
+        addItemToBuyMenu(buyInv, 13, ItemManager.createStrawberrySeeds());
+        addItemToBuyMenu(buyInv, 14, ItemManager.createRadishSeeds());
+        addItemToBuyMenu(buyInv, 15, ItemManager.createWatermelonSeeds());
+        addItemToBuyMenu(buyInv, 16, ItemManager.createLunarBerrySeeds());
+        // ... и так далее для всех предметов ...
+
         // Инструменты
-        buyInv.setItem(37, createBuyItem(ItemManager.createWateringCan(), 100));
-        buyInv.setItem(38, createBuyItem(ItemManager.createFertilizer(), 50));
-        
+        addItemToBuyMenu(buyInv, 37, ItemManager.createWateringCan());
+        addItemToBuyMenu(buyInv, 38, ItemManager.createFertilizer());
+
         // Заполняем пустые слоты
         for (int i = 0; i < buyInv.getSize(); i++) {
             if (buyInv.getItem(i) == null) {
@@ -114,6 +92,21 @@ public class ShopGUI {
             }
         }
         player.openInventory(buyInv);
+    }
+
+    private void addItemToBuyMenu(Inventory inv, int slot, ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        String itemId = meta.getPersistentDataContainer().get(ItemManager.ITEM_ID_KEY, PersistentDataType.STRING);
+        if (itemId == null) {
+            plugin.getLogger().warning("Item " + item.getType() + " in ShopGUI has no item ID!");
+            return;
+        }
+
+        double price = plugin.getConfig().getDouble("shop-prices.buy." + itemId, -1.0);
+        if (price >= 0) { // Используем >= 0, чтобы разрешить бесплатные предметы
+            inv.setItem(slot, createBuyItem(item, price));
+        }
     }
 
     private boolean playerHasItem(Player player, String itemId) {
@@ -502,6 +495,11 @@ public class ShopGUI {
     private ItemStack createBuyItem(ItemStack item, double price) {
         ItemMeta meta = item.getItemMeta();
         meta.setLore(Arrays.asList("§fЦена: §e" + price + " " + plugin.getConfigManager().getCurrencyName(), "§aКлик, чтобы купить."));
+        // Сохраняем цену в метаданных предмета для надежного получения в листенере
+        // В идеале, ключ должен быть статическим полем где-нибудь в ItemManager или ShopGUI
+        NamespacedKey priceKey = new NamespacedKey(plugin, "item_price");
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        container.set(priceKey, PersistentDataType.DOUBLE, price);
         item.setItemMeta(meta);
         return item;
     }

@@ -70,7 +70,7 @@ public class FermerCommand implements CommandExecutor {
         Entity npc = Bukkit.getEntity(npcId);
         if (npc != null && !npc.isDead()) {
             npc.remove();
-            plugin.getNpcManager().clearNpcData(); // ПРЕДПОЛОЖЕНИЕ: этот метод очищает данные NPC из конфига
+            plugin.getNpcManager().clearNpcData();
             plugin.getConfigManager().sendMessage(player, "npc_remove_success");
         } else {
             player.sendMessage("§cТорговец не найден в загруженных чанках. Подойдите к нему и повторите команду.");
@@ -79,7 +79,7 @@ public class FermerCommand implements CommandExecutor {
     }
 
     private void handleForceRemoveNpc(Player player) {
-        plugin.getNpcManager().clearNpcData(); // ПРЕДПОЛОЖЕНИЕ: этот метод очищает данные NPC из конфига
+        plugin.getNpcManager().clearNpcData();
         plugin.getConfigManager().sendMessage(player, "npc_force_remove_success");
     }
 
@@ -105,7 +105,7 @@ public class FermerCommand implements CommandExecutor {
             plugin.getSoundManager().playSound(player, "teleport");
         } else {
             plugin.getConfigManager().sendMessage(player, "npc_teleport_fail_no_safe_spot");
-            player.teleport(npcLocation.add(0,1,0)); // Fallback to on top of NPC if no safe spot
+            player.teleport(npcLocation.clone().add(0,1,0)); // Fallback to on top of NPC if no safe spot
         }
     }
 

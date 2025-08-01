@@ -1,6 +1,7 @@
 package com.github.d88a.farmereconomist.listeners;
 
 import com.github.d88a.farmereconomist.FarmerEconomist;
+import com.github.d88a.farmereconomist.config.ConfigManager;
 import com.github.d88a.farmereconomist.economy.EconomyManager;
 import com.github.d88a.farmereconomist.items.ItemManager;
 import com.github.d88a.farmereconomist.npc.ShopGUI;
@@ -16,6 +17,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.UUID;
@@ -30,42 +32,28 @@ public class ShopListener implements Listener {
     private final ShopGUI shopGUI;
     private final EconomyManager economyManager;
     private final NamespacedKey itemIdKey;
+    private final NamespacedKey itemPriceKey;
 
-    // В идеале, это должно загружаться из конфига
     private final Map<String, Double> sellPrices = new HashMap<>();
 
     public ShopListener(FarmerEconomist plugin) {
         this.plugin = plugin;
         this.shopGUI = new ShopGUI(plugin);
         this.economyManager = plugin.getEconomyManager();
-        this.itemIdKey = new NamespacedKey(plugin, "item_id");
+        // Используем статический ключ из ItemManager
+        this.itemIdKey = ItemManager.ITEM_ID_KEY;
+        this.itemPriceKey = new NamespacedKey(plugin, "item_price");
         loadPrices();
     }
 
-    // В идеале, это должно загружаться из конфига
+    // Загружаем цены продажи из config.yml
     private void loadPrices() {
-        sellPrices.put("LETTUCE_NORMAL", 5.0);
-        sellPrices.put("LETTUCE_EXCELLENT", 15.0);
-        sellPrices.put("TOMATO", 20.0);
-        sellPrices.put("GLOWSHROOM_DUST", 45.0);
-        sellPrices.put("STRAWBERRY", 60.0);
-        sellPrices.put("RADISH", 25.0);
-        sellPrices.put("WATERMELON", 80.0);
-        sellPrices.put("LUNAR_BERRY", 120.0);
-        sellPrices.put("RAINBOW_MUSHROOM", 65.0);
-        sellPrices.put("CRYSTAL_CACTUS", 100.0);
-        sellPrices.put("FLAME_PEPPER", 75.0);
-        sellPrices.put("MYSTIC_ROOT", 160.0);
-        sellPrices.put("STAR_FRUIT", 145.0);
-        sellPrices.put("PREDATOR_FLOWER", 200.0);
-        sellPrices.put("ELECTRO_PUMPKIN", 130.0);
-        sellPrices.put("MANDRAKE_LEAF", 90.0);
-        sellPrices.put("FLYING_FRUIT", 115.0);
-        sellPrices.put("SNOW_MINT", 80.0);
-        sellPrices.put("SUN_PINEAPPLE", 180.0);
-        sellPrices.put("FOG_BERRY", 70.0);
-        sellPrices.put("SAND_MELON", 105.0);
-        sellPrices.put("WITCH_MUSHROOM", 140.0);
+        org.bukkit.configuration.ConfigurationSection sellPricesSection = plugin.getConfig().getConfigurationSection("shop-prices.sell");
+        if (sellPricesSection != null) {
+            for (String key : sellPricesSection.getKeys(false)) {
+                sellPrices.put(key, sellPricesSection.getDouble(key));
+            }
+        }
     }
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
@@ -107,13 +95,21 @@ public class ShopListener implements Listener {
         } else if (title.equals("Купить у Мирона")) { // Окно покупки
             event.setCancelled(true);
             if (clickedItem.getItemMeta() != null && clickedItem.getItemMeta().getLore() != null && clickedItem.getItemMeta().getLore().size() > 1 && clickedItem.getItemMeta().getLore().get(1).contains("купить")) {
-                String priceString = ChatColor.stripColor(clickedItem.getItemMeta().getLore().get(0).split(" ")[1]);
-                try {
-                    double price = Double.parseDouble(priceString);
+                // Получаем цену из метаданных, а не из лора. Это надежнее.
+                ItemMeta meta = clickedItem.getItemMeta();
+                PersistentDataContainer container = meta.getPersistentDataContainer();
+
+                if (container.has(itemPriceKey, PersistentDataType.DOUBLE)) {
+                    double price = container.get(itemPriceKey, PersistentDataType.DOUBLE);
                     if (economyManager.getBalance(player) >= price) {
                         economyManager.takeBalance(player, price);
                         ItemStack itemToGive = clickedItem.clone();
                         itemToGive.setLore(new ArrayList<>());
+                        // Очищаем цену из метаданных копии, чтобы не засорять инвентарь
+                        ItemMeta toGiveMeta = itemToGive.getItemMeta();
+                        toGiveMeta.getPersistentDataContainer().remove(itemPriceKey);
+                        itemToGive.setItemMeta(toGiveMeta);
+
                         player.getInventory().addItem(itemToGive);
                         plugin.getConfigManager().sendMessage(player, "shop_buy_success", "%item_name%", clickedItem.getItemMeta().getDisplayName());
                         plugin.getSoundManager().playSound(player, "buy_item");
@@ -121,8 +117,6 @@ public class ShopListener implements Listener {
                     } else {
                         plugin.getConfigManager().sendMessage(player, "shop_buy_fail_no_money");
                     }
-                } catch (NumberFormatException ignored) {
-                    // Игнорируем, если цена не является числом
                 }
             }
         } else if (title.equals("Продать Мирону")) { // Окно продажи
