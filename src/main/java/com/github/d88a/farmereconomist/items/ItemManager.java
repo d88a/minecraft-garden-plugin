@@ -177,20 +177,22 @@ public class ItemManager {
 
     // Seeds for new crops
     public static ItemStack createStrawberrySeeds() {
-        ItemStack item = new ItemStack(Material.SWEET_BERRIES); // Используем сладкие ягоды как семена
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§dСемена Лучезарной Клубники");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.STRAWBERRY.getSeedItemId());
+        meta.setCustomModelData(2); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на своем участке. Плодоносит несколько раз."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createRadishSeeds() {
-        ItemStack item = new ItemStack(Material.CARROT); // Используем морковь как семена
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§fСемена Хрустящего Редиса");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.RADISH.getSeedItemId());
+        meta.setCustomModelData(3); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на своем участке."));
         item.setItemMeta(meta);
         return item;
@@ -201,6 +203,7 @@ public class ItemManager {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§aСемена Пустынного Арбуза");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.WATERMELON.getSeedItemId());
+        meta.setCustomModelData(4); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на своем участке. Очень большой!"));
         item.setItemMeta(meta);
         return item;
@@ -221,10 +224,11 @@ public class ItemManager {
 
     // Seeds for existing crops to ensure consistency
     public static ItemStack createLunarBerrySeeds() {
-        ItemStack item = new ItemStack(Material.MANGROVE_PROPAGULE);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // ИСПРАВЛЕНО: Убираем "манговое дерево"
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§bСемена Лунной Ягоды");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.LUNAR_BERRY.getSeedItemId());
+        meta.setCustomModelData(5); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на своем участке. Светится ночью."));
         item.setItemMeta(meta);
         return item;
@@ -235,126 +239,139 @@ public class ItemManager {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§dСпоры Радужного Гриба");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.RAINBOW_MUSHROOM.getSeedItemId());
+        meta.setCustomModelData(6); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на мицелий или подзол."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createCrystalCactusSeeds() {
-        ItemStack item = new ItemStack(Material.CACTUS);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§3Семена Кристального Кактуса");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.CRYSTAL_CACTUS.getSeedItemId());
+        meta.setCustomModelData(7); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на песок. Очень колючий!"));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createFlamePepperSeeds() {
-        ItemStack item = new ItemStack(Material.MAGMA_CREAM);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§cСемена Пылающего Перца");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.FLAME_PEPPER.getSeedItemId());
+        meta.setCustomModelData(8); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на адский камень. Жжётся!"));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createMysticRootSeeds() {
-        ItemStack item = new ItemStack(Material.VINE);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§5Семена Мистического Корня");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.MYSTIC_ROOT.getSeedItemId());
+        meta.setCustomModelData(9); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Покрыт рунами."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createStarFruitSeeds() {
-        ItemStack item = new ItemStack(Material.GLOW_BERRIES);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§eСемена Звёздного Плода");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.STAR_FRUIT.getSeedItemId());
+        meta.setCustomModelData(10); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Светится."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createPredatorFlowerSeeds() {
-        ItemStack item = new ItemStack(Material.WITHER_ROSE);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§4Семена Цветка-Хищника");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.PREDATOR_FLOWER.getSeedItemId());
+        meta.setCustomModelData(11); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Осторожно, кусается!"));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createElectroPumpkinSeeds() {
-        ItemStack item = new ItemStack(Material.CARVED_PUMPKIN);
+        ItemStack item = new ItemStack(Material.PUMPKIN_SEEDS); // Используем правильные семена
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§9Семена Электро-тыквы");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.ELECTRO_PUMPKIN.getSeedItemId());
+        meta.setCustomModelData(12); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Потрескивает."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createMandrakeLeafSeeds() {
-        ItemStack item = new ItemStack(Material.FERN);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§aСемена Листьев Мандрагоры");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.MANDRAKE_LEAF.getSeedItemId());
+        meta.setCustomModelData(13); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Издает странные звуки."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createFlyingFruitSeeds() {
-        ItemStack item = new ItemStack(Material.CHORUS_FRUIT);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§fСемена Летающего Плода");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.FLYING_FRUIT.getSeedItemId());
+        meta.setCustomModelData(14); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Иногда исчезает."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createSnowMintSeeds() {
-        ItemStack item = new ItemStack(Material.SNOWBALL);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§bСемена Снежной Мяты");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.SNOW_MINT.getSeedItemId());
+        meta.setCustomModelData(15); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на снег. Освежает!"));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createSunPineappleSeeds() {
-        ItemStack item = new ItemStack(Material.GOLDEN_APPLE);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§6Семена Солнечного Ананаса");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.SUN_PINEAPPLE.getSeedItemId());
+        meta.setCustomModelData(16); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Светится на солнце."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createFogBerrySeeds() {
-        ItemStack item = new ItemStack(Material.WEEPING_VINES);
+        ItemStack item = new ItemStack(Material.WHEAT_SEEDS); // Стандартизируем внешний вид
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§7Семена Туманной Ягоды");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.FOG_BERRY.getSeedItemId());
+        meta.setCustomModelData(17); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на землю. Окутана дымкой."));
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createSandMelonSeeds() {
-        ItemStack item = new ItemStack(Material.BONE_MEAL);
+        ItemStack item = new ItemStack(Material.MELON_SEEDS); // Используем правильные семена
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§eСемена Песчаного Арбуза");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.SAND_MELON.getSeedItemId());
+        meta.setCustomModelData(18); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на песок. Очень жаростойкий."));
         item.setItemMeta(meta);
         return item;
@@ -365,6 +382,7 @@ public class ItemManager {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§5Споры Ведьмина Гриба");
         meta.getPersistentDataContainer().set(ITEM_ID_KEY, PersistentDataType.STRING, CustomCrop.CropType.WITCH_MUSHROOM.getSeedItemId());
+        meta.setCustomModelData(19); // Уникальная модель для ресурс-пака
         meta.setLore(Arrays.asList("Можно посадить на незерак. Пахнет магией."));
         item.setItemMeta(meta);
         return item;

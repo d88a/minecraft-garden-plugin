@@ -91,13 +91,17 @@ public class ShopListener implements Listener {
         // Главное меню магазина
         if (title.equals("Магазин Старого Мирона")) {
             event.setCancelled(true);
-            if (clickedItem.getType() == Material.EMERALD) {
+            // Делаем проверку более точной, по имени предмета, чтобы избежать конфликтов
+            ItemMeta clickedMeta = clickedItem.getItemMeta();
+            if (clickedMeta == null) return;
+
+            if (clickedItem.getType() == Material.EMERALD && clickedMeta.getDisplayName().equals("§aКупить")) {
                 shopGUI.openBuy(player);
-            } else if (clickedItem.getType() == Material.GOLD_INGOT) { // <-- Проблема была связана с обработкой этой кнопки
+            } else if (clickedItem.getType() == Material.GOLD_INGOT && clickedMeta.getDisplayName().equals("§6Продать")) {
                 shopGUI.openSell(player);
-            } else if (clickedItem.getType() == Material.BOOK) {
+            } else if (clickedItem.getType() == Material.BOOK && clickedMeta.getDisplayName().equals("§eСправочник растений")) {
                 shopGUI.openPlantGuide(player);
-            } else if (clickedItem.getType() == Material.BEACON) {
+            } else if (clickedItem.getType() == Material.BEACON && clickedMeta.getDisplayName().equals("§dИгровые события")) {
                 shopGUI.openEventGuide(player);
             }
         } else if (title.equals("Купить у Мирона")) { // Окно покупки
@@ -123,7 +127,6 @@ public class ShopListener implements Listener {
             }
         } else if (title.equals("Продать Мирону")) { // Окно продажи
             event.setCancelled(true);
-            // Игнорируем клики по стеклянным панелям-заполнителям
             if (clickedItem == null || clickedItem.getType() == Material.GRAY_STAINED_GLASS_PANE) {
                 return;
             }
@@ -138,25 +141,34 @@ public class ShopListener implements Listener {
 
             String itemId = meta.getPersistentDataContainer().get(itemIdKey, PersistentDataType.STRING);
             if (itemId == null || !sellPrices.containsKey(itemId)) {
-                return; // Это не предмет, который можно продать через наше GUI
+                return; // Это не предмет, который можно продать через это GUI
             }
 
-            // Ищем все предметы этого типа в инвентаре игрока и продаем их все
-            int amountToSell = 0;
-            ItemStack itemToSell = null;
-            for (ItemStack inventoryItem : player.getInventory().getStorageContents()) { // getStorageContents, чтобы не трогать броню
+            double pricePerItem = sellPrices.get(itemId);
+            int totalAmountSold = 0;
+
+            // Ищем и удаляем все предметы этого типа из инвентаря игрока
+            ItemStack[] contents = player.getInventory().getStorageContents();
+            for (int i = 0; i < contents.length; i++) {
+                ItemStack inventoryItem = contents[i];
                 if (inventoryItem != null && !inventoryItem.getType().isAir()) {
                     ItemMeta invItemMeta = inventoryItem.getItemMeta();
                     if (invItemMeta != null && itemId.equals(invItemMeta.getPersistentDataContainer().get(itemIdKey, PersistentDataType.STRING))) {
-                        if (itemToSell == null) itemToSell = inventoryItem;
-                        amountToSell += inventoryItem.getAmount();
+                        totalAmountSold += inventoryItem.getAmount();
+                        player.getInventory().setItem(i, null); // Удаляем стак
                     }
                 }
             }
 
-            if (amountToSell > 0 && itemToSell != null) {
-                sellItem(player, itemToSell, amountToSell);
+            if (totalAmountSold > 0) {
+                double totalEarnings = pricePerItem * totalAmountSold;
+                economyManager.addBalance(player, totalEarnings);
+                plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", meta.getDisplayName());
+                plugin.getSoundManager().playSound(player, "sell_item");
+                plugin.getPlotManager().updatePlotSign(player);
                 shopGUI.openSell(player); // Обновляем GUI после продажи
+            } else {
+                plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
             }
         } else if (title.equals("§dСправочник событий") || title.equals("§aСправочник растений")) {
             event.setCancelled(true);
@@ -168,36 +180,6 @@ public class ShopListener implements Listener {
         String title = event.getView().getTitle();
         if (title.equals("Продать Мирону")) {
             event.setCancelled(true);
-        }
-    }
-
-    private void sellItem(Player player, ItemStack item, int amount) {
-        if (item == null || item.getType() == Material.AIR) return;
-
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
-
-        String itemId = meta.getPersistentDataContainer().get(itemIdKey, PersistentDataType.STRING);
-        if (itemId == null || !sellPrices.containsKey(itemId)) {
-            // Этот предмет не продается
-            return;
-        }
-
-        double pricePerItem = sellPrices.get(itemId);
-        double totalPrice = pricePerItem * amount;
-
-        // Проверяем, есть ли у игрока достаточно предметов
-        if (player.getInventory().containsAtLeast(item, amount)) {
-            ItemStack toRemove = item.clone();
-            toRemove.setAmount(amount);
-            player.getInventory().removeItem(toRemove);
-
-            economyManager.addBalance(player, totalPrice);
-            plugin.getConfigManager().sendMessage(player, "shop_sell_success", "%item_name%", meta.getDisplayName());
-            plugin.getSoundManager().playSound(player, "sell_item");
-            plugin.getPlotManager().updatePlotSign(player);
-        } else {
-            plugin.getConfigManager().sendMessage(player, "shop_sell_fail_no_item");
         }
     }
 } 

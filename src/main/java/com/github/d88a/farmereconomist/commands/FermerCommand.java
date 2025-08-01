@@ -28,9 +28,59 @@ public class FermerCommand implements CommandExecutor {
             return true;
         }
 
+        Player player = (Player) sender;
+
+        if (args.length > 0 && args[0].equalsIgnoreCase("admin")) {
+            handleAdminCommand(player, args);
+            return true;
+        }
+
         handleTeleport((Player) sender);
 
         return true;
+    }
+
+    private void handleAdminCommand(Player player, String[] args) {
+        if (!player.hasPermission("farmereconomist.admin.npc")) {
+            plugin.getConfigManager().sendMessage(player, "no_permission");
+            return;
+        }
+
+        if (args.length < 2) {
+            player.sendMessage("§cИспользование: /fermer admin <removenpc|forceremove>");
+            return;
+        }
+
+        if (args[1].equalsIgnoreCase("removenpc")) {
+            handleRemoveNpc(player);
+        } else if (args[1].equalsIgnoreCase("forceremove")) {
+            handleForceRemoveNpc(player);
+        } else {
+            player.sendMessage("§cНеизвестная админ-команда. Доступно: removenpc, forceremove");
+        }
+    }
+
+    private void handleRemoveNpc(Player player) {
+        UUID npcId = plugin.getNpcManager().getNpcUniqueId();
+        if (npcId == null) {
+            plugin.getConfigManager().sendMessage(player, "npc_not_set");
+            return;
+        }
+
+        Entity npc = Bukkit.getEntity(npcId);
+        if (npc != null && !npc.isDead()) {
+            npc.remove();
+            plugin.getNpcManager().clearNpcData(); // ПРЕДПОЛОЖЕНИЕ: этот метод очищает данные NPC из конфига
+            plugin.getConfigManager().sendMessage(player, "npc_remove_success");
+        } else {
+            player.sendMessage("§cТорговец не найден в загруженных чанках. Подойдите к нему и повторите команду.");
+            player.sendMessage("§eЕсли это не поможет, используйте §f/fermer admin forceremove §eдля принудительной очистки данных.");
+        }
+    }
+
+    private void handleForceRemoveNpc(Player player) {
+        plugin.getNpcManager().clearNpcData(); // ПРЕДПОЛОЖЕНИЕ: этот метод очищает данные NPC из конфига
+        plugin.getConfigManager().sendMessage(player, "npc_force_remove_success");
     }
 
     private void handleTeleport(Player player) {

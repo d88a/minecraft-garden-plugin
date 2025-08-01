@@ -8,8 +8,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
+import org.bukkit.NamespacedKey;
 
 public class ShopGUI {
 
@@ -114,86 +116,101 @@ public class ShopGUI {
         player.openInventory(buyInv);
     }
 
+    private boolean playerHasItem(Player player, String itemId) {
+        NamespacedKey key = ItemManager.ITEM_ID_KEY;
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+            if (item != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
+                    if (meta.getPersistentDataContainer().get(key, PersistentDataType.STRING).equals(itemId)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public void openSell(Player player) {
         Inventory sellInv = Bukkit.createInventory(null, 54, "Продать Мирону");
         
         int slot = 10;
         
         // Базовые растения
-        if (player.getInventory().containsAtLeast(ItemManager.createLettuce(false), 1)) {
+        if (playerHasItem(player, "LETTUCE_NORMAL")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(false), 5));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createLettuce(true), 1)) {
+        if (playerHasItem(player, "LETTUCE_EXCELLENT")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createLettuce(true), 15));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createTomato(), 1)) {
+        if (playerHasItem(player, "TOMATO")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createTomato(), 20));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createGlowshroomDust(), 1)) {
+        if (playerHasItem(player, "GLOWSHROOM_DUST")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createGlowshroomDust(), 45));
         }
         
         // Новые растения - первая строка
-        if (player.getInventory().containsAtLeast(ItemManager.createStrawberry(), 1)) {
+        if (playerHasItem(player, "STRAWBERRY")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createStrawberry(), 60));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createRadish(), 1)) {
+        if (playerHasItem(player, "RADISH")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createRadish(), 25));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createWatermelon(), 1)) {
+        if (playerHasItem(player, "WATERMELON")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createWatermelon(), 80));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createLunarBerry(), 1)) {
+        if (playerHasItem(player, "LUNAR_BERRY")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createLunarBerry(), 120));
         }
         
         // Вторая строка
-        if (player.getInventory().containsAtLeast(ItemManager.createRainbowMushroom(), 1)) {
+        if (playerHasItem(player, "RAINBOW_MUSHROOM")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createRainbowMushroom(), 65));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createCrystalCactus(), 1)) {
+        if (playerHasItem(player, "CRYSTAL_CACTUS")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createCrystalCactus(), 100));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createFlamePepper(), 1)) {
+        if (playerHasItem(player, "FLAME_PEPPER")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createFlamePepper(), 75));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createMysticRoot(), 1)) {
+        if (playerHasItem(player, "MYSTIC_ROOT")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createMysticRoot(), 160));
         }
         
         // Третья строка
-        if (player.getInventory().containsAtLeast(ItemManager.createStarFruit(), 1)) {
+        if (playerHasItem(player, "STAR_FRUIT")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createStarFruit(), 145));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createPredatorFlower(), 1)) {
+        if (playerHasItem(player, "PREDATOR_FLOWER")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createPredatorFlower(), 200));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createElectroPumpkin(), 1)) {
+        if (playerHasItem(player, "ELECTRO_PUMPKIN")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createElectroPumpkin(), 130));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createMandrakeLeaf(), 1)) {
+        if (playerHasItem(player, "MANDRAKE_LEAF")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createMandrakeLeaf(), 90));
         }
         
         // Четвертая строка
-        if (player.getInventory().containsAtLeast(ItemManager.createFlyingFruit(), 1)) {
+        if (playerHasItem(player, "FLYING_FRUIT")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createFlyingFruit(), 115));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createSnowMint(), 1)) {
+        if (playerHasItem(player, "SNOW_MINT")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createSnowMint(), 80));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createSunPineapple(), 1)) {
+        if (playerHasItem(player, "SUN_PINEAPPLE")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createSunPineapple(), 180));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createFogBerry(), 1)) {
+        if (playerHasItem(player, "FOG_BERRY")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createFogBerry(), 70));
         }
         
         // Пятая строка
-        if (player.getInventory().containsAtLeast(ItemManager.createSandMelon(), 1)) {
+        if (playerHasItem(player, "SAND_MELON")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createSandMelon(), 105));
         }
-        if (player.getInventory().containsAtLeast(ItemManager.createWitchMushroom(), 1)) {
+        if (playerHasItem(player, "WITCH_MUSHROOM")) {
             sellInv.setItem(slot++, createSellItem(ItemManager.createWitchMushroom(), 140));
         }
         

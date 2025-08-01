@@ -91,6 +91,15 @@ public class CropListener implements Listener {
         }
     }
 
+    private boolean isCustomItem(ItemStack item, String expectedId) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        String itemId = meta.getPersistentDataContainer().get(ItemManager.ITEM_ID_KEY, PersistentDataType.STRING);
+        return expectedId.equals(itemId);
+    }
+
     private void handleToolUse(PlayerInteractEvent event, CustomCrop crop, ItemStack itemInHand) {
         Player player = event.getPlayer();
         Plot plot = plugin.getPlotManager().getPlotAt(crop.getLocation());
@@ -102,29 +111,30 @@ public class CropListener implements Listener {
             return;
         }
 
-        if (itemInHand.isSimilar(ItemManager.createWateringCan())) {
+        // Используем надежную проверку по ID предмета, а не isSimilar
+        if (isCustomItem(itemInHand, "WATERING_CAN")) {
             if (!crop.isWatered()) {
                 crop.setWatered(true);
                 crop.setWateredTime(System.currentTimeMillis());
                 plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_watered");
                 plugin.getSoundManager().playSound(event.getPlayer(), "water_crop");
-                event.setCancelled(true);
             } else {
                 plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_already_watered");
             }
+            event.setCancelled(true); // Отменяем в любом случае, чтобы не вспахать землю
             return;
         }
-        if (itemInHand.isSimilar(ItemManager.createFertilizer())) {
+        if (isCustomItem(itemInHand, "FERTILIZER")) {
             if (!crop.isFertilized()) {
                 crop.setFertilized(true);
                 crop.setFertilizerTime(System.currentTimeMillis());
                 itemInHand.setAmount(itemInHand.getAmount() - 1);
                 plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_fertilized");
                 plugin.getSoundManager().playSound(event.getPlayer(), "fertilize_crop");
-                event.setCancelled(true);
             } else {
                 plugin.getConfigManager().sendMessage(event.getPlayer(), "crop_already_fertilized");
             }
+            event.setCancelled(true); // Отменяем в любом случае
         }
     }
 
@@ -133,13 +143,19 @@ public class CropListener implements Listener {
         ItemMeta meta = itemInHand.getItemMeta();
         if (meta == null) return;
 
+        // Полностью переработанная, надежная проверка на семена
         String itemId = meta.getPersistentDataContainer().get(ItemManager.ITEM_ID_KEY, PersistentDataType.STRING);
-        if (itemId == null || !itemId.endsWith("_SEEDS") && !itemId.endsWith("_SPORES")) {
-            return; // Это не семена
-        }
+        if (itemId == null) return;
 
         CropType cropType = getCropTypeForSeed(itemId);
-        if (cropType == null) return;
+        if (cropType == null) return; // Если ID не соответствует ни одному из известных семян, выходим.
+
+        // Это наше кастомное семя. Мы должны отменить стандартное поведение,
+        // чтобы не посадилось ванильное растение (например, пшеница).
+        // Это нужно сделать ДО всех проверок, чтобы гарантировать отмену.
+        event.setUseItemInHand(Event.Result.DENY);
+        event.setUseInteractedBlock(Event.Result.DENY);
+        event.setCancelled(true);
 
         Player player = event.getPlayer();
         Plot plot = plugin.getPlotManager().getPlotAt(clickedBlock.getLocation());
@@ -167,10 +183,6 @@ public class CropListener implements Listener {
         } else {
             plugin.getConfigManager().sendMessage(player, "crop_plant_fail_wrong_soil");
         }
-        // Более надежно отменяем стандартное поведение посадки семян
-        event.setUseItemInHand(Event.Result.DENY);
-        event.setUseInteractedBlock(Event.Result.DENY);
-        event.setCancelled(true);
     }
 
     // Связывает ID семян с типом растения
